@@ -1,4 +1,4 @@
-package io.github.abansal755.spring_query.annotation;
+package io.github.abansal755.spring_web_query.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

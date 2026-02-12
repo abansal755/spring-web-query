@@ -1,6 +1,6 @@
-package io.github.abansal755.spring_query.config;
+package io.github.abansal755.spring_web_query.config;
 
-import io.github.abansal755.spring_query.RestrictedPageableArgumentResolver;
+import io.github.abansal755.spring_web_query.RestrictedPageableArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;

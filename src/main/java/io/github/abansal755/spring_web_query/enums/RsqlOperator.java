@@ -1,6 +1,8 @@
-package io.github.abansal755.spring_query.enums;
+package io.github.abansal755.spring_web_query.enums;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
+import io.github.abansal755.spring_web_query.ValidationRSQLVisitor;
+import io.github.abansal755.spring_web_query.annotation.RsqlFilterable;
 import io.github.perplexhub.rsql.RSQLOperators;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +27,8 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>
  * {@link RsqlOperator} is typically used in conjunction with
- * {@link io.github.abansal755.spring_query.annotation.RsqlFilterable} to declare the set of allowed operators on an entity field,
- * and with {@link io.github.abansal755.spring_query.ValidationRSQLVisitor} to enforce these constraints at runtime.
+ * {@link RsqlFilterable} to declare the set of allowed operators on an entity field,
+ * and with {@link ValidationRSQLVisitor} to enforce these constraints at runtime.
  * </p>
  *
  * <p><b>Example usage:</b></p>
@@ -35,8 +37,8 @@ import lombok.RequiredArgsConstructor;
  * private String status;
  * }</pre>
  *
- * @see io.github.abansal755.spring_query.annotation.RsqlFilterable
- * @see io.github.abansal755.spring_query.ValidationRSQLVisitor
+ * @see RsqlFilterable
+ * @see ValidationRSQLVisitor
  * @see RSQLOperators
  * @see cz.jirutka.rsql.parser.ast.ComparisonOperator
  */

@@ -1,6 +1,6 @@
-package io.github.abansal755.spring_query.annotation;
+package io.github.abansal755.spring_web_query.annotation;
 
-import io.github.abansal755.spring_query.enums.RsqlOperator;
+import io.github.abansal755.spring_web_query.enums.RsqlOperator;
 
 import java.lang.annotation.*;
 

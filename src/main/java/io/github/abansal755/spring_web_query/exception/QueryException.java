@@ -1,4 +1,4 @@
-package io.github.abansal755.spring_query.exception;
+package io.github.abansal755.spring_web_query.exception;
 
 public class QueryException extends RuntimeException {
 

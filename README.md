@@ -43,14 +43,14 @@ Add the dependency to your Spring Boot project.
 ```xml
 <dependency>
   <groupId>io.github.abansal755</groupId>
-  <artifactId>spring-query</artifactId>
+  <artifactId>spring-web-query</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 </dependency>
 ```
 
 ### Gradle
 ```gradle
-implementation "io.github.abansal755:spring-query:0.0.1-SNAPSHOT"
+implementation "io.github.abansal755:spring-web-query:0.0.1-SNAPSHOT"
 ```
 
 No additional configuration is required.

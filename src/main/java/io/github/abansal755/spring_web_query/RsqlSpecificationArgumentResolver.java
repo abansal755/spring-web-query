@@ -1,11 +1,12 @@
-package io.github.abansal755.spring_query;
+package io.github.abansal755.spring_web_query;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
-import io.github.abansal755.spring_query.annotation.FieldMapping;
-import io.github.abansal755.spring_query.annotation.RsqlSpec;
-import io.github.abansal755.spring_query.exception.QueryException;
+import io.github.abansal755.spring_web_query.annotation.FieldMapping;
+import io.github.abansal755.spring_web_query.annotation.RsqlFilterable;
+import io.github.abansal755.spring_web_query.annotation.RsqlSpec;
+import io.github.abansal755.spring_web_query.exception.QueryException;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -96,7 +97,7 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
      * @return a {@link Specification} representing the RSQL query,
      *         or an unrestricted Specification if the query is absent
      * @throws QueryException if the RSQL query is invalid or violates
-     *                       {@link io.github.abansal755.spring_query.annotation.RsqlFilterable} constraints
+     *                       {@link RsqlFilterable} constraints
      */
     @Override
     public Specification<?> resolveArgument(

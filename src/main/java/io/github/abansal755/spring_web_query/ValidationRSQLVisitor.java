@@ -1,11 +1,11 @@
-package io.github.abansal755.spring_query;
+package io.github.abansal755.spring_web_query;
 
 import cz.jirutka.rsql.parser.ast.*;
-import io.github.abansal755.spring_query.annotation.FieldMapping;
-import io.github.abansal755.spring_query.annotation.RsqlFilterable;
-import io.github.abansal755.spring_query.enums.RsqlOperator;
-import io.github.abansal755.spring_query.exception.QueryException;
-import io.github.abansal755.spring_query.util.ReflectionUtil;
+import io.github.abansal755.spring_web_query.annotation.FieldMapping;
+import io.github.abansal755.spring_web_query.annotation.RsqlFilterable;
+import io.github.abansal755.spring_web_query.enums.RsqlOperator;
+import io.github.abansal755.spring_web_query.exception.QueryException;
+import io.github.abansal755.spring_web_query.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;

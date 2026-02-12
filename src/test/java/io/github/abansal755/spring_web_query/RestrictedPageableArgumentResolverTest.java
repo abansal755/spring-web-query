@@ -1,8 +1,8 @@
-package io.github.abansal755.spring_query;
+package io.github.abansal755.spring_web_query;
 
-import io.github.abansal755.spring_query.annotation.RestrictedPageable;
-import io.github.abansal755.spring_query.annotation.Sortable;
-import io.github.abansal755.spring_query.exception.QueryException;
+import io.github.abansal755.spring_web_query.annotation.RestrictedPageable;
+import io.github.abansal755.spring_web_query.annotation.Sortable;
+import io.github.abansal755.spring_web_query.exception.QueryException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;

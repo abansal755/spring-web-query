@@ -1,9 +1,9 @@
-package io.github.abansal755.spring_query.config;
+package io.github.abansal755.spring_web_query.config;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import io.github.abansal755.spring_query.RsqlSpecificationArgumentResolver;
-import io.github.abansal755.spring_query.enums.RsqlOperator;
+import io.github.abansal755.spring_web_query.RsqlSpecificationArgumentResolver;
+import io.github.abansal755.spring_web_query.enums.RsqlOperator;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
