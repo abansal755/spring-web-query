@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,8 +48,7 @@ class RsqlSpecificationArgumentResolverTest {
         Method method = TestController.class.getDeclaredMethod("search", Specification.class);
         MethodParameter parameter = new MethodParameter(method, 0);
 
-        Object result = resolver.resolveArgument(parameter, null, emptyRequest(), null);
-        assertInstanceOf(Specification.class, result);
+        resolver.resolveArgument(parameter, null, emptyRequest(), null);
     }
 
     @Test
@@ -68,8 +66,7 @@ class RsqlSpecificationArgumentResolverTest {
         MethodParameter parameter = new MethodParameter(method, 0);
         NativeWebRequest webRequest = requestWithFilter("displayName==john");
 
-        Object result = resolver.resolveArgument(parameter, null, webRequest, null);
-        assertInstanceOf(Specification.class, result);
+        resolver.resolveArgument(parameter, null, webRequest, null);
     }
 
     @Test
@@ -87,8 +84,7 @@ class RsqlSpecificationArgumentResolverTest {
         MethodParameter parameter = new MethodParameter(method, 0);
         NativeWebRequest webRequest = requestWithFilter("name==john");
 
-        Object result = resolver.resolveArgument(parameter, null, webRequest, null);
-        assertInstanceOf(Specification.class, result);
+        resolver.resolveArgument(parameter, null, webRequest, null);
     }
 
     private static NativeWebRequest emptyRequest() {

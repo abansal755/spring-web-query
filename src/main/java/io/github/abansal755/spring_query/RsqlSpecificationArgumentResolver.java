@@ -99,7 +99,7 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
      *                       {@link io.github.abansal755.spring_query.annotation.RsqlFilterable} constraints
      */
     @Override
-    public Object resolveArgument(
+    public Specification<?> resolveArgument(
             @NonNull MethodParameter parameter,
             ModelAndViewContainer mavContainer,
             @NonNull NativeWebRequest webRequest,
