@@ -1,0 +1,3 @@
+io.github.abansal755.spring_query.config.PaginationCustomizationAutoConfig
+io.github.abansal755.spring_query.config.RestrictedPageableAutoConfig
+io.github.abansal755.spring_query.config.RsqlAutoConfig
