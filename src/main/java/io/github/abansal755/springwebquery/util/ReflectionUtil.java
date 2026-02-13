@@ -1,6 +1,6 @@
-package io.github.abansal755.spring_web_query.util;
+package io.github.abansal755.springwebquery.util;
 
-import io.github.abansal755.spring_web_query.exception.QueryException;
+import io.github.abansal755.springwebquery.exception.QueryException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;

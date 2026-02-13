@@ -1,9 +1,9 @@
-package io.github.abansal755.spring_web_query;
+package io.github.abansal755.springwebquery;
 
-import io.github.abansal755.spring_web_query.annotation.RestrictedPageable;
-import io.github.abansal755.spring_web_query.annotation.Sortable;
-import io.github.abansal755.spring_web_query.exception.QueryException;
-import io.github.abansal755.spring_web_query.util.ReflectionUtil;
+import io.github.abansal755.springwebquery.annotation.RestrictedPageable;
+import io.github.abansal755.springwebquery.annotation.Sortable;
+import io.github.abansal755.springwebquery.exception.QueryException;
+import io.github.abansal755.springwebquery.util.ReflectionUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;

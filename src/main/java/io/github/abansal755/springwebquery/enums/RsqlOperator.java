@@ -1,8 +1,8 @@
-package io.github.abansal755.spring_web_query.enums;
+package io.github.abansal755.springwebquery.enums;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import io.github.abansal755.spring_web_query.ValidationRSQLVisitor;
-import io.github.abansal755.spring_web_query.annotation.RsqlFilterable;
+import io.github.abansal755.springwebquery.ValidationRSQLVisitor;
+import io.github.abansal755.springwebquery.annotation.RsqlFilterable;
 import io.github.perplexhub.rsql.RSQLOperators;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

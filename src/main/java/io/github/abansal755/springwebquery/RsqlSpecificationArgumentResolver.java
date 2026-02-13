@@ -1,12 +1,12 @@
-package io.github.abansal755.spring_web_query;
+package io.github.abansal755.springwebquery;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
-import io.github.abansal755.spring_web_query.annotation.FieldMapping;
-import io.github.abansal755.spring_web_query.annotation.RsqlFilterable;
-import io.github.abansal755.spring_web_query.annotation.RsqlSpec;
-import io.github.abansal755.spring_web_query.exception.QueryException;
+import io.github.abansal755.springwebquery.annotation.FieldMapping;
+import io.github.abansal755.springwebquery.annotation.RsqlFilterable;
+import io.github.abansal755.springwebquery.annotation.RsqlSpec;
+import io.github.abansal755.springwebquery.exception.QueryException;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

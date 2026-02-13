@@ -1,12 +1,12 @@
-package io.github.abansal755.spring_web_query;
+package io.github.abansal755.springwebquery;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import io.github.abansal755.spring_web_query.annotation.FieldMapping;
-import io.github.abansal755.spring_web_query.annotation.RsqlFilterable;
-import io.github.abansal755.spring_web_query.annotation.RsqlSpec;
-import io.github.abansal755.spring_web_query.enums.RsqlOperator;
-import io.github.abansal755.spring_web_query.exception.QueryException;
+import io.github.abansal755.springwebquery.annotation.FieldMapping;
+import io.github.abansal755.springwebquery.annotation.RsqlFilterable;
+import io.github.abansal755.springwebquery.annotation.RsqlSpec;
+import io.github.abansal755.springwebquery.enums.RsqlOperator;
+import io.github.abansal755.springwebquery.exception.QueryException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;

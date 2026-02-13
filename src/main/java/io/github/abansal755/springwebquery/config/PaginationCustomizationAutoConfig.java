@@ -1,4 +1,4 @@
-package io.github.abansal755.spring_web_query.config;
+package io.github.abansal755.springwebquery.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
