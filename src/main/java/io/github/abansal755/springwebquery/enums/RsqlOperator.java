@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
  * {@link cz.jirutka.rsql.parser.ast.RSQLOperators} supplied by the RSQL library.
  * Each enum constant maps directly to a corresponding {@link cz.jirutka.rsql.parser.ast.ComparisonOperator}
  * instance and represents a single logical comparison operation supported by RSQL.
- * </p>
  *
  * <p>
  * The primary purpose of this enum is to:
@@ -23,7 +22,6 @@ import lombok.RequiredArgsConstructor;
  *     <li>Allow fine-grained control over which operators are permitted for a given entity field</li>
  *     <li>Decouple application code from direct usage of {@link RSQLOperators}</li>
  * </ul>
- * </p>
  *
  * <p>
  * {@link RsqlOperator} is typically used in conjunction with
