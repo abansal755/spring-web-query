@@ -4,43 +4,60 @@
 [![Java 21+](https://img.shields.io/badge/Java-21+-orange.svg)](https://www.oracle.com/java/technologies/javase-jdk21-downloads.html)
 [![Spring Boot 4.0.2+](https://img.shields.io/badge/Spring%20Boot-4.0.2+-brightgreen.svg)](https://spring.io/projects/spring-boot)
 
-`spring-web-query` is a powerful, **secure-by-default** library for Spring Boot that enables declarative, dynamic filtering and sorting for your REST APIs. It bridges the gap between RSQL query strings and Spring Data JPA Specifications while enforcing strict field-level security.
+`spring-web-query` is split into two artifacts:
+
+- `spring-web-query-core`: Core annotations, argument resolvers, validation, and query utilities.
+- `spring-boot-starter-web-query`: Spring Boot auto-configuration on top of `core` for zero-config setup.
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-*   **🔒 Secure Filtering**: Whitelist filterable fields and specific operators using `@RsqlFilterable`.
-*   **↕️ Restricted Sorting**: Allow sorting only on fields explicitly marked with `@Sortable`.
-*   **📂 Deep Path Resolution**: Native support for nested properties (e.g., `user.address.city`), collections, and arrays.
-*   **🔗 API Aliasing**: Use `@FieldMapping` to expose clean API field names without leaking internal entity structures.
-*   **⚡ Zero-Config**: Auto-configures argument resolvers for `@RsqlSpec` and `@RestrictedPageable`.
-*   **🛡️ DoS Protection**: Built-in maximum page size enforcement.
-*   **📅 ISO-8601 Ready**: Seamless handling of date/time formats in query strings.
+- Secure filtering: Whitelist filterable fields and specific operators using `@RsqlFilterable`.
+- Restricted sorting: Allow sorting only on fields explicitly marked with `@Sortable`.
+- Deep path resolution: Support for nested properties (for example `user.address.city`), collections, and arrays.
+- API aliasing: Use `@FieldMapping` to expose clean API field names without leaking internal entity structures.
+- Zero-config (starter): Auto-configures argument resolvers for `@RsqlSpec` and `@RestrictedPageable`.
+- DoS protection: Built-in maximum page size enforcement.
+- ISO-8601 ready: Handling of date/time formats in query strings.
 
 ---
 
-## 📦 Installation
+## Installation
 
-Add the dependency to your `pom.xml`:
+Use one of the following depending on your setup.
+
+### Option 1: Spring Boot starter (recommended)
 
 ```xml
 <dependency>
     <groupId>io.github.abansal755</groupId>
-    <artifactId>spring-web-query</artifactId>
+    <artifactId>spring-boot-starter-web-query</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 </dependency>
 ```
 
-The library is designed for **Spring Boot 4.x** and **Java 21+**.
+This includes `spring-web-query-core` transitively and auto-registers required configuration.
+
+### Option 2: Core only (manual wiring)
+
+```xml
+<dependency>
+    <groupId>io.github.abansal755</groupId>
+    <artifactId>spring-web-query-core</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+
+Use this when you do not want Boot starter auto-configuration and prefer manual resolver setup.
+
+The project targets Spring Boot `4.0.2+` and Java `21+`.
 
 ---
 
-## 🛠️ Usage
+## Usage
 
 ### 1. Annotate your Entity
-
-Explicitly define which fields can be filtered or sorted.
 
 ```java
 @Entity
@@ -56,22 +73,19 @@ public class User {
     @RsqlFilterable(operators = {RsqlOperator.EQUAL})
     private String username;
 
-    // Nested property example
     @OneToOne
-    private Profile profile; 
+    private Profile profile;
 }
 
 @Entity
 public class Profile {
-    
+
     @RsqlFilterable(operators = {RsqlOperator.EQUAL})
     private String city;
 }
 ```
 
 ### 2. Use in Controller
-
-Add the annotations to your controller method arguments.
 
 ```java
 @GetMapping("/users")
@@ -87,19 +101,17 @@ public Page<User> search(
 
 | Feature | Query |
 | :--- | :--- |
-| **Simple Filter** | `/users?filter=status==ACTIVE` |
-| **Complex Logical** | `/users?filter=status==ACTIVE;username==john*` |
-| **Date Range** | `/users?filter=createdAt=gt=2024-01-01T00:00:00Z` |
-| **Nested Paths** | `/users?filter=profile.city==NewYork` |
-| **Secure Sorting** | `/users?sort=username,asc` |
+| Simple Filter | `/users?filter=status==ACTIVE` |
+| Complex Logical | `/users?filter=status==ACTIVE;username==john*` |
+| Date Range | `/users?filter=createdAt=gt=2024-01-01T00:00:00Z` |
+| Nested Paths | `/users?filter=profile.city==NewYork` |
+| Secure Sorting | `/users?sort=username,asc` |
 
 ---
 
-## ⚙️ Advanced Configuration
+## Advanced Configuration
 
 ### Field Mapping (Aliases)
-
-Hide your internal database structure from the API.
 
 ```java
 @RsqlSpec(
@@ -109,11 +121,12 @@ Hide your internal database structure from the API.
     }
 ) Specification<User> spec
 ```
-*Query:* `/users?filter=joined=gt=2024-01-01T00:00:00Z`
+
+Query: `/users?filter=joined=gt=2024-01-01T00:00:00Z`
 
 ### Enforced Pagination Defaults
 
-Control the maximum allowed page size via `application.properties` (default is **100**):
+Configure maximum allowed page size in `application.properties` (default `100`):
 
 ```properties
 api.pagination.max-page-size=500
@@ -121,15 +134,14 @@ api.pagination.max-page-size=500
 
 ---
 
-## ❌ Error Handling
+## Error Handling
 
 The library throws a `QueryException` when security or syntax rules are violated:
-*   Attempting to filter on a non-`@RsqlFilterable` field.
-*   Using a restricted operator on a field.
-*   Sorting on a non-`@Sortable` field.
-*   Invalid RSQL syntax.
 
-**Recommended Global Exception Handler:**
+- Filtering on a non-`@RsqlFilterable` field.
+- Using a restricted operator on a field.
+- Sorting on a non-`@Sortable` field.
+- Invalid RSQL syntax.
 
 ```java
 @ControllerAdvice
@@ -143,15 +155,15 @@ public class GlobalExceptionHandler {
 
 ---
 
-## 🏗️ How It Works
+## How It Works
 
-1.  **Parsing**: The RSQL string is parsed into an AST.
-2.  **Validation**: A custom `RSQLVisitor` traverses the AST and checks every node against the `@RsqlFilterable` configuration on the target Entity.
-3.  **Reflection**: `ReflectionUtil` resolves dot-notation paths, handling JPA associations and collection types.
-4.  **Specification**: Once validated, it is converted into a `Specification<T>` that is compatible with Spring Data JPA's `findAll(Specification, Pageable)`.
+1. Parsing: The RSQL string is parsed into an AST.
+2. Validation: A custom `RSQLVisitor` traverses the AST and checks every node against the `@RsqlFilterable` configuration on the target entity.
+3. Reflection: `ReflectionUtil` resolves dot-notation paths, handling JPA associations and collection types.
+4. Specification: Once validated, it is converted into a `Specification<T>` compatible with Spring Data JPA `findAll(Specification, Pageable)`.
 
 ---
 
-## 📜 License
+## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License.
