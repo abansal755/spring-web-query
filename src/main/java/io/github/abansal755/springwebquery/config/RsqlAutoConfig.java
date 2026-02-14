@@ -4,9 +4,11 @@ import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import io.github.abansal755.springwebquery.RsqlSpecificationArgumentResolver;
 import io.github.abansal755.springwebquery.enums.RsqlOperator;
+import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -20,6 +22,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @AutoConfiguration
+@ConditionalOnClass(RSQLJPAAutoConfiguration.class)
 public class RsqlAutoConfig implements WebMvcConfigurer {
 
     @Override
