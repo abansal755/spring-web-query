@@ -5,8 +5,29 @@
 	<groupId>in.co.akshitbansal</groupId>
 	<artifactId>spring-web-query-core</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>spring-web-query-core</name>
+	<name>${groupId}:${artifactId}</name>
 	<description>Effective querying for Spring Web APIs</description>
+	<url>https://github.com/abansal755/spring-web-query</url>
+	<scm>
+		<url>https://github.com/abansal755/spring-web-query</url>
+		<connection>scm:git:https://github.com/abansal755/spring-web-query.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com:abansal755/spring-web-query.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>abansal755</id>
+			<name>Akshit Bansal</name>
+			<email>bansalakshitwork@gmail.com</email>
+		</developer>
+	</developers>
 	<properties>
 		<java.version>21</java.version>
 		<maven.compiler.release>21</maven.compiler.release>
@@ -102,7 +123,29 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<plugin>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>0.10.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<publishingServerId>central</publishingServerId>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>3.2.8</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 

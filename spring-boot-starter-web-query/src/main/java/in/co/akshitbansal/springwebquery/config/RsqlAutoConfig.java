@@ -2,8 +2,8 @@ package in.co.akshitbansal.springwebquery.config;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import io.github.abansal755.springwebquery.RsqlSpecificationArgumentResolver;
-import io.github.abansal755.springwebquery.enums.RsqlOperator;
+import in.co.akshitbansal.springwebquery.RsqlSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.enums.RsqlOperator;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;

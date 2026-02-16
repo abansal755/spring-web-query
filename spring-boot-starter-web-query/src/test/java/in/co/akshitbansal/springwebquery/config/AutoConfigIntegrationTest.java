@@ -1,7 +1,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import io.github.abansal755.springwebquery.RestrictedPageableArgumentResolver;
-import io.github.abansal755.springwebquery.RsqlSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.RestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.RsqlSpecificationArgumentResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

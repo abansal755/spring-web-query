@@ -1,6 +1,6 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import io.github.abansal755.springwebquery.RestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.RestrictedPageableArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
