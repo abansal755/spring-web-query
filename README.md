@@ -31,7 +31,7 @@ Use one of the following depending on your setup.
 
 ```xml
 <dependency>
-    <groupId>io.github.abansal755</groupId>
+    <groupId>in.co.akshitbansal</groupId>
     <artifactId>spring-boot-starter-web-query</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 </dependency>
@@ -43,7 +43,7 @@ This includes `spring-web-query-core` transitively and auto-registers required c
 
 ```xml
 <dependency>
-    <groupId>io.github.abansal755</groupId>
+    <groupId>in.co.akshitbansal</groupId>
     <artifactId>spring-web-query-core</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 </dependency>

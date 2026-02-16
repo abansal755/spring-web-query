@@ -1,0 +1,59 @@
+package in.co.akshitbansal.springwebquery;
+
+import cz.jirutka.rsql.parser.RSQLParser;
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
+import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
+import in.co.akshitbansal.springwebquery.enums.RsqlOperator;
+import in.co.akshitbansal.springwebquery.exception.QueryException;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class ValidationRSQLVisitorTest {
+
+    private final RSQLParser parser = new RSQLParser();
+
+    @Test
+    void visit_allowsFilterableFieldWithAllowedOperator() {
+        ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntity.class, new FieldMapping[]{});
+        parser.parse("name==john").accept(visitor);
+    }
+
+    @Test
+    void visit_rejectsUnknownField() {
+        ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntity.class, new FieldMapping[]{});
+        QueryException ex = assertThrows(
+                QueryException.class,
+                () -> parser.parse("missing==x").accept(visitor)
+        );
+        assertEquals("Unknown field 'missing'", ex.getMessage());
+    }
+
+    @Test
+    void visit_rejectsNonFilterableField() {
+        ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntity.class, new FieldMapping[]{});
+        QueryException ex = assertThrows(
+                QueryException.class,
+                () -> parser.parse("age==10").accept(visitor)
+        );
+        assertEquals("Filtering not allowed on field 'age'", ex.getMessage());
+    }
+
+    @Test
+    void visit_rejectsDisallowedOperator() {
+        ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntity.class, new FieldMapping[]{});
+        QueryException ex = assertThrows(
+                QueryException.class,
+                () -> parser.parse("name!=john").accept(visitor)
+        );
+        assertEquals("Operator '!=' not allowed on field 'name'", ex.getMessage());
+    }
+
+    private static class TestEntity {
+        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
+        private String name;
+
+        private Integer age;
+    }
+}
