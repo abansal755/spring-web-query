@@ -3,7 +3,6 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Java 21+](https://img.shields.io/badge/Java-21+-orange.svg)](https://www.oracle.com/java/technologies/javase-jdk21-downloads.html)
 [![Spring Boot 4.0.2+](https://img.shields.io/badge/Spring%20Boot-4.0.2+-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Java CI](https://github.com/abansal755/spring-web-query/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/abansal755/spring-web-query/actions/workflows/ci.yml)
 
 `spring-web-query` is split into two artifacts:
 
@@ -53,6 +52,16 @@ This includes `spring-web-query-core` transitively and auto-registers required c
 Use this when you do not want Boot starter auto-configuration and prefer manual resolver setup.
 
 The project targets Spring Boot `4.0.2+` and Java `21+`.
+
+---
+
+## Branching And Release Workflow
+
+- `main` always contains `-SNAPSHOT` versions.
+- Every commit to `main` publishes a snapshot version to Maven Central.
+- Releases are created from `release/**` branches:
+  versions are changed to non-snapshot values, and release publishing is triggered manually through a GitHub Action.
+- For all non-`main` branch commits and pull requests, CI only verifies build and test success.
 
 ---
 
