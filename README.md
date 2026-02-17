@@ -3,6 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Java 21+](https://img.shields.io/badge/Java-21+-orange.svg)](https://www.oracle.com/java/technologies/javase-jdk21-downloads.html)
 [![Spring Boot 4.0.2+](https://img.shields.io/badge/Spring%20Boot-4.0.2+-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Java CI](https://github.com/abansal755/spring-web-query/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/abansal755/spring-web-query/actions/workflows/ci.yml)
 
 `spring-web-query` is split into two artifacts:
 
