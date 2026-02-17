@@ -1,10 +1,12 @@
-name: Release
+name: Snapshot Release
 on:
+    push:
+      branches:
+        - main
     workflow_dispatch:
 
 jobs:
     release:
-        if: startsWith(github.ref, 'refs/heads/release/')
         runs-on: ubuntu-latest
         
         steps:
@@ -30,7 +32,6 @@ jobs:
                 GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                 MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
                 MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-                
             - name: Release spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: mvn -B clean deploy
