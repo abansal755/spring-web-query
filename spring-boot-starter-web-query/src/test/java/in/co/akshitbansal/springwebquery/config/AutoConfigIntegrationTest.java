@@ -1,6 +1,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.RestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.RsqlSpecificationArgumentResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(classes = {
         PaginationCustomizationAutoConfig.class,
         RestrictedPageableAutoConfig.class,
-        RsqlAutoConfig.class
+        RsqlAutoConfig.class,
+        RsqlSpecResolverAutoConfig.class
 })
 @TestPropertySource(properties = "api.pagination.max-page-size=50")
 class AutoConfigIntegrationTest {
@@ -34,13 +36,14 @@ class AutoConfigIntegrationTest {
     private RestrictedPageableAutoConfig restrictedPageableConfig;
 
     @Autowired
-    private RsqlAutoConfig rsqlConfig;
+    private RsqlSpecResolverAutoConfig rsqlSpecResolverConfig;
 
     @Test
     void testBeansAreRegistered() {
         assertNotNull(context.getBean(PageableHandlerMethodArgumentResolverCustomizer.class));
         assertNotNull(context.getBean(RestrictedPageableArgumentResolver.class));
         assertNotNull(context.getBean(RsqlSpecificationArgumentResolver.class));
+        assertNotNull(context.getBean(RsqlCustomOperatorsConfigurer.class));
     }
 
     @Test
@@ -53,7 +56,7 @@ class AutoConfigIntegrationTest {
     @Test
     void testRsqlConfigAddsResolver() {
         List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>();
-        rsqlConfig.addArgumentResolvers(resolvers);
+        rsqlSpecResolverConfig.addArgumentResolvers(resolvers);
         assertTrue(resolvers.stream().anyMatch(r -> r instanceof RsqlSpecificationArgumentResolver));
     }
 }
