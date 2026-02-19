@@ -42,6 +42,14 @@ public @interface RsqlSpec {
      */
     Class<?> entityClass();
 
+    /**
+     * Optional field mappings for aliasing entity fields.
+     * <p>
+     * Allows mapping query parameter field names (aliases) to actual entity field names.
+     * </p>
+     *
+     * @return an array of {@link FieldMapping} annotations
+     */
     FieldMapping[] fieldMappings() default {};
 
     /**

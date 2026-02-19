@@ -1,12 +1,14 @@
 package in.co.akshitbansal.springwebquery;
 
-import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
-import in.co.akshitbansal.springwebquery.enums.RsqlOperator;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
+import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
@@ -15,17 +17,17 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RsqlSpecificationArgumentResolverTest {
 
-    private final RsqlSpecificationArgumentResolver resolver = new RsqlSpecificationArgumentResolver(configuredParser());
+    private final RsqlSpecificationArgumentResolver resolver = new RsqlSpecificationArgumentResolver(
+            Set.of(RsqlOperator.values()),
+            Collections.emptySet()
+    );
 
     @Test
     void supportsParameter_returnsTrueForAnnotatedSpecification() throws NoSuchMethodException {
@@ -87,6 +89,19 @@ class RsqlSpecificationArgumentResolverTest {
         resolver.resolveArgument(parameter, null, webRequest, null);
     }
 
+    @Test
+    void resolveArgument_allowsCustomOperator() throws NoSuchMethodException {
+        RsqlSpecificationArgumentResolver resolverWithCustom = new RsqlSpecificationArgumentResolver(
+                Set.of(RsqlOperator.values()),
+                Set.of(new MockCustomOperator())
+        );
+        Method method = TestController.class.getDeclaredMethod("searchWithCustom", Specification.class);
+        MethodParameter parameter = new MethodParameter(method, 0);
+        NativeWebRequest webRequest = requestWithFilter("name=mock=value");
+
+        resolverWithCustom.resolveArgument(parameter, null, webRequest, null);
+    }
+
     private static NativeWebRequest emptyRequest() {
         return new ServletWebRequest(new MockHttpServletRequest());
     }
@@ -97,12 +112,22 @@ class RsqlSpecificationArgumentResolverTest {
         return new ServletWebRequest(request);
     }
 
-    private static RSQLParser configuredParser() {
-        Set<ComparisonOperator> allowedOperators = Arrays
-                .stream(RsqlOperator.values())
-                .map(RsqlOperator::getOperator)
-                .collect(Collectors.toSet());
-        return new RSQLParser(allowedOperators);
+    private static class MockCustomOperator implements RsqlCustomOperator<String> {
+
+        @Override
+        public ComparisonOperator getComparisonOperator() {
+            return new ComparisonOperator("=mock=");
+        }
+
+        @Override
+        public Class<String> getType() {
+            return String.class;
+        }
+
+        @Override
+        public Predicate toPredicate(RSQLCustomPredicateInput input) {
+            return null;
+        }
     }
 
     @SuppressWarnings("unused")
@@ -128,10 +153,18 @@ class RsqlSpecificationArgumentResolverTest {
                 }
         ) Specification<TestEntity> specification) {
         }
+
+        void searchWithCustom(@RsqlSpec(entityClass = TestEntityWithCustom.class) Specification<TestEntityWithCustom> specification) {
+        }
     }
 
     private static class TestEntity {
         @RsqlFilterable(operators = {RsqlOperator.EQUAL})
+        private String name;
+    }
+
+    private static class TestEntityWithCustom {
+        @RsqlFilterable(operators = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }
 }

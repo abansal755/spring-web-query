@@ -127,12 +127,81 @@ public Page<User> search(
 @RsqlSpec(
     entityClass = User.class,
     fieldMappings = {
-        @FieldMapping(name = "joined", field = "createdAt")
+        @FieldMapping(name = "joined", field = "createdAt", allowOriginalFieldName = false)
     }
 ) Specification<User> spec
 ```
 
+- `name`: The alias to be used in the query.
+- `field`: The actual entity field path.
+- `allowOriginalFieldName`: If `true`, both the alias and original field name can be used. If `false` (default), only the alias is allowed.
+
 Query: `/users?filter=joined=gt=2024-01-01T00:00:00Z`
+
+---
+
+## Custom RSQL Operators
+
+You can define custom operators to extend filtering capabilities.
+
+### 1. Implement `RsqlCustomOperator`
+
+```java
+public class IsMondayOperator implements RsqlCustomOperator<Long> {
+    @Override
+    public ComparisonOperator getComparisonOperator() {
+        return new ComparisonOperator("=monday=", Arity.nary(0));
+    }
+
+    @Override
+    public Class<Long> getType() {
+        return Long.class;
+    }
+
+    @Override
+    public Predicate toPredicate(RSQLCustomPredicateInput input) {
+        CriteriaBuilder cb = input.getCriteriaBuilder();
+        // MySQL example: DAYOFWEEK() returns 1 for Sunday, 2 for Monday...
+        return cb.equal(
+            cb.function("DAYOFWEEK", Long.class, input.getPath()),
+            2
+        );
+    }
+}
+```
+
+### 2. Register via `RsqlCustomOperatorsConfigurer`
+
+Register your custom operators as a Spring Bean. You can register multiple `RsqlCustomOperatorsConfigurer` beans, and the library will automatically combine all custom operators from all registered configurers.
+
+```java
+@Configuration
+public class RsqlConfig {
+    @Bean
+    public RsqlCustomOperatorsConfigurer customOperators() {
+        return () -> Set.of(new IsMondayOperator());
+    }
+}
+```
+
+### 3. Enable in Entity
+
+Whitelisting is required for custom operators just like default ones.
+
+```java
+@Entity
+public class User {
+    @RsqlFilterable(
+        operators = {RsqlOperator.EQUAL},
+        customOperators = {IsMondayOperator.class}
+    )
+    private LocalDateTime createdAt;
+}
+```
+
+Query: `/users?filter=createdAt=monday=`
+
+---
 
 ### Enforced Pagination Defaults
 
