@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ public class RsqlAutoConfig {
     @Bean
     @ConditionalOnMissingBean(RsqlCustomOperatorsConfigurer.class)
     public RsqlCustomOperatorsConfigurer rsqlCustomOperatorsConfigurer() {
-        return new RsqlCustomOperatorsConfigurer() {};
+        return Collections::emptySet;
     }
 
     @Bean
