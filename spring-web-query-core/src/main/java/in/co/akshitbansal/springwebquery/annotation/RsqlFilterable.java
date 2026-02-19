@@ -1,6 +1,7 @@
 package in.co.akshitbansal.springwebquery.annotation;
 
-import in.co.akshitbansal.springwebquery.enums.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 
 import java.lang.annotation.*;
 
@@ -36,4 +37,6 @@ public @interface RsqlFilterable {
      * @return an array of allowed {@link RsqlOperator} values
      */
     RsqlOperator[] operators();
+
+    Class<? extends RsqlCustomOperator<?>>[] customOperators() default {};
 }

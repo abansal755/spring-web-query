@@ -2,12 +2,18 @@ package in.co.akshitbansal.springwebquery;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
+import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import io.github.perplexhub.rsql.RSQLCustomPredicate;
+import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import io.github.perplexhub.rsql.RSQLJPASupport;
+import jakarta.persistence.criteria.Predicate;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
@@ -17,9 +23,10 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Spring MVC {@link HandlerMethodArgumentResolver} that resolves controller method
@@ -57,13 +64,39 @@ import java.util.stream.Collectors;
  * @see RSQLJPASupport
  * @see Specification
  */
-@RequiredArgsConstructor
 public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentResolver {
 
     /**
      * RSQL parser used to convert query strings into an AST.
      */
     private final RSQLParser rsqlParser;
+    private final Set<? extends RsqlCustomOperator<?>> customOperators;
+    private final List<RSQLCustomPredicate<?>> customPredicates;
+
+    public RsqlSpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators) {
+        // Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
+        Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
+                .stream()
+                .map(RsqlOperator::getOperator);
+        this.customOperators = customOperators;
+        Stream<ComparisonOperator> customOperatorsStream = customOperators
+                .stream()
+                .map(RsqlCustomOperator::getComparisonOperator);
+        Set<ComparisonOperator> allowedOperators = Stream
+                .concat(defaultOperatorsStream, customOperatorsStream)
+                .collect(Collectors.toSet());
+        rsqlParser = new RSQLParser(allowedOperators);
+
+        // Convert custom operators to the format which rsql jpa support library accepts
+        this.customPredicates = new ArrayList<>();
+        for(RsqlCustomOperator<?> customOperator : customOperators) {
+            customPredicates.add(new RSQLCustomPredicate<>(
+                    customOperator.getComparisonOperator(),
+                    customOperator.getType(),
+                    customOperator::toPredicate
+            ));
+        }
+    }
 
     /**
      * Determines whether this resolver supports the given method parameter.
@@ -118,15 +151,20 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);
             // Validate the parsed AST against the target entity and its @RsqlFilterable fields
-            ValidationRSQLVisitor validationVisitor = new ValidationRSQLVisitor(annotation.entityClass(), annotation.fieldMappings());
+            ValidationRSQLVisitor validationVisitor = new ValidationRSQLVisitor(
+                    annotation.entityClass(),
+                    annotation.fieldMappings(),
+                    customOperators
+            );
             root.accept(validationVisitor);
 
             // Convert field mappings to aliases map which rsql jpa support library accepts
             Map<String, String> fieldMappings = Arrays
                     .stream(annotation.fieldMappings())
                     .collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
+
             // Convert the validated RSQL query into a JPA Specification
-            return RSQLJPASupport.toSpecification(filter, fieldMappings);
+            return RSQLJPASupport.toSpecification(filter, fieldMappings, customPredicates, null);
         }
         catch (RSQLParserException ex) {
             throw new QueryException("Unable to parse rsql query param", ex);

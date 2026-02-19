@@ -1,4 +1,4 @@
-package in.co.akshitbansal.springwebquery.enums;
+package in.co.akshitbansal.springwebquery.operator;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.ValidationRSQLVisitor;

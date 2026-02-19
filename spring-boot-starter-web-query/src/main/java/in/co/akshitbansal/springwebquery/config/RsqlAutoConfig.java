@@ -1,43 +1,41 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import cz.jirutka.rsql.parser.RSQLParser;
-import cz.jirutka.rsql.parser.ast.ComparisonOperator;
+import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.RsqlSpecificationArgumentResolver;
-import in.co.akshitbansal.springwebquery.enums.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @AutoConfiguration
 @ConditionalOnClass(RSQLJPAAutoConfiguration.class)
-public class RsqlAutoConfig implements WebMvcConfigurer {
+@RequiredArgsConstructor
+public class RsqlAutoConfig {
 
-    @Override
-    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(rsqlSpecificationArgumentResolver());
+    @Bean
+    @ConditionalOnMissingBean(RsqlCustomOperatorsConfigurer.class)
+    public RsqlCustomOperatorsConfigurer rsqlCustomOperatorsConfigurer() {
+        return new RsqlCustomOperatorsConfigurer() {};
     }
 
     @Bean
-    public RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver() {
-        Set<ComparisonOperator> allowedOperators = Arrays
+    public RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver(RsqlCustomOperatorsConfigurer rsqlCustomOperatorsConfigurer) {
+        Set<RsqlOperator> defaultOperators = Arrays
                 .stream(RsqlOperator.values())
-                .map(RsqlOperator::getOperator)
                 .collect(Collectors.toSet());
-        RSQLParser rsqlParser = new RSQLParser(allowedOperators);
-        return new RsqlSpecificationArgumentResolver(rsqlParser);
+        return new RsqlSpecificationArgumentResolver(defaultOperators, rsqlCustomOperatorsConfigurer.getCustomOperators());
     }
 
     // Allows RSQL to parse ISO-8601 Timestamp fields

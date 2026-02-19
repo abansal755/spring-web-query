@@ -5,7 +5,7 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
-import in.co.akshitbansal.springwebquery.enums.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;

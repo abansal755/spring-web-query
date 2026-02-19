@@ -3,16 +3,19 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.enums.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * RSQL AST visitor that validates RSQL queries against a given entity class.
@@ -51,8 +54,9 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
     private final Class<?> entityClass;
     private final Map<String, FieldMapping> fieldMappings;
     private final Map<String, FieldMapping> originalFieldMappings;
+    private final Map<Class<?>, RsqlCustomOperator<?>> customOperators;
 
-    public ValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings) {
+    public ValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings, Set<? extends RsqlCustomOperator<?>> customOperators) {
         this.entityClass = entityClass;
         // Map from name to FieldMapping
         this.fieldMappings = Arrays
@@ -62,6 +66,10 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         this.originalFieldMappings = Arrays
                 .stream(fieldMappings)
                 .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
+        // Map from custom operator class to instance
+        this.customOperators = customOperators
+                .stream()
+                .collect(Collectors.toMap(RsqlCustomOperator::getClass, operator -> operator));
     }
 
     /**
@@ -138,10 +146,19 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         ));
 
         // Collect the set of allowed operators for this field from the annotation
-        Set<ComparisonOperator> allowedOperators = Arrays
-                .stream(filterable.operators()) // Get operators defined in annotation
-                .map(RsqlOperator::getOperator) // Map to ComparisonOperator
-                .collect(Collectors.toSet()); // Collect into a Set for fast lookup
+        // Stream of default operators defined in the annotation
+        Stream<ComparisonOperator> defaultOperators = Arrays
+                .stream(filterable.operators())
+                .map(RsqlOperator::getOperator);
+        // Stream of custom operators defined in the annotation
+        Stream<ComparisonOperator> customOperators = Arrays
+                .stream(filterable.customOperators())
+                .map(this.customOperators::get)
+                .map(RsqlCustomOperator::getComparisonOperator);
+        Set<ComparisonOperator> allowedOperators = Stream
+                .concat(defaultOperators, customOperators)
+                .collect(Collectors.toSet());
+
         // Throw exception if the provided operator is not in the allowed set
         if(!allowedOperators.contains(operator)) throw new QueryException(MessageFormat.format(
                 "Operator ''{0}'' not allowed on field ''{1}''", operator, fieldName

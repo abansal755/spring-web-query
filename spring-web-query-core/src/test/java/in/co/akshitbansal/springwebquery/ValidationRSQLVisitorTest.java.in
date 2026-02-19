@@ -3,7 +3,7 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.RSQLParser;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.enums.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import org.junit.jupiter.api.Test;
 

@@ -1,3 +1,4 @@
 in.co.akshitbansal.springwebquery.config.PaginationCustomizationAutoConfig
 in.co.akshitbansal.springwebquery.config.RestrictedPageableAutoConfig
 in.co.akshitbansal.springwebquery.config.RsqlAutoConfig
+in.co.akshitbansal.springwebquery.config.RsqlSpecAutoConfig
