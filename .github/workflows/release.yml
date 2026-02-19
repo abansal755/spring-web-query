@@ -25,7 +25,7 @@ jobs:
                 
             - name: Release core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B clean deploy
+              run: mvn -B clean deploy -Prelease
               env:
                 GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                 MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -33,7 +33,7 @@ jobs:
                 
             - name: Release spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B clean deploy
+              run: mvn -B clean deploy -Prelease
               env:
                 GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                 MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}

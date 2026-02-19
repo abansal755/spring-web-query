@@ -23,7 +23,7 @@ jobs:
 
             - name: Build core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean install -Dgpg.skip=true
+              run: mvn -B -ntp clean install
 
             - name: Build spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
