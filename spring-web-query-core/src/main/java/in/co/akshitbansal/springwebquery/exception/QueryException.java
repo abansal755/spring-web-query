@@ -1,5 +1,6 @@
 package in.co.akshitbansal.springwebquery.exception;
 
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 
@@ -11,10 +12,12 @@ import in.co.akshitbansal.springwebquery.annotation.Sortable;
  * <ul>
  *     <li>A query attempts to filter on a field not annotated with
  *         {@link RsqlFilterable}</li>
- *     <li>A query uses an operator not allowed for a specific field</li>
+ *     <li>A query uses a default or custom operator not allowed for a specific field</li>
+ *     <li>A query uses original field name when the behavior is disabled via {@link FieldMapping#allowOriginalFieldName()}</li>
  *     <li>A sort request targets a field not annotated with
  *         {@link Sortable}</li>
  *     <li>A field referenced in a query does not exist on the entity</li>
+ *     <li>A custom operator referenced in {@link RsqlFilterable} is not registered</li>
  *     <li>The RSQL query syntax is malformed or cannot be parsed</li>
  * </ul>
  *

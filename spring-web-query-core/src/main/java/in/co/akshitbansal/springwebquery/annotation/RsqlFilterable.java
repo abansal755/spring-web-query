@@ -8,9 +8,10 @@ import java.lang.annotation.*;
 /**
  * Marks an entity field as filterable via RSQL (RESTful Service Query Language) queries.
  * <p>
- * This annotation allows you to declare which RSQL operators are permitted on a specific field.
+ * This annotation allows you to declare which RSQL operators (both default and custom)
+ * are permitted on a specific field.
  * When used in combination with a RSQL-to-Spring-Data Specification resolver,
- * only the specified operators will be allowed for filtering on this field.
+ * only the specified default and custom operators will be allowed for filtering on this field.
  * </p>
  *
  * <p><b>Example usage:</b></p>
