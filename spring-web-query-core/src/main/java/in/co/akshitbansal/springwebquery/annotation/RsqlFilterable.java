@@ -32,11 +32,16 @@ import java.lang.annotation.*;
 public @interface RsqlFilterable {
 
     /**
-     * The set of RSQL operators that are allowed for filtering this field.
+     * The set of default RSQL operators that are allowed for filtering this field.
      *
      * @return an array of allowed {@link RsqlOperator} values
      */
     RsqlOperator[] operators();
 
+    /**
+     * The set of custom RSQL operators that are allowed for filtering this field.
+     *
+     * @return an array of custom operator classes
+     */
     Class<? extends RsqlCustomOperator<?>>[] customOperators() default {};
 }

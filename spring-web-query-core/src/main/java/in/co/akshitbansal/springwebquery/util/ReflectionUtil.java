@@ -9,6 +9,13 @@ import java.lang.reflect.WildcardType;
 import java.text.MessageFormat;
 import java.util.Collection;
 
+/**
+ * Utility class for performing reflection-based operations on entity classes.
+ * <p>
+ * This class provides methods for resolving fields from dot-separated paths,
+ * handling inheritance hierarchies, and unwrapping container types (arrays and collections).
+ * </p>
+ */
 public class ReflectionUtil {
 
     /**

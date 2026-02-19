@@ -70,9 +70,23 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
      * RSQL parser used to convert query strings into an AST.
      */
     private final RSQLParser rsqlParser;
+
+    /**
+     * Set of custom RSQL operators allowed by this resolver.
+     */
     private final Set<? extends RsqlCustomOperator<?>> customOperators;
+
+    /**
+     * List of RSQLCustomPredicate corresponding to the custom operators.
+     */
     private final List<RSQLCustomPredicate<?>> customPredicates;
 
+    /**
+     * Creates a new RsqlSpecificationArgumentResolver with the specified operators.
+     *
+     * @param defaultOperators set of default RSQL operators to support
+     * @param customOperators  set of custom RSQL operators to support
+     */
     public RsqlSpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators) {
         // Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
         Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
