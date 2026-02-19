@@ -12,7 +12,7 @@ import java.util.List;
 @AutoConfiguration
 @RequiredArgsConstructor
 @ConditionalOnClass(RsqlAutoConfig.class)
-public class RsqlSpecAutoConfig implements WebMvcConfigurer {
+public class RsqlSpecResolverAutoConfig implements WebMvcConfigurer {
 
     private final RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver;
 

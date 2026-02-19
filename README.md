@@ -172,7 +172,7 @@ public class IsMondayOperator implements RsqlCustomOperator<Long> {
 
 ### 2. Register via `RsqlCustomOperatorsConfigurer`
 
-Register your custom operators as a Spring Bean.
+Register your custom operators as a Spring Bean. You can register multiple `RsqlCustomOperatorsConfigurer` beans, and the library will automatically combine all custom operators from all registered configurers.
 
 ```java
 @Configuration

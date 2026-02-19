@@ -2,6 +2,7 @@ package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.RsqlSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
@@ -16,6 +17,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,11 +33,15 @@ public class RsqlAutoConfig {
     }
 
     @Bean
-    public RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver(RsqlCustomOperatorsConfigurer rsqlCustomOperatorsConfigurer) {
+    public RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver(List<RsqlCustomOperatorsConfigurer> rsqlCustomOperatorsConfigurers) {
         Set<RsqlOperator> defaultOperators = Arrays
                 .stream(RsqlOperator.values())
                 .collect(Collectors.toSet());
-        return new RsqlSpecificationArgumentResolver(defaultOperators, rsqlCustomOperatorsConfigurer.getCustomOperators());
+        Set<? extends RsqlCustomOperator<?>> customOperators = rsqlCustomOperatorsConfigurers
+                .stream()
+                .flatMap(configurer -> configurer.getCustomOperators().stream())
+                .collect(Collectors.toSet());
+        return new RsqlSpecificationArgumentResolver(defaultOperators, customOperators);
     }
 
     // Allows RSQL to parse ISO-8601 Timestamp fields
