@@ -10,6 +10,7 @@ import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import io.github.perplexhub.rsql.RSQLJPASupport;
@@ -178,7 +179,14 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
                     .collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
 
             // Convert the validated RSQL query into a JPA Specification
-            return RSQLJPASupport.toSpecification(filter, fieldMappings, customPredicates, null);
+            QuerySupport querySupport = QuerySupport
+                    .builder()
+                    .rsqlQuery(filter)
+                    .propertyPathMapper(fieldMappings)
+                    .customPredicates(customPredicates)
+                    .strictEquality(true)
+                    .build();;
+            return RSQLJPASupport.toSpecification(querySupport);
         }
         catch (RSQLParserException ex) {
             throw new QueryException("Unable to parse rsql query param", ex);
