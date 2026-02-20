@@ -93,7 +93,7 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
         Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
                 .stream()
                 .map(RsqlOperator::getOperator);
-        this.customOperators = customOperators;
+        this.customOperators = Set.copyOf(customOperators); // Create an immutable copy of the custom operators set
         Stream<ComparisonOperator> customOperatorsStream = customOperators
                 .stream()
                 .map(RsqlCustomOperator::getComparisonOperator);
@@ -103,14 +103,14 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
         rsqlParser = new RSQLParser(allowedOperators);
 
         // Convert custom operators to the format which rsql jpa support library accepts
-        this.customPredicates = new ArrayList<>();
-        for(RsqlCustomOperator<?> customOperator : customOperators) {
-            customPredicates.add(new RSQLCustomPredicate<>(
-                    customOperator.getComparisonOperator(),
-                    customOperator.getType(),
-                    customOperator::toPredicate
-            ));
-        }
+        this.customPredicates = customOperators
+                .stream()
+                .map(operator -> new RSQLCustomPredicate<>(
+                        operator.getComparisonOperator(),
+                        operator.getType(),
+                        operator::toPredicate
+                ))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -184,6 +184,9 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
                     .rsqlQuery(filter)
                     .propertyPathMapper(fieldMappings)
                     .customPredicates(customPredicates)
+                    // prevents wildcard parsing for string equality operator
+                    // so that "name==John*" is treated as: name equals 'John*'
+                    // rather than: name starts with 'John'
                     .strictEquality(true)
                     .build();;
             return RSQLJPASupport.toSpecification(querySupport);
