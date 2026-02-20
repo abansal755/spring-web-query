@@ -1,10 +1,20 @@
 name: Release
 on:
     workflow_dispatch:
+        inputs:
+            version:
+                required: true
+                description: "Release version (example: 0.0.3)"
+            nextMainVersion:
+                required: true
+                description: "Next main version (example: 0.0.4-SNAPSHOT)"
+
+permissions:
+    contents: write
+    pull-requests: write
 
 jobs:
     release:
-        if: startsWith(github.ref, 'refs/heads/release/')
         runs-on: ubuntu-latest
         
         steps:
@@ -22,7 +32,30 @@ jobs:
                 server-password: MAVEN_CENTRAL_PASSWORD
                 gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
                 gpg-passphrase: GPG_PASSPHRASE
+
+            - name: Configure git identity
+              run: |
+                git config user.name "github-actions[bot]"
+                git config user.email "github-actions[bot]@users.noreply.github.com"
                 
+            - name: Create release branch
+              run: |
+                git checkout -b release/${{ inputs.version }}
+            
+            - name: Set versions of packages
+              run: |
+                cd ${{ github.workspace }}/spring-web-query-core
+                mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
+
+                cd ${{ github.workspace }}/spring-boot-starter-web-query
+                mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
+                mvn -ntp versions:use-dep-version -Dincludes=in.co.akshitbansal:spring-web-query-core -DdepVersion=${{ inputs.version }} -DforceVersion=true -DgenerateBackupPoms=false
+
+            - name: Commit changes
+              run: |
+                git add spring-web-query-core/pom.xml spring-boot-starter-web-query/pom.xml
+                git commit -m "Changed versions to ${{ inputs.version }}"
+
             - name: Release core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
               run: mvn -B clean deploy -Prelease
@@ -38,3 +71,31 @@ jobs:
                 GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                 MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
                 MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+
+            - name: Push commit and tag
+              run: |
+                git push origin release/${{ inputs.version }}
+                git tag -a ${{ inputs.version }} -m "Relase ${{ inputs.version }}"
+                git push origin ${{ inputs.version }}
+
+            - name: Change versions in main branch
+              run: |
+                git checkout main
+                
+                cd ${{ github.workspace }}/spring-web-query-core
+                mvn -ntp versions:set -DnewVersion=${{ inputs.nextMainVersion }} -DgenerateBackupPoms=false
+
+                cd ${{ github.workspace }}/spring-boot-starter-web-query
+                mvn -ntp versions:set -DnewVersion=${{ inputs.nextMainVersion }} -DgenerateBackupPoms=false
+                mvn -ntp versions:use-dep-version -Dincludes=in.co.akshitbansal:spring-web-query-core -DdepVersion=${{ inputs.nextMainVersion }} -DforceVersion=true -DgenerateBackupPoms=false
+
+            - name: Create PR
+              uses: peter-evans/create-pull-request@v8
+              with:
+                commit-message: Changed versions to ${{ inputs.nextMainVersion }}
+                branch: version-bump-${{ inputs.nextMainVersion }}
+                title: Changed versions to ${{ inputs.nextMainVersion }}
+                body: Automated version changes to ${{ inputs.nextMainVersion }} post [${{ inputs.version }} release](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ inputs.version }})
+                labels: automated,post-release
+                author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+                committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
