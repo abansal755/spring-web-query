@@ -144,14 +144,15 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         ComparisonOperator operator = node.getOperator();
 
         // Find if there exists a field mapping with original field name and throw error if use is not allowed
-        FieldMapping orginalFieldMapping = originalFieldMappings.get(fieldName);
-        if(orginalFieldMapping != null && !orginalFieldMapping.allowOriginalFieldName())
+        FieldMapping originalFieldMapping = originalFieldMappings.get(fieldName);
+        if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
             throw new QueryException(MessageFormat.format(
                     "Unknown field ''{0}''", fieldName
             ));
 
         // Find original field name if field mapping exists to correctly find the field
         FieldMapping fieldMapping = fieldMappings.get(fieldName);
+        String reqFieldName = fieldName; // Storing field name present in req for error messages
         if(fieldMapping != null) fieldName = fieldMapping.field();
 
         // Resolve the Field object from the entity class using reflection
@@ -162,7 +163,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
 
         // Throw exception if the field is not annotated as filterable
         if(filterable == null) throw new QueryException(MessageFormat.format(
-                "Filtering not allowed on field ''{0}''", fieldName
+                "Filtering not allowed on field ''{0}''", reqFieldName
         ));
 
         // Collect the set of allowed operators for this field from the annotation
@@ -185,7 +186,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
 
         // Throw exception if the provided operator is not in the allowed set
         if(!allowedOperators.contains(operator)) throw new QueryException(MessageFormat.format(
-                "Operator ''{0}'' not allowed on field ''{1}''", operator, fieldName
+                "Operator ''{0}'' not allowed on field ''{1}''", operator, reqFieldName
         ));
     }
 
