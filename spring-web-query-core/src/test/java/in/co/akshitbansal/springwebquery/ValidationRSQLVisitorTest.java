@@ -4,7 +4,8 @@ import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
@@ -42,8 +43,8 @@ class ValidationRSQLVisitorTest {
     @Test
     void visit_rejectsUnknownField() {
         ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntity.class, new FieldMapping[]{}, Collections.emptySet());
-        QueryException ex = assertThrows(
-                QueryException.class,
+        QueryValidationException ex = assertThrows(
+                QueryValidationException.class,
                 () -> parser.parse("missing==x").accept(visitor)
         );
         assertEquals("Unknown field 'missing'", ex.getMessage());
@@ -52,8 +53,8 @@ class ValidationRSQLVisitorTest {
     @Test
     void visit_rejectsNonFilterableField() {
         ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntity.class, new FieldMapping[]{}, Collections.emptySet());
-        QueryException ex = assertThrows(
-                QueryException.class,
+        QueryValidationException ex = assertThrows(
+                QueryValidationException.class,
                 () -> parser.parse("age==10").accept(visitor)
         );
         assertEquals("Filtering not allowed on field 'age'", ex.getMessage());
@@ -62,8 +63,8 @@ class ValidationRSQLVisitorTest {
     @Test
     void visit_rejectsDisallowedOperator() {
         ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntity.class, new FieldMapping[]{}, Collections.emptySet());
-        QueryException ex = assertThrows(
-                QueryException.class,
+        QueryValidationException ex = assertThrows(
+                QueryValidationException.class,
                 () -> parser.parse("name!=john").accept(visitor)
         );
         assertEquals("Operator '!=' not allowed on field 'name'", ex.getMessage());
@@ -81,8 +82,8 @@ class ValidationRSQLVisitorTest {
         Set<RsqlCustomOperator<?>> customOperators = Set.of(new MockCustomOperator());
         ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntityWithCustom.class, new FieldMapping[]{}, Collections.emptySet());
         RSQLParser customParser = configuredParser(customOperators);
-        QueryException ex = assertThrows(
-                QueryException.class,
+        QueryConfigurationException ex = assertThrows(
+                QueryConfigurationException.class,
                 () -> customParser.parse("name=mock=value").accept(visitor)
         );
         assertEquals("Custom operator 'MockCustomOperator' referenced in @RsqlFilterable is not registered", ex.getMessage());

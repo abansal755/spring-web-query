@@ -1,6 +1,5 @@
 package in.co.akshitbansal.springwebquery.util;
 
-import in.co.akshitbansal.springwebquery.exception.QueryException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -34,11 +33,11 @@ class ReflectionUtilTest {
 
     @Test
     void resolveField_throwsForUnknownSegment() {
-        QueryException ex = assertThrows(
-                QueryException.class,
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
                 () -> ReflectionUtil.resolveField(ParentEntity.class, "children.unknown")
         );
-        assertEquals("Unknown field 'unknown'", ex.getMessage());
+        assertEquals("Field 'unknown' not found in class hierarchy of class in.co.akshitbansal.springwebquery.util.ReflectionUtilTest$NestedEntity", ex.getMessage());
     }
 
     private static class BaseEntity {

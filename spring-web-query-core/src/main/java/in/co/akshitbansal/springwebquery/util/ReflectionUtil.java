@@ -87,8 +87,8 @@ public class ReflectionUtil {
                 current = current.getSuperclass();
             }
         }
-        throw new QueryException(MessageFormat.format(
-                "Unknown field ''{0}''", name
+        throw new RuntimeException(MessageFormat.format(
+                "Field ''{0}'' not found in class hierarchy of {1}", name, type
         ));
     }
 

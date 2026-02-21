@@ -3,7 +3,9 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
@@ -123,8 +125,9 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      * @param comparisonNode the comparison node
      * @param unused         unused parameter
      * @return null
-     * @throws QueryException if the field does not exist, is not filterable,
+     * @throws QueryValidationException if the field does not exist, is not filterable,
      *                       or the operator is not allowed
+     * @throws QueryConfigurationException if a custom operator or field mapping is misconfigured
      */
     @Override
     public Void visit(ComparisonNode comparisonNode, Void unused) {
@@ -136,7 +139,8 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      * Validates a comparison node against the entity class.
      *
      * @param node the comparison node to validate
-     * @throws QueryException if the field is not allowed or operator is invalid
+     * @throws QueryValidationException if the field is not allowed or operator is invalid
+     * @throws QueryConfigurationException if the field mapping is misconfigured
      */
     private void validate(ComparisonNode node) {
         // Extract the field name and operator from the RSQL node
@@ -146,7 +150,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         // Find if there exists a field mapping with original field name and throw error if use is not allowed
         FieldMapping originalFieldMapping = originalFieldMappings.get(fieldName);
         if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
-            throw new QueryException(MessageFormat.format(
+            throw new QueryValidationException(MessageFormat.format(
                     "Unknown field ''{0}''", fieldName
             ));
 
@@ -156,13 +160,21 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         if(fieldMapping != null) fieldName = fieldMapping.field();
 
         // Resolve the Field object from the entity class using reflection
-        Field field = ReflectionUtil.resolveField(entityClass, fieldName);
+        Field field;
+        try {
+            field = ReflectionUtil.resolveField(entityClass, fieldName);
+        }
+        catch (Exception ex) {
+            throw new QueryValidationException(MessageFormat.format(
+                    "Unknown field ''{0}''", fieldName
+            ), ex);
+        }
 
         // Retrieve the RsqlFilterable annotation on the field (if present)
         RsqlFilterable filterable = field.getAnnotation(RsqlFilterable.class);
 
         // Throw exception if the field is not annotated as filterable
-        if(filterable == null) throw new QueryException(MessageFormat.format(
+        if(filterable == null) throw new QueryValidationException(MessageFormat.format(
                 "Filtering not allowed on field ''{0}''", reqFieldName
         ));
 
@@ -185,7 +197,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
                 .collect(Collectors.toSet());
 
         // Throw exception if the provided operator is not in the allowed set
-        if(!allowedOperators.contains(operator)) throw new QueryException(MessageFormat.format(
+        if(!allowedOperators.contains(operator)) throw new QueryValidationException(MessageFormat.format(
                 "Operator ''{0}'' not allowed on field ''{1}''", operator, reqFieldName
         ));
     }
@@ -195,11 +207,11 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      *
      * @param clazz the custom operator class to look up
      * @return the registered custom operator instance
-     * @throws QueryException if the custom operator class is not registered
+     * @throws QueryConfigurationException if the custom operator class is not registered
      */
     private RsqlCustomOperator<?> getCustomOperator(Class<?> clazz) {
         RsqlCustomOperator<?> operator = customOperators.get(clazz);
-        if(operator == null) throw new QueryException(MessageFormat.format(
+        if(operator == null) throw new QueryConfigurationException(MessageFormat.format(
                 "Custom operator ''{0}'' referenced in @RsqlFilterable is not registered", clazz.getSimpleName()
         ));
         return operator;

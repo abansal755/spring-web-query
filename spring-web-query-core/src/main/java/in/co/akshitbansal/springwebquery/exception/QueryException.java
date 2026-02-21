@@ -1,30 +1,28 @@
 package in.co.akshitbansal.springwebquery.exception;
 
-import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 
 /**
- * Exception thrown when an RSQL query or pagination request violates
- * configured field or operator restrictions.
+ * Base exception thrown for all RSQL query or pagination related errors.
  * <p>
- * This exception is typically thrown in the following scenarios:
+ * This class serves as the parent for more specific exceptions that distinguish
+ * between client-side validation errors and developer-side configuration errors:
+ * </p>
  * <ul>
- *     <li>A query attempts to filter on a field not annotated with
- *         {@link RsqlFilterable}</li>
- *     <li>A query uses a default or custom operator not allowed for a specific field</li>
- *     <li>A query uses original field name when the behavior is disabled via {@link FieldMapping#allowOriginalFieldName()}</li>
- *     <li>A sort request targets a field not annotated with
- *         {@link Sortable}</li>
- *     <li>A field referenced in a query does not exist on the entity</li>
- *     <li>A custom operator referenced in {@link RsqlFilterable} is not registered</li>
- *     <li>The RSQL query syntax is malformed or cannot be parsed</li>
+ *     <li>{@link QueryValidationException}: Thrown when an API consumer provides
+ *         an invalid query or violates validation rules (e.g., malformed RSQL,
+ *         disallowed operators, non-filterable fields).</li>
+ *     <li>{@link QueryConfigurationException}: Thrown when the library or
+ *         entity mapping is misconfigured by the developer (e.g., unregistered
+ *         custom operators).</li>
  * </ul>
  *
- * <p>This is a runtime exception and is intended to be caught and handled
- * at the controller or advice layer to provide meaningful error responses
- * to API clients.</p>
+ * <p>Using this base exception in a controller advice or catch block allows
+ * handling all query-related errors in a unified manner.</p>
  *
+ * @see QueryValidationException
+ * @see QueryConfigurationException
  * @see RsqlFilterable
  * @see Sortable
  */

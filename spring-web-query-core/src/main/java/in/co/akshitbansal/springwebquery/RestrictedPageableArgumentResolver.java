@@ -2,7 +2,7 @@ package in.co.akshitbansal.springwebquery;
 
 import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ import java.text.MessageFormat;
  * on fields explicitly annotated with {@link Sortable}.
  * <p>
  * If a requested sort field is not annotated as {@link Sortable}, a
- * {@link QueryException} is thrown.
+ * {@link QueryValidationException} is thrown.
  */
 @RequiredArgsConstructor
 public class RestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
@@ -73,7 +73,7 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
      *     <li>Delegate parsing of page, size, and sort parameters to {@link #delegate}.</li>
      *     <li>Retrieve the target entity class from the {@link RestrictedPageable} annotation.</li>
      *     <li>Validate each requested {@link Sort.Order} against the entity's sortable fields.
-     *     If a field is not annotated with {@link Sortable}, a {@link QueryException} is thrown.</li>
+     *     If a field is not annotated with {@link Sortable}, a {@link QueryValidationException} is thrown.</li>
      * </ol>
      *
      * @param methodParameter the method parameter for which the value should be resolved
@@ -81,7 +81,7 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
      * @param webRequest the current request
      * @param binderFactory a factory for creating WebDataBinder instances (can be {@code null})
      * @return a {@link Pageable} object containing page, size, and validated sort information
-     * @throws QueryException if any requested sort field is not marked as {@link Sortable}
+     * @throws QueryValidationException if any requested sort field is not marked as {@link Sortable}
      */
     @Override
     public Pageable resolveArgument(
@@ -101,10 +101,18 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
         for(Sort.Order order : pageable.getSort()) {
             String fieldName = order.getProperty();
             // Resolve the field on the entity (including inherited fields)
-            Field field = ReflectionUtil.resolveField(entityClass, fieldName);
+            Field field;
+            try {
+                field = ReflectionUtil.resolveField(entityClass, fieldName);
+            }
+            catch (Exception ex) {
+                throw new QueryValidationException(MessageFormat.format(
+                        "Unknown field ''{0}''", fieldName
+                ), ex);
+            }
             // Reject sorting on fields not explicitly marked as sortable
             if(!field.isAnnotationPresent(Sortable.class))
-                throw new QueryException(MessageFormat.format("Sorting is not allowed on the field ''{0}''", fieldName));
+                throw new QueryValidationException(MessageFormat.format("Sorting is not allowed on the field ''{0}''", fieldName));
         }
 
         return pageable;

@@ -8,6 +8,7 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import io.github.perplexhub.rsql.QuerySupport;
@@ -144,7 +145,7 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
      * @param binderFactory the data binder factory
      * @return a {@link Specification} representing the RSQL query,
      *         or an unrestricted Specification if the query is absent
-     * @throws QueryException if the RSQL query is invalid or violates
+     * @throws QueryValidationException if the RSQL query is invalid or violates
      *                       {@link RsqlFilterable} constraints
      */
     @Override
@@ -192,10 +193,7 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
             return RSQLJPASupport.toSpecification(querySupport);
         }
         catch (RSQLParserException ex) {
-            throw new QueryException("Unable to parse rsql query param", ex);
-        }
-        catch (QueryException ex) {
-            throw ex;
+            throw new QueryValidationException("Unable to parse rsql query param", ex);
         }
     }
 }
