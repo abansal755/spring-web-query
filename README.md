@@ -223,16 +223,37 @@ api.pagination.max-page-size=500
 
 ## Error Handling
 
-The library throws a `QueryException` when security or syntax rules are violated:
+The library provides a hierarchy of exceptions to distinguish between client-side validation errors and developer-side configuration issues. All exceptions extend the base `QueryException`.
 
-- Filtering on a non-`@RsqlFilterable` field.
-- Using a restricted operator on a field.
-- Sorting on a non-`@Sortable` field.
-- Invalid RSQL syntax.
+### Exception Hierarchy
+
+- **`QueryValidationException`**: Thrown when an API consumer provides invalid input. These should typically be returned as a `400 Bad Request`.
+  - Filtering on a non-`@RsqlFilterable` field.
+  - Using a disallowed operator on a field.
+  - Sorting on a non-`@Sortable` field.
+  - Using an original field name when a mapping alias is required (`allowOriginalFieldName = false`).
+  - Malformed RSQL syntax.
+- **`QueryConfigurationException`**: Thrown when the library or entity mapping is misconfigured by the developer. These should typically be treated as a `500 Internal Server Error`.
+  - Custom operators referenced in `@RsqlFilterable` that are not registered.
+  - Field mappings pointing to non-existent fields on the entity.
+
+### Handling Exceptions
 
 ```java
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(QueryValidationException.class)
+    public ResponseEntity<String> handleValidationException(QueryValidationException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(QueryConfigurationException.class)
+    public ResponseEntity<String> handleConfigurationException(QueryConfigurationException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal configuration error");
+    }
+
+    // Alternatively, catch the base exception for unified handling
     @ExceptionHandler(QueryException.class)
     public ResponseEntity<String> handleQueryException(QueryException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
