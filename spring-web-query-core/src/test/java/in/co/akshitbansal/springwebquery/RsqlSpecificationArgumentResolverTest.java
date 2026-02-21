@@ -4,7 +4,7 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
@@ -59,7 +59,7 @@ class RsqlSpecificationArgumentResolverTest {
         MethodParameter parameter = new MethodParameter(method, 0);
         NativeWebRequest webRequest = requestWithFilter("name==");
 
-        assertThrows(QueryException.class, () -> resolver.resolveArgument(parameter, null, webRequest, null));
+        assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(parameter, null, webRequest, null));
     }
 
     @Test
@@ -77,7 +77,7 @@ class RsqlSpecificationArgumentResolverTest {
         MethodParameter parameter = new MethodParameter(method, 0);
         NativeWebRequest webRequest = requestWithFilter("name==john");
 
-        assertThrows(QueryException.class, () -> resolver.resolveArgument(parameter, null, webRequest, null));
+        assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(parameter, null, webRequest, null));
     }
 
     @Test

@@ -2,7 +2,7 @@ package in.co.akshitbansal.springwebquery;
 
 import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;
@@ -13,10 +13,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 
 import java.lang.reflect.Method;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RestrictedPageableArgumentResolverTest {
 
@@ -55,7 +52,7 @@ class RestrictedPageableArgumentResolverTest {
         MethodParameter parameter = new MethodParameter(method, 0);
         NativeWebRequest request = requestWithSort("secret,desc");
 
-        assertThrows(QueryException.class, () -> resolver.resolveArgument(parameter, null, request, null));
+        assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(parameter, null, request, null));
     }
 
     private static NativeWebRequest requestWithSort(String sort) {
