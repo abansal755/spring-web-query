@@ -21,7 +21,8 @@ public class RestrictedPageableAutoConfig implements WebMvcConfigurer {
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(restrictedPageableArgumentResolver());
+        // Ensure this resolver is checked before Spring Data's default Pageable resolver.
+        resolvers.addFirst(restrictedPageableArgumentResolver());
     }
 
     @Bean

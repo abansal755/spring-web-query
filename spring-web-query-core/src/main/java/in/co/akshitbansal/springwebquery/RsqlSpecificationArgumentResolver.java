@@ -7,17 +7,15 @@ import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
-import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import io.github.perplexhub.rsql.RSQLJPASupport;
-import jakarta.persistence.criteria.Predicate;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -25,8 +23,10 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.*;
-import java.util.function.Function;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,6 +38,7 @@ import java.util.stream.Stream;
  * This resolver enables transparent usage of RSQL queries in controller methods.
  * When a request contains an RSQL query parameter, the resolver:
  * <ol>
+ *     <li>Resolves entity metadata and aliases from {@link WebQuery} on the controller method</li>
  *     <li>Parses the RSQL query string into an AST</li>
  *     <li>Validates the AST against the target entity using {@link ValidationRSQLVisitor}</li>
  *     <li>Converts the validated query into a {@link Specification} using
@@ -50,8 +51,9 @@ import java.util.stream.Stream;
  * <p><b>Example controller usage:</b></p>
  * <pre>{@code
  * @GetMapping("/users")
+ * @WebQuery(entityClass = User.class)
  * public List<User> search(
- *     @RsqlSpec(entityClass = User.class) Specification<User> spec
+ *     @RsqlSpec Specification<User> spec
  * ) {
  *     return userRepository.findAll(spec);
  * }
@@ -136,8 +138,9 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
      * Resolves the controller method argument into a {@link Specification}.
      * <p>
      * The RSQL query is read from the request parameter defined by
-     * {@link RsqlSpec#paramName()}. The query is then parsed, validated,
-     * and converted into a JPA {@link Specification}.
+     * {@link RsqlSpec#paramName()}. Entity metadata and alias mappings are read
+     * from {@link WebQuery} on the same controller method. The query is then
+     * parsed, validated, and converted into a JPA {@link Specification}.
      *
      * @param parameter     the method parameter to resolve
      * @param mavContainer  the model and view container
@@ -157,7 +160,14 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
     )
     {
         try {
-            // Retrieve the @RsqlSpec annotation to access configuration
+            // Retrieve the @WebQuery annotation from the method parameter to access entity and field mapping configuration
+            WebQuery webQueryAnnotation = AnnotationUtil.resolveWebQueryFromParameter(parameter);
+
+            // Extract entity class and field mappings from the @WebQuery annotation
+            Class<?> entityClass = webQueryAnnotation.entityClass();
+            FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
+
+            // Retrieve the @RsqlSpec annotation from the method parameter to access parameter-specific configuration
             RsqlSpec annotation = parameter.getParameterAnnotation(RsqlSpec.class);
             // Extract the RSQL query string from the request using the configured parameter name
             String filter = webRequest.getParameter(annotation.paramName());
@@ -168,28 +178,28 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
             Node root = rsqlParser.parse(filter);
             // Validate the parsed AST against the target entity and its @RsqlFilterable fields
             ValidationRSQLVisitor validationVisitor = new ValidationRSQLVisitor(
-                    annotation.entityClass(),
-                    annotation.fieldMappings(),
+                    entityClass,
+                    fieldMappings,
                     customOperators
             );
             root.accept(validationVisitor);
 
             // Convert field mappings to aliases map which rsql jpa support library accepts
-            Map<String, String> fieldMappings = Arrays
-                    .stream(annotation.fieldMappings())
+            Map<String, String> fieldMappingsMap = Arrays
+                    .stream(fieldMappings)
                     .collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
 
             // Convert the validated RSQL query into a JPA Specification
             QuerySupport querySupport = QuerySupport
                     .builder()
                     .rsqlQuery(filter)
-                    .propertyPathMapper(fieldMappings)
+                    .propertyPathMapper(fieldMappingsMap)
                     .customPredicates(customPredicates)
                     // prevents wildcard parsing for string equality operator
                     // so that "name==John*" is treated as: name equals 'John*'
                     // rather than: name starts with 'John'
                     .strictEquality(true)
-                    .build();;
+                    .build();
             return RSQLJPASupport.toSpecification(querySupport);
         }
         catch (RSQLParserException ex) {

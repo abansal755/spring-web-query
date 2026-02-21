@@ -36,7 +36,7 @@ import java.util.stream.Stream;
  * <p><b>Usage example:</b></p>
  * <pre>{@code
  * Node root = new RSQLParser().parse("status==ACTIVE;age>30");
- * new ValidationRSQLVisitor(User.class).visit(root);
+ * new ValidationRSQLVisitor(User.class, new FieldMapping[0], Set.of()).visit(root);
  * }</pre>
  *
  * <p>This visitor is typically used in combination with
@@ -166,7 +166,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         }
         catch (Exception ex) {
             throw new QueryValidationException(MessageFormat.format(
-                    "Unknown field ''{0}''", fieldName
+                    "Unknown field ''{0}''", reqFieldName
             ), ex);
         }
 

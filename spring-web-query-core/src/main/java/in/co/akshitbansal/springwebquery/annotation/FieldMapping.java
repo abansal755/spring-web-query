@@ -5,25 +5,27 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Defines a mapping between a query parameter field name and an actual entity field name.
+ * Defines a mapping between an API-facing field name and an actual entity field name.
  * <p>
- * This annotation is used within {@link RsqlSpec#fieldMappings()} to create aliases
- * for entity fields in RSQL queries. It allows clients to use simpler or more
- * intuitive names in query strings while mapping them to the actual field names on
- * the entity.
+ * This annotation is used within {@link WebQuery#fieldMappings()} to create aliases
+ * for entity fields in filtering and sorting requests. It allows clients to use
+ * simpler or more intuitive names while mapping them to the actual field names
+ * on the entity.
  * </p>
  *
  * <p><b>Example usage:</b></p>
  * <pre>{@code
  * @GetMapping("/users")
+ * @WebQuery(
+ *     entityClass = User.class,
+ *     fieldMappings = {
+ *         @FieldMapping(name = "id", field = "userId"),
+ *         @FieldMapping(name = "fullName", field = "profile.name")
+ *     }
+ * )
  * public List<User> search(
- *     @RsqlSpec(
- *         entityClass = User.class,
- *         fieldMappings = {
- *             @FieldMapping(name = "id", field = "userId"),
- *             @FieldMapping(name = "fullName", field = "profile.name")
- *         }
- *     ) Specification<User> spec
+ *     @RsqlSpec Specification<User> spec,
+ *     @RestrictedPageable Pageable pageable
  * ) {
  *     return userRepository.findAll(spec);
  * }
@@ -33,14 +35,14 @@ import java.lang.annotation.Target;
  * in their RSQL queries, which will be translated to {@code userId==123} and
  * {@code profile.name==John} respectively.</p>
  *
- * @see RsqlSpec
+ * @see WebQuery
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({})
 public @interface FieldMapping {
 
     /**
-     * The alias name to use in RSQL query strings.
+     * The alias name to use in API query strings.
      * <p>
      * This is the name that clients will use when constructing their queries.
      * </p>
@@ -64,8 +66,8 @@ public @interface FieldMapping {
      * Whether to allow the use of the original field name in addition to the alias.
      * <p>
      * When {@code false} (default), only the alias name defined in {@link #name()}
-     * can be used in queries. When {@code true}, both the alias and the original
-     * field name are allowed.
+     * can be used in filter and sort expressions. When {@code true}, both the alias
+     * and the original field name are allowed.
      * </p>
      *
      * @return {@code true} if the original field name should remain usable,
