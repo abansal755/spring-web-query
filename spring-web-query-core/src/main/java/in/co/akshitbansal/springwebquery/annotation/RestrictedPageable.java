@@ -7,7 +7,9 @@ import java.lang.annotation.*;
  * as subject to field-level sorting restrictions.
  *
  * <p>When applied, the pageable argument is validated so that sorting is only
- * allowed on entity fields explicitly annotated with {@link Sortable}.</p>
+ * allowed on entity fields explicitly annotated with {@link Sortable}. Entity
+ * metadata and alias mappings are resolved from {@link WebQuery} on the same
+ * controller method.</p>
  *
  * <p>This annotation does <strong>not</strong> affect pagination parameters
  * such as page number or page size. It only governs which fields may be used
@@ -21,8 +23,9 @@ import java.lang.annotation.*;
  *
  * <pre>{@code
  * @GetMapping
+ * @WebQuery(entityClass = User.class)
  * public Page<User> search(
- *     @RestrictedPageable(entityClass = User.class) Pageable pageable
+ *     @RestrictedPageable Pageable pageable
  * ) {
  *     ...
  * }

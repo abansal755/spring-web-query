@@ -8,8 +8,19 @@ import org.springframework.core.MethodParameter;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 
+/**
+ * Utility methods for resolving query-related annotations from controller metadata.
+ */
 public class AnnotationUtil {
 
+    /**
+     * Resolves {@link WebQuery} from the controller method that declares the
+     * provided Spring MVC method parameter.
+     *
+     * @param parameter controller method parameter currently being resolved
+     * @return resolved {@link WebQuery} annotation
+     * @throws QueryConfigurationException if the method cannot be resolved or is not annotated with {@link WebQuery}
+     */
     public static WebQuery resolveWebQueryFromParameter(@NonNull MethodParameter parameter) {
         // Retrieve the controller method
         Method controllerMethod = parameter.getMethod();
@@ -22,7 +33,7 @@ public class AnnotationUtil {
         // Ensure that the method is annotated with @WebQuery to access query configuration
         if(webQueryAnnotation == null)
             throw new QueryConfigurationException(MessageFormat.format(
-                    "Controller method {0} must be annotated with @WebQuery to use @RsqlSpec parameters",
+                    "Controller method {0} must be annotated with @WebQuery to use query argument resolvers",
                     controllerMethod
             ));
         return webQueryAnnotation;

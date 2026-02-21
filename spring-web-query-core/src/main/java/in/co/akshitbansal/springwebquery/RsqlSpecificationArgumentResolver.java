@@ -38,6 +38,7 @@ import java.util.stream.Stream;
  * This resolver enables transparent usage of RSQL queries in controller methods.
  * When a request contains an RSQL query parameter, the resolver:
  * <ol>
+ *     <li>Resolves entity metadata and aliases from {@link WebQuery} on the controller method</li>
  *     <li>Parses the RSQL query string into an AST</li>
  *     <li>Validates the AST against the target entity using {@link ValidationRSQLVisitor}</li>
  *     <li>Converts the validated query into a {@link Specification} using
@@ -50,8 +51,9 @@ import java.util.stream.Stream;
  * <p><b>Example controller usage:</b></p>
  * <pre>{@code
  * @GetMapping("/users")
+ * @WebQuery(entityClass = User.class)
  * public List<User> search(
- *     @RsqlSpec(entityClass = User.class) Specification<User> spec
+ *     @RsqlSpec Specification<User> spec
  * ) {
  *     return userRepository.findAll(spec);
  * }
@@ -136,8 +138,9 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
      * Resolves the controller method argument into a {@link Specification}.
      * <p>
      * The RSQL query is read from the request parameter defined by
-     * {@link RsqlSpec#paramName()}. The query is then parsed, validated,
-     * and converted into a JPA {@link Specification}.
+     * {@link RsqlSpec#paramName()}. Entity metadata and alias mappings are read
+     * from {@link WebQuery} on the same controller method. The query is then
+     * parsed, validated, and converted into a JPA {@link Specification}.
      *
      * @param parameter     the method parameter to resolve
      * @param mavContainer  the model and view container

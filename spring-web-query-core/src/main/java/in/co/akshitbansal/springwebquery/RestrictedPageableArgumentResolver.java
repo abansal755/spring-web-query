@@ -40,8 +40,10 @@ import java.util.stream.Collectors;
  * The resolver delegates the initial parsing of {@code page}, {@code size},
  * and {@code sort} parameters to Spring's {@link PageableHandlerMethodArgumentResolver}.
  * It then validates each requested {@link Sort.Order} against the target entity class
- * specified in the {@link RestrictedPageable} annotation. Sorting is only allowed
+ * specified in {@link WebQuery} on the controller method. Sorting is only allowed
  * on fields explicitly annotated with {@link Sortable}.
+ * Alias mappings from {@link WebQuery#fieldMappings()} are also applied so API-facing
+ * sort names can be rewritten to entity field paths.
  * <p>
  * If a requested sort field is not annotated as {@link Sortable}, a
  * {@link QueryValidationException} is thrown.
@@ -79,16 +81,18 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
      * The process is as follows:
      * <ol>
      *     <li>Delegate parsing of page, size, and sort parameters to {@link #delegate}.</li>
-     *     <li>Retrieve the target entity class from the {@link RestrictedPageable} annotation.</li>
+     *     <li>Resolve {@link WebQuery} metadata from the controller method.</li>
      *     <li>Validate each requested {@link Sort.Order} against the entity's sortable fields.
      *     If a field is not annotated with {@link Sortable}, a {@link QueryValidationException} is thrown.</li>
+     *     <li>Rewrite alias sort properties to real entity field paths using field mappings.</li>
      * </ol>
      *
      * @param methodParameter the method parameter for which the value should be resolved
      * @param mavContainer the ModelAndViewContainer (can be {@code null})
      * @param webRequest the current request
      * @param binderFactory a factory for creating WebDataBinder instances (can be {@code null})
-     * @return a {@link Pageable} object containing page, size, and validated sort information
+     * @return a {@link Pageable} object containing page, size, validated sort information,
+     *         and mapped sort field paths
      * @throws QueryValidationException if any requested sort field is not marked as {@link Sortable}
      */
     @Override
