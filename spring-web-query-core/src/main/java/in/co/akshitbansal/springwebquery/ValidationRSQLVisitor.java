@@ -166,7 +166,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         }
         catch (Exception ex) {
             throw new QueryValidationException(MessageFormat.format(
-                    "Unknown field ''{0}''", fieldName
+                    "Unknown field ''{0}''", reqFieldName
             ), ex);
         }
 

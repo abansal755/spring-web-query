@@ -1,12 +1,16 @@
 package in.co.akshitbansal.springwebquery;
 
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
+import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
+import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -17,6 +21,10 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A custom {@link HandlerMethodArgumentResolver} that wraps a standard
@@ -90,16 +98,38 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
             @NonNull NativeWebRequest webRequest,
             WebDataBinderFactory binderFactory
     ) {
+        // Resolve the @WebQuery annotation to access entity metadata for validation
+        WebQuery webQueryAnnotation = AnnotationUtil.resolveWebQueryFromParameter(methodParameter);
+        // Extract entity class and field mappings from the @WebQuery annotation
+        Class<?> entityClass = webQueryAnnotation.entityClass();
+        FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
+
+        // Create maps for quick lookup of field mappings by both API name and original field name
+        Map<String, FieldMapping> fieldMappingMap = Arrays
+                .stream(fieldMappings)
+                .collect(Collectors.toMap(FieldMapping::name, mapping -> mapping));
+        Map<String, FieldMapping> originalFieldNameMap = Arrays
+                .stream(fieldMappings)
+                .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
+
         // Delegate parsing of page, size and sort parameters to Spring
         Pageable pageable = delegate.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
-
-        // Retrieve annotation to determine the target entity
-        RestrictedPageable restrictedPageable = methodParameter.getParameterAnnotation(RestrictedPageable.class);
-        Class<?> entityClass = restrictedPageable.entityClass();
 
         // Validate each requested sort order against entity metadata
         for(Sort.Order order : pageable.getSort()) {
             String fieldName = order.getProperty();
+
+            // If the field name corresponds to an API alias that does not allow using the original field name, reject it
+            FieldMapping originalFieldMapping = originalFieldNameMap.get(fieldName);
+            if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
+                throw new QueryValidationException(MessageFormat.format(
+                        "Unknown field ''{0}''", fieldName
+                ));
+
+            FieldMapping fieldMapping = fieldMappingMap.get(fieldName);
+            String reqFieldName = fieldName; // Storing field name present in req for error messages
+            if(fieldMapping != null) fieldName = fieldMapping.field();
+
             // Resolve the field on the entity (including inherited fields)
             Field field;
             try {
@@ -107,14 +137,26 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
             }
             catch (Exception ex) {
                 throw new QueryValidationException(MessageFormat.format(
-                        "Unknown field ''{0}''", fieldName
+                        "Unknown field ''{0}''", reqFieldName
                 ), ex);
             }
             // Reject sorting on fields not explicitly marked as sortable
             if(!field.isAnnotationPresent(Sortable.class))
-                throw new QueryValidationException(MessageFormat.format("Sorting is not allowed on the field ''{0}''", fieldName));
+                throw new QueryValidationException(MessageFormat.format("Sorting is not allowed on the field ''{0}''", reqFieldName));
         }
 
-        return pageable;
+        List<Sort.Order> newOrders = pageable
+                .getSort()
+                .stream()
+                .map(order -> {
+                    String fieldName = order.getProperty();
+                    FieldMapping fieldMapping = fieldMappingMap.get(fieldName);
+                    if(fieldMapping != null) fieldName = fieldMapping.field();
+                    return new Sort.Order(order.getDirection(), fieldName);
+                })
+                .toList();
+        Sort sort = Sort.by(newOrders);
+        if(pageable.isUnpaged()) return Pageable.unpaged(sort);
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     }
 }

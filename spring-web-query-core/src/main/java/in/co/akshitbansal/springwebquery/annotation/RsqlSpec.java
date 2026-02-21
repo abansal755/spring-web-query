@@ -34,25 +34,6 @@ import java.lang.annotation.*;
 public @interface RsqlSpec {
 
     /**
-     * The entity class for which the Specification should be built.
-     * This class is used to validate the RSQL query fields and operators
-     * against the {@link RsqlFilterable} annotations.
-     *
-     * @return the target entity class
-     */
-    Class<?> entityClass();
-
-    /**
-     * Optional field mappings for aliasing entity fields.
-     * <p>
-     * Allows mapping query parameter field names (aliases) to actual entity field names.
-     * </p>
-     *
-     * @return an array of {@link FieldMapping} annotations
-     */
-    FieldMapping[] fieldMappings() default {};
-
-    /**
      * The name of the query parameter that contains the RSQL string.
      * Defaults to "filter".
      *

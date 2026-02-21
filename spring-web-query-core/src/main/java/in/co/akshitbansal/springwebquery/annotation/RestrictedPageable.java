@@ -33,14 +33,4 @@ import java.lang.annotation.*;
 @Documented
 public @interface RestrictedPageable {
 
-    /**
-     * Entity class whose fields define the set of properties
-     * that may be used for sorting.
-     *
-     * <p>Only fields annotated with {@link Sortable} on this entity
-     * are permitted in the {@code sort} request parameter.</p>
-     *
-     * @return the entity class used for sort validation
-     */
-    Class<?> entityClass();
 }
