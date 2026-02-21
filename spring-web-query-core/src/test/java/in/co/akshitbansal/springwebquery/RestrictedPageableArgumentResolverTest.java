@@ -1,7 +1,10 @@
 package in.co.akshitbansal.springwebquery;
 
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
+import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
@@ -47,12 +50,50 @@ class RestrictedPageableArgumentResolverTest {
     }
 
     @Test
+    void resolveArgument_rewritesMappedAliasField() throws NoSuchMethodException {
+        Method method = TestController.class.getDeclaredMethod("searchWithMapping", Pageable.class);
+        MethodParameter parameter = new MethodParameter(method, 0);
+        NativeWebRequest request = requestWithSort("displayName,asc");
+
+        Pageable pageable = resolver.resolveArgument(parameter, null, request, null);
+        assertEquals("name", pageable.getSort().iterator().next().getProperty());
+    }
+
+    @Test
     void resolveArgument_rejectsNonSortableField() throws NoSuchMethodException {
         Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
         MethodParameter parameter = new MethodParameter(method, 0);
         NativeWebRequest request = requestWithSort("secret,desc");
 
         assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(parameter, null, request, null));
+    }
+
+    @Test
+    void resolveArgument_rejectsOriginalMappedFieldWhenNotAllowed() throws NoSuchMethodException {
+        Method method = TestController.class.getDeclaredMethod("searchWithMapping", Pageable.class);
+        MethodParameter parameter = new MethodParameter(method, 0);
+        NativeWebRequest request = requestWithSort("name,asc");
+
+        assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(parameter, null, request, null));
+    }
+
+    @Test
+    void resolveArgument_allowsOriginalMappedFieldWhenAllowed() throws NoSuchMethodException {
+        Method method = TestController.class.getDeclaredMethod("searchWithMappingAllowOriginal", Pageable.class);
+        MethodParameter parameter = new MethodParameter(method, 0);
+        NativeWebRequest request = requestWithSort("name,asc");
+
+        Pageable pageable = resolver.resolveArgument(parameter, null, request, null);
+        assertEquals("name", pageable.getSort().iterator().next().getProperty());
+    }
+
+    @Test
+    void resolveArgument_rejectsWhenWebQueryMissing() throws NoSuchMethodException {
+        Method method = TestController.class.getDeclaredMethod("searchWithoutWebQuery", Pageable.class);
+        MethodParameter parameter = new MethodParameter(method, 0);
+        NativeWebRequest request = requestWithSort("name,asc");
+
+        assertThrows(QueryConfigurationException.class, () -> resolver.resolveArgument(parameter, null, request, null));
     }
 
     private static NativeWebRequest requestWithSort(String sort) {
@@ -63,16 +104,37 @@ class RestrictedPageableArgumentResolverTest {
 
     @SuppressWarnings("unused")
     private static class TestController {
-        void search(@RestrictedPageable(entityClass = SortEntity.class) Pageable pageable) {
+
+        @WebQuery(entityClass = SortEntity.class)
+        void search(@RestrictedPageable Pageable pageable) {
         }
 
         void searchWithoutAnnotation(Pageable pageable) {
         }
+
+        @WebQuery(
+                entityClass = SortEntity.class,
+                fieldMappings = {@FieldMapping(name = "displayName", field = "name")}
+        )
+        void searchWithMapping(@RestrictedPageable Pageable pageable) {
+        }
+
+        @WebQuery(
+                entityClass = SortEntity.class,
+                fieldMappings = {@FieldMapping(name = "displayName", field = "name", allowOriginalFieldName = true)}
+        )
+        void searchWithMappingAllowOriginal(@RestrictedPageable Pageable pageable) {
+        }
+
+        void searchWithoutWebQuery(@RestrictedPageable Pageable pageable) {
+        }
     }
 
     private static class SortEntity {
+
         @Sortable
         private String name;
+
         private String secret;
     }
 }

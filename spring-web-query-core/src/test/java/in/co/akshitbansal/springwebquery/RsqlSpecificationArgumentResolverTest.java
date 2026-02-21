@@ -4,6 +4,8 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
+import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
@@ -50,7 +52,8 @@ class RsqlSpecificationArgumentResolverTest {
         Method method = TestController.class.getDeclaredMethod("search", Specification.class);
         MethodParameter parameter = new MethodParameter(method, 0);
 
-        resolver.resolveArgument(parameter, null, emptyRequest(), null);
+        Specification<?> spec = resolver.resolveArgument(parameter, null, emptyRequest(), null);
+        assertNotNull(spec);
     }
 
     @Test
@@ -102,6 +105,25 @@ class RsqlSpecificationArgumentResolverTest {
         resolverWithCustom.resolveArgument(parameter, null, webRequest, null);
     }
 
+    @Test
+    void resolveArgument_usesCustomParameterName() throws NoSuchMethodException {
+        Method method = TestController.class.getDeclaredMethod("searchWithCustomParam", Specification.class);
+        MethodParameter parameter = new MethodParameter(method, 0);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("q", "name==john");
+
+        resolver.resolveArgument(parameter, null, new ServletWebRequest(request), null);
+    }
+
+    @Test
+    void resolveArgument_rejectsWhenWebQueryMissing() throws NoSuchMethodException {
+        Method method = TestController.class.getDeclaredMethod("searchWithoutWebQuery", Specification.class);
+        MethodParameter parameter = new MethodParameter(method, 0);
+        NativeWebRequest webRequest = requestWithFilter("name==john");
+
+        assertThrows(QueryConfigurationException.class, () -> resolver.resolveArgument(parameter, null, webRequest, null));
+    }
+
     private static NativeWebRequest emptyRequest() {
         return new ServletWebRequest(new MockHttpServletRequest());
     }
@@ -132,38 +154,53 @@ class RsqlSpecificationArgumentResolverTest {
 
     @SuppressWarnings("unused")
     private static class TestController {
-        void search(@RsqlSpec(entityClass = TestEntity.class) Specification<TestEntity> specification) {
+
+        @WebQuery(entityClass = TestEntity.class)
+        void search(@RsqlSpec Specification<TestEntity> specification) {
         }
 
         void searchWithoutAnnotation(Specification<TestEntity> specification) {
         }
 
-        void searchWithMapping(@RsqlSpec(
+        @WebQuery(
                 entityClass = TestEntity.class,
                 fieldMappings = {
                         @FieldMapping(name = "displayName", field = "name")
                 }
-        ) Specification<TestEntity> specification) {
+        )
+        void searchWithMapping(@RsqlSpec Specification<TestEntity> specification) {
         }
 
-        void searchWithMappingAllowOriginal(@RsqlSpec(
+        @WebQuery(
                 entityClass = TestEntity.class,
                 fieldMappings = {
                         @FieldMapping(name = "displayName", field = "name", allowOriginalFieldName = true)
                 }
-        ) Specification<TestEntity> specification) {
+        )
+        void searchWithMappingAllowOriginal(@RsqlSpec Specification<TestEntity> specification) {
         }
 
-        void searchWithCustom(@RsqlSpec(entityClass = TestEntityWithCustom.class) Specification<TestEntityWithCustom> specification) {
+        @WebQuery(entityClass = TestEntityWithCustom.class)
+        void searchWithCustom(@RsqlSpec Specification<TestEntityWithCustom> specification) {
+        }
+
+        @WebQuery(entityClass = TestEntity.class)
+        void searchWithCustomParam(@RsqlSpec(paramName = "q") Specification<TestEntity> specification) {
+        }
+
+        void searchWithoutWebQuery(@RsqlSpec Specification<TestEntity> specification) {
         }
     }
 
     private static class TestEntity {
+
         @RsqlFilterable(operators = {RsqlOperator.EQUAL})
+
         private String name;
     }
 
     private static class TestEntityWithCustom {
+
         @RsqlFilterable(operators = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }

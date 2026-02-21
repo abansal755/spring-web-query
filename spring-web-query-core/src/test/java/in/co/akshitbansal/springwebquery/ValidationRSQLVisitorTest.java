@@ -71,6 +71,40 @@ class ValidationRSQLVisitorTest {
     }
 
     @Test
+    void visit_allowsMappedAliasField() {
+        ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(
+                TestEntity.class,
+                new FieldMapping[]{mapping("displayName", "name", false)},
+                Collections.emptySet()
+        );
+        parser.parse("displayName==john").accept(visitor);
+    }
+
+    @Test
+    void visit_rejectsOriginalMappedFieldWhenNotAllowed() {
+        ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(
+                TestEntity.class,
+                new FieldMapping[]{mapping("displayName", "name", false)},
+                Collections.emptySet()
+        );
+        QueryValidationException ex = assertThrows(
+                QueryValidationException.class,
+                () -> parser.parse("name==john").accept(visitor)
+        );
+        assertEquals("Unknown field 'name'", ex.getMessage());
+    }
+
+    @Test
+    void visit_allowsOriginalMappedFieldWhenAllowed() {
+        ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(
+                TestEntity.class,
+                new FieldMapping[]{mapping("displayName", "name", true)},
+                Collections.emptySet()
+        );
+        parser.parse("name==john").accept(visitor);
+    }
+
+    @Test
     void visit_allowsCustomOperator() {
         Set<RsqlCustomOperator<?>> customOperators = Set.of(new MockCustomOperator());
         ValidationRSQLVisitor visitor = new ValidationRSQLVisitor(TestEntityWithCustom.class, new FieldMapping[]{}, customOperators);
@@ -108,6 +142,7 @@ class ValidationRSQLVisitorTest {
     }
 
     private static class TestEntity {
+
         @RsqlFilterable(operators = {RsqlOperator.EQUAL})
         private String name;
 
@@ -115,7 +150,33 @@ class ValidationRSQLVisitorTest {
     }
 
     private static class TestEntityWithCustom {
+
         @RsqlFilterable(operators = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
+    }
+
+    private static FieldMapping mapping(String name, String field, boolean allowOriginalFieldName) {
+        return new FieldMapping() {
+
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public String field() {
+                return field;
+            }
+
+            @Override
+            public boolean allowOriginalFieldName() {
+                return allowOriginalFieldName;
+            }
+
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return FieldMapping.class;
+            }
+        };
     }
 }
