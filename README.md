@@ -107,13 +107,16 @@ public class Profile {
 
 ```java
 @GetMapping("/users")
+@WebQuery(entityClass = User.class)
 public Page<User> search(
-    @RsqlSpec(entityClass = User.class) Specification<User> spec,
-    @RestrictedPageable(entityClass = User.class) Pageable pageable
+    @RsqlSpec Specification<User> spec,
+    @RestrictedPageable Pageable pageable
 ) {
     return userRepository.findAll(spec, pageable);
 }
 ```
+
+`@WebQuery` is required on the controller method when using `@RsqlSpec` and/or `@RestrictedPageable`.
 
 ### 3. Example Queries
 
@@ -132,19 +135,26 @@ public Page<User> search(
 ### Field Mapping (Aliases)
 
 ```java
-@RsqlSpec(
+@WebQuery(
     entityClass = User.class,
     fieldMappings = {
         @FieldMapping(name = "joined", field = "createdAt", allowOriginalFieldName = false)
     }
-) Specification<User> spec
+)
+public Page<User> search(
+    @RsqlSpec Specification<User> spec,
+    @RestrictedPageable Pageable pageable
+) {
+    return userRepository.findAll(spec, pageable);
+}
 ```
 
 - `name`: The alias to be used in the query.
 - `field`: The actual entity field path.
-- `allowOriginalFieldName`: If `true`, both the alias and original field name can be used. If `false` (default), only the alias is allowed.
+- `allowOriginalFieldName`: If `true`, both the alias and original field name can be used. If `false` (default), only the alias is allowed for both filtering and sorting.
 
 Query: `/users?filter=joined=gt=2024-01-01T00:00:00Z`
+Sort query: `/users?sort=joined,desc`
 
 ---
 
@@ -234,6 +244,7 @@ The library provides a hierarchy of exceptions to distinguish between client-sid
   - Using an original field name when a mapping alias is required (`allowOriginalFieldName = false`).
   - Malformed RSQL syntax.
 - **`QueryConfigurationException`**: Thrown when the library or entity mapping is misconfigured by the developer. These should typically be treated as a `500 Internal Server Error`.
+  - Missing `@WebQuery` on a controller method that uses `@RsqlSpec` or `@RestrictedPageable`.
   - Custom operators referenced in `@RsqlFilterable` that are not registered.
   - Field mappings pointing to non-existent fields on the entity.
 
@@ -266,7 +277,7 @@ public class GlobalExceptionHandler {
 ## How It Works
 
 1. Parsing: The RSQL string is parsed into an AST.
-2. Validation: A custom `RSQLVisitor` traverses the AST and checks every node against the `@RsqlFilterable` configuration on the target entity.
+2. Validation: A custom `RSQLVisitor` traverses the AST and checks every node against the `@RsqlFilterable` configuration on the target entity defined by `@WebQuery`.
 3. Reflection: `ReflectionUtil` resolves dot-notation paths, handling JPA associations and collection types.
 4. Specification: Once validated, it is converted into a `Specification<T>` compatible with Spring Data JPA `findAll(Specification, Pageable)`.
 
