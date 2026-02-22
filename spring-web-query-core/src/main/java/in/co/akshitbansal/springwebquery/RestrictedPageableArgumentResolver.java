@@ -4,6 +4,8 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
@@ -94,6 +96,7 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
      * @return a {@link Pageable} object containing page, size, validated sort information,
      *         and mapped sort field paths
      * @throws QueryValidationException if any requested sort field is not marked as {@link Sortable}
+     * @throws QueryConfigurationException if resolver metadata or alias configuration cannot be processed
      */
     @Override
     public Pageable resolveArgument(
@@ -102,65 +105,100 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
             @NonNull NativeWebRequest webRequest,
             WebDataBinderFactory binderFactory
     ) {
-        // Resolve the @WebQuery annotation to access entity metadata for validation
-        WebQuery webQueryAnnotation = AnnotationUtil.resolveWebQueryFromParameter(methodParameter);
-        // Extract entity class and field mappings from the @WebQuery annotation
-        Class<?> entityClass = webQueryAnnotation.entityClass();
-        FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
+        try {
+            // Resolve the @WebQuery annotation to access entity metadata for validation
+            WebQuery webQueryAnnotation = AnnotationUtil.resolveWebQueryFromParameter(methodParameter);
+            // Extract entity class and field mappings from the @WebQuery annotation
+            Class<?> entityClass = webQueryAnnotation.entityClass();
+            FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
 
-        // Create maps for quick lookup of field mappings by both API name and original field name
-        Map<String, FieldMapping> fieldMappingMap = Arrays
-                .stream(fieldMappings)
-                .collect(Collectors.toMap(FieldMapping::name, mapping -> mapping));
-        Map<String, FieldMapping> originalFieldNameMap = Arrays
-                .stream(fieldMappings)
-                .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
+            // Create maps for quick lookup of field mappings by both API name and original field name
+            Map<String, FieldMapping> fieldMappingMap = Arrays
+                    .stream(fieldMappings)
+                    .collect(Collectors.toMap(FieldMapping::name, mapping -> mapping));
+            Map<String, FieldMapping> originalFieldNameMap = Arrays
+                    .stream(fieldMappings)
+                    .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
 
-        // Delegate parsing of page, size and sort parameters to Spring
-        Pageable pageable = delegate.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
+            // Delegate parsing of page, size and sort parameters to Spring
+            Pageable pageable = delegate.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 
-        // Validate each requested sort order against entity metadata
-        for(Sort.Order order : pageable.getSort()) {
-            String fieldName = order.getProperty();
+            // Validate each requested sort order against entity metadata
+            for(Sort.Order order : pageable.getSort()) {
+                String reqFieldName = order.getProperty();
+                String fieldName = reqFieldName; // Actual entity path to validate against, may be rewritten if field mapping exists
 
-            // If the field name corresponds to an API alias that does not allow using the original field name, reject it
-            FieldMapping originalFieldMapping = originalFieldNameMap.get(fieldName);
-            if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
-                throw new QueryValidationException(MessageFormat.format(
-                        "Unknown field ''{0}''", fieldName
-                ));
+                // If the field name corresponds to an API alias that does not allow using the original field name, reject it
+                FieldMapping originalFieldMapping = originalFieldNameMap.get(reqFieldName);
+                if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
+                    throw new QueryValidationException(MessageFormat.format(
+                            "Unknown field ''{0}''", reqFieldName
+                    ));
 
-            FieldMapping fieldMapping = fieldMappingMap.get(fieldName);
-            String reqFieldName = fieldName; // Storing field name present in req for error messages
-            if(fieldMapping != null) fieldName = fieldMapping.field();
+                // Find original field name if field mapping exists to correctly find the field
+                FieldMapping fieldMapping = fieldMappingMap.get(reqFieldName);
+                if(fieldMapping != null) fieldName = fieldMapping.field();
 
-            // Resolve the field on the entity (including inherited fields)
-            Field field;
-            try {
-                field = ReflectionUtil.resolveField(entityClass, fieldName);
+                // Resolve the field on the entity (including inherited fields)
+                Field field;
+                try {
+                    field = ReflectionUtil.resolveField(entityClass, fieldName);
+                }
+                catch (Exception ex) {
+                    throw new QueryValidationException(MessageFormat.format(
+                            "Unknown field ''{0}''", reqFieldName
+                    ), ex);
+                }
+                // Reject sorting on fields not explicitly marked as sortable
+                if(!field.isAnnotationPresent(Sortable.class))
+                    throw new QueryValidationException(MessageFormat.format(
+                            "Sorting is not allowed on the field ''{0}''", reqFieldName
+                    ));
             }
-            catch (Exception ex) {
-                throw new QueryValidationException(MessageFormat.format(
-                        "Unknown field ''{0}''", reqFieldName
-                ), ex);
-            }
-            // Reject sorting on fields not explicitly marked as sortable
-            if(!field.isAnnotationPresent(Sortable.class))
-                throw new QueryValidationException(MessageFormat.format("Sorting is not allowed on the field ''{0}''", reqFieldName));
+
+            return reconstructPageable(pageable, fieldMappingMap);
         }
+        catch (QueryException ex) {
+            throw ex;
+        }
+        catch (Exception ex) {
+            throw new QueryConfigurationException("Failed to resolve pageable argument", ex);
+        }
+    }
 
+    /**
+     * Rebuilds the resolved {@link Pageable} with sort properties rewritten from
+     * public aliases to entity field paths.
+     *
+     * @param pageable the original pageable resolved by Spring
+     * @param fieldMappingMap map of API alias to {@link FieldMapping}
+     * @return a pageable with mapped sort property paths
+     */
+    private Pageable reconstructPageable(Pageable pageable, Map<String, FieldMapping> fieldMappingMap) {
+        // Reconstruct sort orders with mapped field names
         List<Sort.Order> newOrders = pageable
                 .getSort()
                 .stream()
-                .map(order -> {
-                    String fieldName = order.getProperty();
-                    FieldMapping fieldMapping = fieldMappingMap.get(fieldName);
-                    if(fieldMapping != null) fieldName = fieldMapping.field();
-                    return new Sort.Order(order.getDirection(), fieldName);
-                })
+                .map(order -> reconstructSortOrder(order, fieldMappingMap))
                 .toList();
         Sort sort = Sort.by(newOrders);
+        // Reconstruct pageable with mapped sort orders
         if(pageable.isUnpaged()) return Pageable.unpaged(sort);
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+    }
+
+    /**
+     * Rewrites one sort order from alias property name to entity field path when
+     * a matching mapping is present.
+     *
+     * @param order original sort order from request
+     * @param fieldMappingMap map of API alias to {@link FieldMapping}
+     * @return rewritten sort order
+     */
+    private Sort.Order reconstructSortOrder(Sort.Order order, Map<String, FieldMapping> fieldMappingMap) {
+        String fieldName = order.getProperty();
+        FieldMapping fieldMapping = fieldMappingMap.get(fieldName);
+        if(fieldMapping != null) fieldName = fieldMapping.field();
+        return new Sort.Order(order.getDirection(), fieldName);
     }
 }

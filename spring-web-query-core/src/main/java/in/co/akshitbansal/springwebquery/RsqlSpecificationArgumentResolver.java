@@ -8,6 +8,8 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
@@ -150,6 +152,7 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
      *         or an unrestricted Specification if the query is absent
      * @throws QueryValidationException if the RSQL query is invalid or violates
      *                       {@link RsqlFilterable} constraints
+     * @throws QueryConfigurationException if query metadata or field mapping configuration is invalid
      */
     @Override
     public Specification<?> resolveArgument(
@@ -162,27 +165,18 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
         try {
             // Retrieve the @WebQuery annotation from the method parameter to access entity and field mapping configuration
             WebQuery webQueryAnnotation = AnnotationUtil.resolveWebQueryFromParameter(parameter);
-
             // Extract entity class and field mappings from the @WebQuery annotation
             Class<?> entityClass = webQueryAnnotation.entityClass();
             FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
+            // Validate field mappings to ensure they are well-formed and do not contain conflicts
+            AnnotationUtil.validateFieldMappings(fieldMappings);
 
-            // Retrieve the @RsqlSpec annotation from the method parameter to access parameter-specific configuration
-            RsqlSpec annotation = parameter.getParameterAnnotation(RsqlSpec.class);
-            // Extract the RSQL query string from the request using the configured parameter name
-            String filter = webRequest.getParameter(annotation.paramName());
-            // If no filter is provided, return an unrestricted Specification (no filtering)
+            // Extract the RSQL query string from the request using the parameter name defined in @RsqlSpec
+            String filter = getRsqlQueryString(parameter, webRequest);
             if(filter == null || filter.isBlank()) return Specification.unrestricted();
 
-            // Parse the RSQL query into an Abstract Syntax Tree (AST)
-            Node root = rsqlParser.parse(filter);
-            // Validate the parsed AST against the target entity and its @RsqlFilterable fields
-            ValidationRSQLVisitor validationVisitor = new ValidationRSQLVisitor(
-                    entityClass,
-                    fieldMappings,
-                    customOperators
-            );
-            root.accept(validationVisitor);
+            // Validate the RSQL query string against the target entity and its @RsqlFilterable fields
+            validateRsqlQueryString(filter, entityClass, fieldMappings);
 
             // Convert field mappings to aliases map which rsql jpa support library accepts
             Map<String, String> fieldMappingsMap = Arrays
@@ -203,7 +197,51 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
             return RSQLJPASupport.toSpecification(querySupport);
         }
         catch (RSQLParserException ex) {
-            throw new QueryValidationException("Unable to parse rsql query param", ex);
+            throw new QueryValidationException("Unable to parse RSQL query param", ex);
         }
+        catch (QueryException ex) {
+            throw ex;
+        }
+        catch (Exception ex) {
+            throw new QueryConfigurationException("Failed to resolve RSQL Specification argument", ex);
+        }
+    }
+
+    /**
+     * Reads the raw RSQL query string from the request parameter declared by
+     * {@link RsqlSpec#paramName()}.
+     *
+     * @param parameter method parameter annotated with {@link RsqlSpec}
+     * @param webRequest current web request
+     * @return raw query string, or {@code null} if the parameter is missing
+     */
+    private String getRsqlQueryString(@NonNull MethodParameter parameter, @NonNull NativeWebRequest webRequest) {
+        // Retrieve the @RsqlSpec annotation from the method parameter to access parameter-specific configuration
+        RsqlSpec annotation = parameter.getParameterAnnotation(RsqlSpec.class);
+        // Null check not required for annotation since supportsParameter() ensures it is present
+        // Extract the RSQL query string from the request using the configured parameter name
+        return webRequest.getParameter(annotation.paramName());
+    }
+
+    /**
+     * Parses and validates an RSQL query string against the provided entity type.
+     *
+     * @param query raw RSQL query string
+     * @param entityClass entity class used for field resolution
+     * @param fieldMappings configured alias mappings from {@link WebQuery}
+     * @throws RSQLParserException if the query cannot be parsed
+     * @throws QueryValidationException if any field or operator violates validation rules
+     * @throws QueryConfigurationException if validation references misconfigured operators
+     */
+    private void validateRsqlQueryString(@NonNull String query, @NonNull Class<?> entityClass, @NonNull FieldMapping[] fieldMappings) {
+        // Parse the RSQL query into an Abstract Syntax Tree (AST)
+        Node root = rsqlParser.parse(query);
+        // Validate the parsed AST against the target entity and its @RsqlFilterable fields
+        ValidationRSQLVisitor validationVisitor = new ValidationRSQLVisitor(
+                entityClass,
+                fieldMappings,
+                customOperators
+        );
+        root.accept(validationVisitor);
     }
 }

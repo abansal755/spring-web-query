@@ -1,5 +1,6 @@
 package in.co.akshitbansal.springwebquery.util;
 
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import lombok.NonNull;
@@ -7,9 +8,14 @@ import org.springframework.core.MethodParameter;
 
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Utility methods for resolving query-related annotations from controller metadata.
+ * Utility methods for resolving query-related annotations from controller metadata
+ * and validating {@link FieldMapping} declarations.
  */
 public class AnnotationUtil {
 
@@ -37,5 +43,38 @@ public class AnnotationUtil {
                     controllerMethod
             ));
         return webQueryAnnotation;
+    }
+
+    /**
+     * Validates {@link FieldMapping} definitions declared in {@link WebQuery}.
+     * <p>
+     * Validation rules:
+     * <ul>
+     *     <li>Alias names must be unique ({@link FieldMapping#name()}).</li>
+     *     <li>Target entity fields must be unique ({@link FieldMapping#field()}).</li>
+     * </ul>
+     *
+     * @param fieldMappings field mappings to validate
+     * @throws QueryConfigurationException if duplicate aliases or duplicate target fields are found
+     */
+    public static void validateFieldMappings(@NonNull FieldMapping[] fieldMappings) {
+        Set<String> nameSet = new HashSet<>();
+        for (FieldMapping mapping : fieldMappings) {
+            if(!nameSet.add(mapping.name())) throw new QueryConfigurationException(MessageFormat.format(
+                    "Duplicate field mapping present for alias ''{0}''. Only one mapping is allowed per alias.",
+                    mapping.name()
+            ));
+        }
+
+        Map<String, FieldMapping> fieldMap = new HashMap<>();
+        for (FieldMapping mapping : fieldMappings) {
+            fieldMap.compute(mapping.field(), (fieldName, existing) -> {
+                if(existing != null) throw new QueryConfigurationException(MessageFormat.format(
+                        "Aliases ''{0}'' and ''{1}'' are mapped to same field. Only one mapping is allowed per field.",
+                        existing.name(), mapping.name()
+                ));
+                return mapping;
+            });
+        }
     }
 }

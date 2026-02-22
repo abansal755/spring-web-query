@@ -9,6 +9,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import lombok.NonNull;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -144,19 +145,19 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      */
     private void validate(ComparisonNode node) {
         // Extract the field name and operator from the RSQL node
-        String fieldName = node.getSelector();
+        String reqFieldName = node.getSelector();
+        String fieldName = reqFieldName; // Actual entity path to validate against, may be rewritten if field mapping exists
         ComparisonOperator operator = node.getOperator();
 
         // Find if there exists a field mapping with original field name and throw error if use is not allowed
-        FieldMapping originalFieldMapping = originalFieldMappings.get(fieldName);
+        FieldMapping originalFieldMapping = originalFieldMappings.get(reqFieldName);
         if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
             throw new QueryValidationException(MessageFormat.format(
-                    "Unknown field ''{0}''", fieldName
+                    "Unknown field ''{0}''", reqFieldName
             ));
 
         // Find original field name if field mapping exists to correctly find the field
-        FieldMapping fieldMapping = fieldMappings.get(fieldName);
-        String reqFieldName = fieldName; // Storing field name present in req for error messages
+        FieldMapping fieldMapping = fieldMappings.get(reqFieldName);
         if(fieldMapping != null) fieldName = fieldMapping.field();
 
         // Resolve the Field object from the entity class using reflection
@@ -172,34 +173,44 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
 
         // Retrieve the RsqlFilterable annotation on the field (if present)
         RsqlFilterable filterable = field.getAnnotation(RsqlFilterable.class);
-
         // Throw exception if the field is not annotated as filterable
         if(filterable == null) throw new QueryValidationException(MessageFormat.format(
                 "Filtering not allowed on field ''{0}''", reqFieldName
         ));
 
-        // Collect the set of allowed operators for this field from the annotation
-        // 1. Stream of default operators defined in the annotation
-        Stream<ComparisonOperator> defaultOperators = Arrays
-                .stream(filterable.operators())
-                .map(RsqlOperator::getOperator);
-
-        // 2. Stream of custom operators defined in the annotation
-        // Note: The annotation references classes, which are looked up in the customOperators map
-        Stream<ComparisonOperator> customOperators = Arrays
-                .stream(filterable.customOperators())
-                .map(this::getCustomOperator)
-                .map(RsqlCustomOperator::getComparisonOperator);
-
         // Combine default and custom operators into a set for quick lookup
-        Set<ComparisonOperator> allowedOperators = Stream
-                .concat(defaultOperators, customOperators)
-                .collect(Collectors.toSet());
+        Set<ComparisonOperator> allowedOperators = getAllowedOperators(filterable);
 
         // Throw exception if the provided operator is not in the allowed set
         if(!allowedOperators.contains(operator)) throw new QueryValidationException(MessageFormat.format(
                 "Operator ''{0}'' not allowed on field ''{1}''", operator, reqFieldName
         ));
+    }
+
+    /**
+     * Computes the full set of operators allowed for a field by combining
+     * built-in operators and registered custom operators referenced by
+     * {@link RsqlFilterable}.
+     *
+     * @param filterable field-level filterability metadata
+     * @return allowed comparison operators for the field
+     * @throws QueryConfigurationException if a referenced custom operator is not registered
+     */
+    private Set<ComparisonOperator> getAllowedOperators(@NonNull RsqlFilterable filterable) {
+        // Collect the set of allowed operators for this field from the annotation
+        // Stream of default operators defined in the annotation
+        Stream<ComparisonOperator> defaultOperators = Arrays
+                .stream(filterable.operators())
+                .map(RsqlOperator::getOperator);
+        // Stream of custom operators defined in the annotation
+        // Note: The annotation references classes, which are looked up in the customOperators map
+        Stream<ComparisonOperator> customOperators = Arrays
+                .stream(filterable.customOperators())
+                .map(this::getCustomOperator)
+                .map(RsqlCustomOperator::getComparisonOperator);
+        return Stream
+                .concat(defaultOperators, customOperators)
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -209,7 +220,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      * @return the registered custom operator instance
      * @throws QueryConfigurationException if the custom operator class is not registered
      */
-    private RsqlCustomOperator<?> getCustomOperator(Class<?> clazz) {
+    private RsqlCustomOperator<?> getCustomOperator(@NonNull Class<?> clazz) {
         RsqlCustomOperator<?> operator = customOperators.get(clazz);
         if(operator == null) throw new QueryConfigurationException(MessageFormat.format(
                 "Custom operator ''{0}'' referenced in @RsqlFilterable is not registered", clazz.getSimpleName()

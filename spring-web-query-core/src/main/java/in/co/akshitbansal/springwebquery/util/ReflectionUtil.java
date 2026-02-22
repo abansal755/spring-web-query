@@ -1,7 +1,5 @@
 package in.co.akshitbansal.springwebquery.util;
 
-import in.co.akshitbansal.springwebquery.exception.QueryException;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -48,7 +46,7 @@ public class ReflectionUtil {
      * @param type the root class from which resolution starts
      * @param name a dot-separated field path (e.g. {@code "a.b.c"})
      * @return the {@link Field} corresponding to the last segment in the path
-     * @throws QueryException if any segment of the path cannot be resolved
+     * @throws RuntimeException if any segment of the path cannot be resolved
      * @throws UnsupportedOperationException if an intermediate collection type
      *         does not expose resolvable generic information
      */
@@ -74,7 +72,7 @@ public class ReflectionUtil {
      * @param type the class to start searching for the field
      * @param name the name of the field to resolve
      * @return the {@link Field} object representing the resolved field
-     * @throws QueryException if no field with the specified name exists in the class
+     * @throws RuntimeException if no field with the specified name exists in the class
      *                        or any of its superclasses
      */
     private static Field resolveFieldUpHierarchy(Class<?> type, String name) {
