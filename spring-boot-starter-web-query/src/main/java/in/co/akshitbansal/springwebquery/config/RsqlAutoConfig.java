@@ -1,6 +1,5 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.RsqlSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
@@ -19,8 +18,10 @@ import java.sql.Timestamp;
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @AutoConfiguration
 @ConditionalOnClass(RSQLJPAAutoConfiguration.class)
@@ -36,16 +37,19 @@ public class RsqlAutoConfig {
     @Bean
     public RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver(List<RsqlCustomOperatorsConfigurer> rsqlCustomOperatorsConfigurers) {
         // Set for checking duplicates
-        Set<ComparisonOperator> operatorSet = new HashSet<>();
+        Set<String> symbolSet = new HashSet<>();
 
         // Default operators gathered from the RsqlOperator enum
         Set<RsqlOperator> defaultOperators = new HashSet<>();
         for(RsqlOperator operator: RsqlOperator.values()) {
-            // If already an operator is present with the same symbol, throw exception
-            if(!operatorSet.add(operator.getOperator())) {
-                throw new QueryConfigurationException(MessageFormat.format(
-                        "Duplicate operator ''{0}'' found in default RSQL operators. Each operator must be unique.", operator.getOperator()
-                ));
+            for(String symbol:operator.getOperator().getSymbols()) {
+                // If already an operator is present with the same symbol, throw exception
+                if(!symbolSet.add(symbol)) {
+                    throw new QueryConfigurationException(MessageFormat.format(
+                            "Duplicate operator symbol ''{0}'' found in default RSQL operators. Each operator must be unique.",
+                            symbol
+                    ));
+                }
             }
             defaultOperators.add(operator);
         }
@@ -54,12 +58,14 @@ public class RsqlAutoConfig {
         Set<RsqlCustomOperator<?>> customOperators = new HashSet<>();
         for(RsqlCustomOperatorsConfigurer configurer : rsqlCustomOperatorsConfigurers) {
             for(RsqlCustomOperator<?> operator : configurer.getCustomOperators()) {
-                // If already an operator is present with the same symbol, throw exception
-                if(!operatorSet.add(operator.getComparisonOperator())) {
-                    throw new QueryConfigurationException(MessageFormat.format(
-                            "Duplicate operator ''{0}'' found in custom RSQL operators. Each operator must be unique and not overlap with default operators.",
-                            operator.getComparisonOperator()
-                    ));
+                for(String symbol:operator.getComparisonOperator().getSymbols()) {
+                    // If already an operator is present with the same symbol, throw exception
+                    if(!symbolSet.add(symbol)) {
+                        throw new QueryConfigurationException(MessageFormat.format(
+                                "Duplicate operator symbol ''{0}'' found in custom RSQL operators. Each operator must be unique and not overlap with default operators.",
+                                symbol
+                        ));
+                    }
                 }
                 customOperators.add(operator);
             }
