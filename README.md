@@ -11,29 +11,97 @@
 [![Maven Central (spring-boot-starter-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fin%2Fco%2Fakshitbansal%2Fspring-boot-starter-web-query%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Maven%20Central%20(Starter)&color=brightgreen&logo=apachemaven)](https://central.sonatype.com/artifact/in.co.akshitbansal/spring-boot-starter-web-query)
 [![Maven Central (spring-boot-starter-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fin%2Fco%2Fakshitbansal%2Fspring-boot-starter-web-query%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Snapshot%20(Starter)&color=yellow&logo=apachemaven)](https://central.sonatype.com/repository/maven-snapshots/in/co/akshitbansal/spring-boot-starter-web-query/maven-metadata.xml)
 
+`spring-web-query` brings **safe, declarative filtering + sorting** to Spring Web APIs using RSQL and Spring Data JPA Specifications.
 
-`spring-web-query` is split into two artifacts:
+## Table of Contents
 
-- `spring-web-query-core`: Core annotations, argument resolvers, validation, and query utilities.
-- `spring-boot-starter-web-query`: Spring Boot auto-configuration on top of `core` for zero-config setup.
+- [Why this library exists](#why-this-library-exists)
+- [What is RSQL](#what-is-rsql)
+- [Project modules](#project-modules)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [RSQL operator reference (default operators)](#rsql-operator-reference-default-operators)
+- [Advanced configuration](#advanced-configuration)
+- [Error handling](#error-handling)
+- [Compatibility](#compatibility)
+- [Release workflow](#release-workflow)
+- [Contributing](#contributing)
+- [License](#license)
 
----
+## Why this library exists
 
-## Key Features
+### The common API problem
 
-- Secure filtering: Whitelist filterable fields and specific operators using `@RsqlFilterable`.
-- Restricted sorting: Allow sorting only on fields explicitly marked with `@Sortable`.
-- Deep path resolution: Support for nested properties (for example `user.address.city`), collections, and arrays.
-- API aliasing: Use `@FieldMapping` to expose clean API field names without leaking internal entity structures.
-- Zero-config (starter): Auto-configures argument resolvers for `@RsqlSpec` and `@RestrictedPageable`.
-- DoS protection: Built-in maximum page size enforcement.
-- ISO-8601 ready: Handling of date/time formats in query strings.
+Most APIs eventually need dynamic querying:
 
----
+- `GET /users?status=ACTIVE&city=London&createdAfter=...`
+- then more requirements: `OR`, ranges, includes/excludes, nested fields, custom comparisons
+- then pagination and sorting restrictions
+
+This typically leads to either:
+
+- too many ad-hoc query parameters and controller if/else logic, or
+- exposing unrestricted query capabilities that are unsafe
+
+### The declarative approach used here
+
+`spring-web-query` turns this into metadata-driven configuration:
+
+- you **declare** filterable fields and allowed operators using `@RsqlFilterable`
+- you **declare** sortable fields using `@Sortable`
+- you **declare** API aliases using `@FieldMapping`
+- you **declare** method-level query context using `@WebQuery`
+
+At runtime, the library validates incoming RSQL against those declarations before building a `Specification<T>`.
+
+Result: expressive queries for clients, controlled surface area for server code.
+
+## What is RSQL
+
+RSQL (RESTful Service Query Language) is a URL-friendly query language for filtering resources.
+
+Core syntax concepts:
+
+- Comparison: `field==value`, `field=gt=10`, `field=in=(A,B)`
+- Logical AND: `;` (semicolon)
+- Logical OR: `,` (comma)
+- Grouping: parentheses
+
+Examples:
+
+- `status==ACTIVE`
+- `status==ACTIVE;createdAt=ge=2025-01-01T00:00:00Z`
+- `(status==ACTIVE,status==PENDING);age=gt=18`
+
+In this library, RSQL is parsed, validated against your entity annotations, and translated into Spring Data JPA `Specification`s.
+
+## Project modules
+
+This repo contains two artifacts:
+
+- `spring-web-query-core`
+  - Annotations (`@RsqlSpec`, `@RestrictedPageable`, `@WebQuery`, ...)
+  - Argument resolvers
+  - Validation and reflection utilities
+  - Custom operator extension points
+- `spring-boot-starter-web-query`
+  - Auto-configuration for Spring Boot applications
+  - Resolver registration
+  - Pagination max page size customization
+
+## Features
+
+- Secure filtering with field/operator whitelisting
+- Restricted sorting with explicit `@Sortable` declaration
+- Alias mapping (`@FieldMapping`) for API-facing field names
+- Nested path resolution (including inheritance, arrays, collections)
+- Custom RSQL operators via `RsqlCustomOperator`
+- Strict equality semantics for `==` (wildcards are not treated as implicit pattern matching)
+- Configurable max page size (`api.pagination.max-page-size`, default `100`)
+- ISO-8601 support for timestamp parsing via built-in converter
 
 ## Installation
-
-Use one of the following depending on your setup.
 
 ### Option 1: Spring Boot starter (recommended)
 
@@ -45,8 +113,6 @@ Use one of the following depending on your setup.
 </dependency>
 ```
 
-This includes `spring-web-query-core` transitively and auto-registers required configuration.
-
 ### Option 2: Core only (manual wiring)
 
 ```xml
@@ -57,25 +123,9 @@ This includes `spring-web-query-core` transitively and auto-registers required c
 </dependency>
 ```
 
-Use this when you do not want Boot starter auto-configuration and prefer manual resolver setup.
+## Quick start
 
-The project targets Spring Boot `4.0.2+` and Java `21+`.
-
----
-
-## Branching And Release Workflow
-
-- `main` always contains `-SNAPSHOT` versions.
-- Every commit to `main` publishes a snapshot version to Maven Central.
-- Releases are created from `release/**` branches:
-  versions are changed to non-snapshot values, and release publishing is triggered manually through a GitHub Action.
-- For all non-`main` branch commits and pull requests, CI only verifies build and test success.
-
----
-
-## Usage
-
-### 1. Annotate your Entity
+### 1. Annotate your entity
 
 ```java
 @Entity
@@ -103,7 +153,7 @@ public class Profile {
 }
 ```
 
-### 2. Use in Controller
+### 2. Use resolver annotations in controller
 
 ```java
 @GetMapping("/users")
@@ -116,23 +166,112 @@ public Page<User> search(
 }
 ```
 
-`@WebQuery` is required on the controller method when using `@RsqlSpec` and/or `@RestrictedPageable`.
+`@WebQuery` is required on methods that use `@RsqlSpec` and/or `@RestrictedPageable`.
 
-### 3. Example Queries
+### 3. Example requests
 
-| Feature | Query |
-| :--- | :--- |
-| Simple Filter | `/users?filter=status==ACTIVE` |
-| Complex Logical | `/users?filter=status==ACTIVE;username==john*` |
-| Date Range | `/users?filter=createdAt=gt=2024-01-01T00:00:00Z` |
-| Nested Paths | `/users?filter=profile.city==NewYork` |
-| Secure Sorting | `/users?sort=username,asc` |
+- Filter: `/users?filter=status==ACTIVE`
+- Complex logic: `/users?filter=(status==ACTIVE,status==PENDING);createdAt=gt=2025-01-01T00:00:00Z`
+- Nested filter: `/users?filter=profile.city==London`
+- Restricted sorting: `/users?sort=username,asc`
 
----
+## RSQL operator reference (default operators)
 
-## Advanced Configuration
+The following default operators are available through `RsqlOperator`.
 
-### Field Mapping (Aliases)
+### Equality and inequality
+
+- `EQUAL`
+  - Symbols: `==`
+  - Meaning: exact equality
+  - Example: `name==John`
+  - Note: in this library, strict equality is enabled, so `name==John*` matches literal `John*`
+- `NOT_EQUAL`
+  - Symbols: `!=`
+  - Meaning: not equal
+  - Example: `status!=DELETED`
+
+### Ordering comparisons
+
+- `GREATER_THAN`
+  - Symbols: `>`, `=gt=`
+  - Meaning: greater than
+  - Example: `age>18`
+- `GREATER_THAN_OR_EQUAL`
+  - Symbols: `>=`, `=ge=`
+  - Meaning: greater than or equal
+  - Example: `score=ge=90`
+- `LESS_THAN`
+  - Symbols: `<`, `=lt=`
+  - Meaning: less than
+  - Example: `price<100`
+- `LESS_THAN_OR_EQUAL`
+  - Symbols: `<=`, `=le=`
+  - Meaning: less than or equal
+  - Example: `price=le=100`
+
+### Set membership
+
+- `IN`
+  - Symbols: `=in=`
+  - Meaning: value belongs to a set
+  - Example: `role=in=(ADMIN,USER)`
+- `NOT_IN`
+  - Symbols: `=out=`
+  - Meaning: value does not belong to a set
+  - Example: `region=out=(APAC,EMEA)`
+
+### Null checks
+
+- `IS_NULL`
+  - Symbols: `=null=`, `=isnull=`, `=na=`
+  - Meaning: field is null
+  - Examples: `middleName=null=`, `middleName=isnull=true`
+- `NOT_NULL`
+  - Symbols: `=notnull=`, `=isnotnull=`, `=nn=`
+  - Meaning: field is not null
+  - Examples: `email=notnull=`, `email=nn=true`
+
+### Pattern matching
+
+- `LIKE`
+  - Symbols: `=like=`, `=ke=`
+  - Meaning: SQL LIKE match
+  - Example: `description=like=spring`
+- `NOT_LIKE`
+  - Symbols: `=notlike=`, `=nk=`
+  - Meaning: SQL NOT LIKE match
+  - Example: `title=notlike=Draft`
+
+### Case-insensitive variants
+
+- `IGNORE_CASE`
+  - Symbols: `=icase=`, `=ic=`
+  - Meaning: case-insensitive equality
+  - Example: `city=icase=london`
+- `IGNORE_CASE_LIKE`
+  - Symbols: `=ilike=`, `=ik=`
+  - Meaning: case-insensitive LIKE
+  - Example: `username=ilike=admin`
+- `IGNORE_CASE_NOT_LIKE`
+  - Symbols: `=inotlike=`, `=ni=`
+  - Meaning: case-insensitive NOT LIKE
+  - Example: `tag=inotlike=test`
+
+### Range comparisons
+
+- `BETWEEN`
+  - Symbols: `=between=`, `=bt=`
+  - Meaning: value within inclusive range
+  - Example: `createdAt=between=(2025-01-01,2025-12-31)`
+- `NOT_BETWEEN`
+  - Symbols: `=notbetween=`, `=nb=`
+  - Meaning: value outside inclusive range
+  - Example: `age=notbetween=(18,65)`
+
+## Advanced configuration
+
+### Field mapping (API aliases)
 
 ```java
 @WebQuery(
@@ -149,20 +288,20 @@ public Page<User> search(
 }
 ```
 
-- `name`: The alias to be used in the query.
-- `field`: The actual entity field path.
-- `allowOriginalFieldName`: If `true`, both the alias and original field name can be used. If `false` (default), only the alias is allowed for both filtering and sorting.
+- `name`: alias used by clients
+- `field`: real entity field/path
+- `allowOriginalFieldName`
+  - `false` (default): only alias is allowed
+  - `true`: both alias and original field are allowed
 
-Query: `/users?filter=joined=gt=2024-01-01T00:00:00Z`
-Sort query: `/users?sort=joined,desc`
+Examples:
 
----
+- Filter with alias: `/users?filter=joined=gt=2025-01-01T00:00:00Z`
+- Sort with alias: `/users?sort=joined,desc`
 
-## Custom RSQL Operators
+### Custom RSQL operators
 
-You can define custom operators to extend filtering capabilities.
-
-### 1. Implement `RsqlCustomOperator`
+1. Implement `RsqlCustomOperator`
 
 ```java
 public class IsMondayOperator implements RsqlCustomOperator<Long> {
@@ -179,18 +318,12 @@ public class IsMondayOperator implements RsqlCustomOperator<Long> {
     @Override
     public Predicate toPredicate(RSQLCustomPredicateInput input) {
         CriteriaBuilder cb = input.getCriteriaBuilder();
-        // MySQL example: DAYOFWEEK() returns 1 for Sunday, 2 for Monday...
-        return cb.equal(
-            cb.function("DAYOFWEEK", Long.class, input.getPath()),
-            2
-        );
+        return cb.equal(cb.function("DAYOFWEEK", Long.class, input.getPath()), 2);
     }
 }
 ```
 
-### 2. Register via `RsqlCustomOperatorsConfigurer`
-
-Register your custom operators as a Spring Bean. You can register multiple `RsqlCustomOperatorsConfigurer` beans, and the library will automatically combine all custom operators from all registered configurers.
+2. Register operators via `RsqlCustomOperatorsConfigurer`
 
 ```java
 @Configuration
@@ -202,9 +335,7 @@ public class RsqlConfig {
 }
 ```
 
-### 3. Enable in Entity
-
-Whitelisting is required for custom operators just like default ones.
+3. Explicitly whitelist custom operator on entity field
 
 ```java
 @Entity
@@ -217,38 +348,35 @@ public class User {
 }
 ```
 
-Query: `/users?filter=createdAt=monday=`
+Request example:
 
----
+- `/users?filter=createdAt=monday=`
 
-### Enforced Pagination Defaults
+### Pagination max-page-size
 
-Configure maximum allowed page size in `application.properties` (default `100`):
+Configure in `application.properties`:
 
 ```properties
 api.pagination.max-page-size=500
 ```
 
----
+Default is `100`.
 
-## Error Handling
+## Error handling
 
-The library provides a hierarchy of exceptions to distinguish between client-side validation errors and developer-side configuration issues. All exceptions extend the base `QueryException`.
+Exception hierarchy:
 
-### Exception Hierarchy
+- `QueryException` (base type)
+- `QueryValidationException`
+  - invalid RSQL syntax
+  - filtering/sorting not allowed for requested fields
+  - operator not allowed for a field
+- `QueryConfigurationException`
+  - missing `@WebQuery`
+  - duplicate/invalid field mappings
+  - unregistered custom operators referenced by annotations
 
-- **`QueryValidationException`**: Thrown when an API consumer provides invalid input. These should typically be returned as a `400 Bad Request`.
-  - Filtering on a non-`@RsqlFilterable` field.
-  - Using a disallowed operator on a field.
-  - Sorting on a non-`@Sortable` field.
-  - Using an original field name when a mapping alias is required (`allowOriginalFieldName = false`).
-  - Malformed RSQL syntax.
-- **`QueryConfigurationException`**: Thrown when the library or entity mapping is misconfigured by the developer. These should typically be treated as a `500 Internal Server Error`.
-  - Missing `@WebQuery` on a controller method that uses `@RsqlSpec` or `@RestrictedPageable`.
-  - Custom operators referenced in `@RsqlFilterable` that are not registered.
-  - Field mappings pointing to non-existent fields on the entity.
-
-### Handling Exceptions
+Suggested controller advice:
 
 ```java
 @ControllerAdvice
@@ -261,38 +389,47 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(QueryConfigurationException.class)
     public ResponseEntity<String> handleConfigurationException(QueryConfigurationException ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal configuration error");
-    }
-
-    // Alternatively, catch the base exception for unified handling
-    @ExceptionHandler(QueryException.class)
-    public ResponseEntity<String> handleQueryException(QueryException ex) {
-        return ResponseEntity.badRequest().body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Internal configuration error");
     }
 }
 ```
 
----
+## Compatibility
 
-## How It Works
+- Java: `21+`
+- Spring Boot: `4.0.2+`
+- Spring Data JPA / Spring Web MVC
 
-1. Parsing: The RSQL string is parsed into an AST.
-2. Validation: A custom `RSQLVisitor` traverses the AST and checks every node against the `@RsqlFilterable` configuration on the target entity defined by `@WebQuery`.
-3. Reflection: `ReflectionUtil` resolves dot-notation paths, handling JPA associations and collection types.
-4. Specification: Once validated, it is converted into a `Specification<T>` compatible with Spring Data JPA `findAll(Specification, Pageable)`.
+## Release workflow
 
----
+- `main` keeps `-SNAPSHOT` versions
+- pushes to `main` publish snapshots
+- releases are produced from `release/**` branches with GitHub Actions
+- PR and non-main branches run CI build/tests only
+
+## Contributing
+
+Issues and PRs are welcome.
+
+Recommended local flow:
+
+1. Create a feature/fix branch
+2. Run tests in both modules
+3. Open a PR with behavior changes and usage examples when relevant
+
+Build/test commands:
+
+```bash
+cd spring-web-query-core
+mvn -B -ntp clean install
+
+cd ../spring-boot-starter-web-query
+mvn -B -ntp clean package
+```
 
 ## License
 
 Licensed under the Apache License, Version 2.0.
 
-You may obtain a copy of the License at:
-
 https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
