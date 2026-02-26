@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  * @see RsqlOperator
  * @see cz.jirutka.rsql.parser.ast.Node
  */
-public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
+public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
 
     /**
      * The entity class against which RSQL queries are validated.
@@ -72,7 +72,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      * @param fieldMappings  array of field mappings (aliases) to consider
      * @param customOperators set of custom operators to allow in queries
      */
-    public ValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings, AnnotationUtil annotationUtil) {
+    public EntityValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings, AnnotationUtil annotationUtil) {
         this.entityClass = entityClass;
         // Map from name to FieldMapping
         this.fieldMappings = Arrays

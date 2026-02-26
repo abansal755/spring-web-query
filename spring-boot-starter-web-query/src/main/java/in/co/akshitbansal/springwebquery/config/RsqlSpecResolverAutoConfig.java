@@ -1,6 +1,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.RsqlSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.DtoRsqlSpecArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.EntityRsqlSpecArgumentResolver;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -15,10 +16,12 @@ import java.util.List;
 @ConditionalOnClass(RSQLJPAAutoConfiguration.class)
 public class RsqlSpecResolverAutoConfig implements WebMvcConfigurer {
 
-    private final RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver;
+    private final EntityRsqlSpecArgumentResolver entityRsqlSpecArgumentResolver;
+    private final DtoRsqlSpecArgumentResolver dtoRsqlSpecArgumentResolver;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(rsqlSpecificationArgumentResolver);
+        resolvers.add(entityRsqlSpecArgumentResolver);
+        resolvers.add(dtoRsqlSpecArgumentResolver);
     }
 }

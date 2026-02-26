@@ -1,7 +1,7 @@
 package in.co.akshitbansal.springwebquery.operator;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import in.co.akshitbansal.springwebquery.ValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import io.github.perplexhub.rsql.RSQLOperators;
 import lombok.Getter;
@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
  * <p>
  * {@link RsqlOperator} is typically used in conjunction with
  * {@link RsqlFilterable} to declare the set of allowed operators on an entity field,
- * and with {@link ValidationRSQLVisitor} to enforce these constraints at runtime.
+ * and with {@link EntityValidationRSQLVisitor} to enforce these constraints at runtime.
  * </p>
  *
  * <p><b>Example usage:</b></p>
@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
  * }</pre>
  *
  * @see RsqlFilterable
- * @see ValidationRSQLVisitor
+ * @see EntityValidationRSQLVisitor
  * @see RSQLOperators
  * @see cz.jirutka.rsql.parser.ast.ComparisonOperator
  */
