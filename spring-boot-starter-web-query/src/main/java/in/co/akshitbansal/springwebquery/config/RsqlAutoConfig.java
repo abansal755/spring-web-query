@@ -1,10 +1,13 @@
 package in.co.akshitbansal.springwebquery.config;
 
+import cz.jirutka.rsql.parser.ast.ComparisonOperator;
+import in.co.akshitbansal.springwebquery.RestrictedPageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.RsqlSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
@@ -13,15 +16,14 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 
 import java.sql.Timestamp;
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @AutoConfiguration
 @ConditionalOnClass(RSQLJPAAutoConfiguration.class)
@@ -35,7 +37,7 @@ public class RsqlAutoConfig {
     }
 
     @Bean
-    public RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver(List<RsqlCustomOperatorsConfigurer> rsqlCustomOperatorsConfigurers) {
+    public Set<RsqlOperator> defaultOperatorSet() {
         // Set for checking duplicates
         Set<String> symbolSet = new HashSet<>();
 
@@ -53,6 +55,18 @@ public class RsqlAutoConfig {
             }
             defaultOperators.add(operator);
         }
+        return defaultOperators;
+    }
+
+    @Bean
+    public Set<? extends RsqlCustomOperator<?>> customOperatorSet(
+            List<RsqlCustomOperatorsConfigurer> rsqlCustomOperatorsConfigurers,
+            Set<RsqlOperator> defaultOperatorSet
+    ) {
+        // Set for checking duplicates
+        Set<String> symbolSet = new HashSet<>();
+        for(RsqlOperator operator: defaultOperatorSet)
+            symbolSet.addAll(Arrays.asList(operator.getOperator().getSymbols()));
 
         // Custom operators gathered from all the configurers
         Set<RsqlCustomOperator<?>> customOperators = new HashSet<>();
@@ -70,7 +84,21 @@ public class RsqlAutoConfig {
                 customOperators.add(operator);
             }
         }
-        return new RsqlSpecificationArgumentResolver(defaultOperators, customOperators);
+        return customOperators;
+    }
+
+    @Bean
+    public AnnotationUtil annotationUtil(Set<? extends RsqlCustomOperator<?>> customOperatorSet) {
+        return new AnnotationUtil(customOperatorSet);
+    }
+
+    @Bean
+    public RsqlSpecificationArgumentResolver rsqlSpecificationArgumentResolver(
+            Set<RsqlOperator> defaultOperatorSet,
+            Set<? extends RsqlCustomOperator<?>> customOperatorSet,
+            AnnotationUtil annotationUtil
+    ) {
+        return new RsqlSpecificationArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
     }
 
     // Allows RSQL to parse ISO-8601 Timestamp fields
@@ -85,5 +113,16 @@ public class RsqlAutoConfig {
             Instant instant = odt.toInstant();
             return Timestamp.from(instant);
         });
+    }
+
+    @Bean
+    public RestrictedPageableArgumentResolver restrictedPageableArgumentResolver(
+            List<PageableHandlerMethodArgumentResolverCustomizer> customizers,
+            AnnotationUtil annotationUtil
+    ) {
+        PageableHandlerMethodArgumentResolver delegate = new PageableHandlerMethodArgumentResolver();
+        for (PageableHandlerMethodArgumentResolverCustomizer customizer : customizers)
+            customizer.customize(delegate);
+        return new RestrictedPageableArgumentResolver(delegate, annotationUtil);
     }
 }

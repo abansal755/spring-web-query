@@ -26,6 +26,8 @@ public @interface WebQuery {
      */
     Class<?> entityClass();
 
+    Class<?> dtoClass() default void.class;
+
     /**
      * Optional field mappings used to expose API-facing aliases for entity fields.
      *

@@ -5,7 +5,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Utility class for performing reflection-based operations on entity classes.
@@ -59,6 +61,18 @@ public class ReflectionUtil {
             current = unwrapContainerType(field);
         }
         return field;
+    }
+
+    public static List<Field> resolveFieldPath(Class<?> type, String name) {
+        String[] fieldNames = name.split("\\.");
+        Class<?> current = type;
+        List<Field> path = new ArrayList<>();
+        for(String fieldName : fieldNames) {
+            Field field = resolveFieldUpHierarchy(current, fieldName);
+            path.add(field);
+            current = unwrapContainerType(field);
+        }
+        return path;
     }
 
     /**

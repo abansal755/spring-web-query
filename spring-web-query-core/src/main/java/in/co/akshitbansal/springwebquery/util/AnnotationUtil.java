@@ -1,23 +1,34 @@
 package in.co.akshitbansal.springwebquery.util;
 
+import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
+import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utility methods for resolving query-related annotations from controller metadata
  * and validating {@link FieldMapping} declarations.
  */
 public class AnnotationUtil {
+
+    private final Map<Class<?>, RsqlCustomOperator<?>> customOperators;
+
+    public AnnotationUtil(Set<? extends RsqlCustomOperator<?>> customOperators) {
+        this.customOperators = customOperators
+                .stream()
+                .collect(Collectors.toMap(RsqlCustomOperator::getClass, operator -> operator));
+    }
 
     /**
      * Resolves {@link WebQuery} from the controller method that declares the
@@ -27,7 +38,7 @@ public class AnnotationUtil {
      * @return resolved {@link WebQuery} annotation
      * @throws QueryConfigurationException if the method cannot be resolved or is not annotated with {@link WebQuery}
      */
-    public static WebQuery resolveWebQueryFromParameter(@NonNull MethodParameter parameter) {
+    public WebQuery resolveWebQueryFromParameter(@NonNull MethodParameter parameter) {
         // Retrieve the controller method
         Method controllerMethod = parameter.getMethod();
         // Ensure that the method is not null (should not happen for valid controller parameters)
@@ -57,7 +68,7 @@ public class AnnotationUtil {
      * @param fieldMappings field mappings to validate
      * @throws QueryConfigurationException if duplicate aliases or duplicate target fields are found
      */
-    public static void validateFieldMappings(@NonNull FieldMapping[] fieldMappings) {
+    public void validateFieldMappings(@NonNull FieldMapping[] fieldMappings) {
         Set<String> nameSet = new HashSet<>();
         for (FieldMapping mapping : fieldMappings) {
             if(!nameSet.add(mapping.name())) throw new QueryConfigurationException(MessageFormat.format(
@@ -76,5 +87,46 @@ public class AnnotationUtil {
                 return mapping;
             });
         }
+    }
+
+    /**
+     * Computes the full set of operators allowed for a field by combining
+     * built-in operators and registered custom operators referenced by
+     * {@link RsqlFilterable}.
+     *
+     * @param filterable field-level filterability metadata
+     * @return allowed comparison operators for the field
+     * @throws QueryConfigurationException if a referenced custom operator is not registered
+     */
+    public Set<ComparisonOperator> getAllowedOperators(@NonNull RsqlFilterable filterable) {
+        // Collect the set of allowed operators for this field from the annotation
+        // Stream of default operators defined in the annotation
+        Stream<ComparisonOperator> defaultOperators = Arrays
+                .stream(filterable.operators())
+                .map(RsqlOperator::getOperator);
+        // Stream of custom operators defined in the annotation
+        // Note: The annotation references classes, which are looked up in the customOperators map
+        Stream<ComparisonOperator> customOperators = Arrays
+                .stream(filterable.customOperators())
+                .map(this::getCustomOperator)
+                .map(RsqlCustomOperator::getComparisonOperator);
+        return Stream
+                .concat(defaultOperators, customOperators)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Retrieves the custom operator instance for the given operator class.
+     *
+     * @param clazz the custom operator class to look up
+     * @return the registered custom operator instance
+     * @throws QueryConfigurationException if the custom operator class is not registered
+     */
+    private RsqlCustomOperator<?> getCustomOperator(@NonNull Class<?> clazz) {
+        RsqlCustomOperator<?> operator = customOperators.get(clazz);
+        if(operator == null) throw new QueryConfigurationException(MessageFormat.format(
+                "Custom operator ''{0}'' referenced in @RsqlFilterable is not registered", clazz.getSimpleName()
+        ));
+        return operator;
     }
 }

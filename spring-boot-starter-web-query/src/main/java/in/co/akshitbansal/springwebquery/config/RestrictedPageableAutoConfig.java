@@ -3,10 +3,7 @@ package in.co.akshitbansal.springwebquery.config;
 import in.co.akshitbansal.springwebquery.RestrictedPageableArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
-import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -17,19 +14,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RestrictedPageableAutoConfig implements WebMvcConfigurer {
 
-    private final List<PageableHandlerMethodArgumentResolverCustomizer> customizers;
+    private final RestrictedPageableArgumentResolver restrictedPageableArgumentResolver;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         // Ensure this resolver is checked before Spring Data's default Pageable resolver.
-        resolvers.addFirst(restrictedPageableArgumentResolver());
-    }
-
-    @Bean
-    public RestrictedPageableArgumentResolver restrictedPageableArgumentResolver() {
-        PageableHandlerMethodArgumentResolver delegate = new PageableHandlerMethodArgumentResolver();
-        for (PageableHandlerMethodArgumentResolverCustomizer customizer : customizers)
-            customizer.customize(delegate);
-        return new RestrictedPageableArgumentResolver(delegate);
+        resolvers.addFirst(restrictedPageableArgumentResolver);
     }
 }

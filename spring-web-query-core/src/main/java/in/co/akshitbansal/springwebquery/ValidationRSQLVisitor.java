@@ -6,10 +6,9 @@ import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
-import lombok.NonNull;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -17,7 +16,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * RSQL AST visitor that validates RSQL queries against a given entity class.
@@ -65,10 +63,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      */
     private final Map<String, FieldMapping> originalFieldMappings;
 
-    /**
-     * Map from custom operator class types to their actual implementations.
-     */
-    private final Map<Class<?>, RsqlCustomOperator<?>> customOperators;
+    private final AnnotationUtil annotationUtil;
 
     /**
      * Creates a new ValidationRSQLVisitor with the specified configuration.
@@ -77,7 +72,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      * @param fieldMappings  array of field mappings (aliases) to consider
      * @param customOperators set of custom operators to allow in queries
      */
-    public ValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings, Set<? extends RsqlCustomOperator<?>> customOperators) {
+    public ValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings, AnnotationUtil annotationUtil) {
         this.entityClass = entityClass;
         // Map from name to FieldMapping
         this.fieldMappings = Arrays
@@ -87,10 +82,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         this.originalFieldMappings = Arrays
                 .stream(fieldMappings)
                 .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
-        // Map from custom operator class to instance
-        this.customOperators = customOperators
-                .stream()
-                .collect(Collectors.toMap(RsqlCustomOperator::getClass, operator -> operator));
+        this.annotationUtil = annotationUtil;
     }
 
     /**
@@ -178,53 +170,10 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
                 "Filtering not allowed on field ''{0}''", reqFieldName
         ));
 
-        // Combine default and custom operators into a set for quick lookup
-        Set<ComparisonOperator> allowedOperators = getAllowedOperators(filterable);
-
         // Throw exception if the provided operator is not in the allowed set
+        Set<ComparisonOperator> allowedOperators = annotationUtil.getAllowedOperators(filterable);
         if(!allowedOperators.contains(operator)) throw new QueryValidationException(MessageFormat.format(
                 "Operator ''{0}'' not allowed on field ''{1}''", operator, reqFieldName
         ));
-    }
-
-    /**
-     * Computes the full set of operators allowed for a field by combining
-     * built-in operators and registered custom operators referenced by
-     * {@link RsqlFilterable}.
-     *
-     * @param filterable field-level filterability metadata
-     * @return allowed comparison operators for the field
-     * @throws QueryConfigurationException if a referenced custom operator is not registered
-     */
-    private Set<ComparisonOperator> getAllowedOperators(@NonNull RsqlFilterable filterable) {
-        // Collect the set of allowed operators for this field from the annotation
-        // Stream of default operators defined in the annotation
-        Stream<ComparisonOperator> defaultOperators = Arrays
-                .stream(filterable.operators())
-                .map(RsqlOperator::getOperator);
-        // Stream of custom operators defined in the annotation
-        // Note: The annotation references classes, which are looked up in the customOperators map
-        Stream<ComparisonOperator> customOperators = Arrays
-                .stream(filterable.customOperators())
-                .map(this::getCustomOperator)
-                .map(RsqlCustomOperator::getComparisonOperator);
-        return Stream
-                .concat(defaultOperators, customOperators)
-                .collect(Collectors.toSet());
-    }
-
-    /**
-     * Retrieves the custom operator instance for the given operator class.
-     *
-     * @param clazz the custom operator class to look up
-     * @return the registered custom operator instance
-     * @throws QueryConfigurationException if the custom operator class is not registered
-     */
-    private RsqlCustomOperator<?> getCustomOperator(@NonNull Class<?> clazz) {
-        RsqlCustomOperator<?> operator = customOperators.get(clazz);
-        if(operator == null) throw new QueryConfigurationException(MessageFormat.format(
-                "Custom operator ''{0}'' referenced in @RsqlFilterable is not registered", clazz.getSimpleName()
-        ));
-        return operator;
     }
 }

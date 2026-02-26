@@ -78,14 +78,11 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
     private final RSQLParser rsqlParser;
 
     /**
-     * Set of custom RSQL operators allowed by this resolver.
-     */
-    private final Set<? extends RsqlCustomOperator<?>> customOperators;
-
-    /**
      * List of RSQLCustomPredicate corresponding to the custom operators.
      */
     private final List<RSQLCustomPredicate<?>> customPredicates;
+
+    private final AnnotationUtil annotationUtil;
 
     /**
      * Creates a new RsqlSpecificationArgumentResolver with the specified operators.
@@ -93,12 +90,11 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
      * @param defaultOperators set of default RSQL operators to support
      * @param customOperators  set of custom RSQL operators to support
      */
-    public RsqlSpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators) {
+    public RsqlSpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
         // Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
         Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
                 .stream()
                 .map(RsqlOperator::getOperator);
-        this.customOperators = Set.copyOf(customOperators); // Create an immutable copy of the custom operators set
         Stream<ComparisonOperator> customOperatorsStream = customOperators
                 .stream()
                 .map(RsqlCustomOperator::getComparisonOperator);
@@ -116,6 +112,7 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
                         operator::toPredicate
                 ))
                 .collect(Collectors.toList());
+        this.annotationUtil = annotationUtil;
     }
 
     /**
@@ -163,38 +160,24 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
     )
     {
         try {
-            // Retrieve the @WebQuery annotation from the method parameter to access entity and field mapping configuration
-            WebQuery webQueryAnnotation = AnnotationUtil.resolveWebQueryFromParameter(parameter);
-            // Extract entity class and field mappings from the @WebQuery annotation
-            Class<?> entityClass = webQueryAnnotation.entityClass();
-            FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
-            // Validate field mappings to ensure they are well-formed and do not contain conflicts
-            AnnotationUtil.validateFieldMappings(fieldMappings);
-
             // Extract the RSQL query string from the request using the parameter name defined in @RsqlSpec
             String filter = getRsqlQueryString(parameter, webRequest);
             if(filter == null || filter.isBlank()) return Specification.unrestricted();
 
-            // Validate the RSQL query string against the target entity and its @RsqlFilterable fields
-            validateRsqlQueryString(filter, entityClass, fieldMappings);
+            // Retrieve the @WebQuery annotation from the method parameter to access configuration
+            WebQuery webQueryAnnotation = annotationUtil.resolveWebQueryFromParameter(parameter);
+            // Extract entity and dto class
+            Class<?> entityClass = webQueryAnnotation.entityClass();
+            Class<?> dtoClass = webQueryAnnotation.dtoClass();
 
-            // Convert field mappings to aliases map which rsql jpa support library accepts
-            Map<String, String> fieldMappingsMap = Arrays
-                    .stream(fieldMappings)
-                    .collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
+            // Entity mode
+            if(dtoClass == void.class) {
+                FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
+                return buildEntityModeSpecification(entityClass, fieldMappings, filter);
+            }
 
-            // Convert the validated RSQL query into a JPA Specification
-            QuerySupport querySupport = QuerySupport
-                    .builder()
-                    .rsqlQuery(filter)
-                    .propertyPathMapper(fieldMappingsMap)
-                    .customPredicates(customPredicates)
-                    // prevents wildcard parsing for string equality operator
-                    // so that "name==John*" is treated as: name equals 'John*'
-                    // rather than: name starts with 'John'
-                    .strictEquality(true)
-                    .build();
-            return RSQLJPASupport.toSpecification(querySupport);
+            // DTO mode
+            return buildDtoModeSpecification(entityClass, dtoClass, filter);
         }
         catch (RSQLParserException ex) {
             throw new QueryValidationException("Unable to parse RSQL query param", ex);
@@ -223,25 +206,57 @@ public class RsqlSpecificationArgumentResolver implements HandlerMethodArgumentR
         return webRequest.getParameter(annotation.paramName());
     }
 
-    /**
-     * Parses and validates an RSQL query string against the provided entity type.
-     *
-     * @param query raw RSQL query string
-     * @param entityClass entity class used for field resolution
-     * @param fieldMappings configured alias mappings from {@link WebQuery}
-     * @throws RSQLParserException if the query cannot be parsed
-     * @throws QueryValidationException if any field or operator violates validation rules
-     * @throws QueryConfigurationException if validation references misconfigured operators
-     */
-    private void validateRsqlQueryString(@NonNull String query, @NonNull Class<?> entityClass, @NonNull FieldMapping[] fieldMappings) {
+    private Specification<?> buildEntityModeSpecification(Class<?> entityClass, FieldMapping[] fieldMappings, String filter) {
+        // Validate field mappings to ensure they are well-formed and do not contain conflicts
+        annotationUtil.validateFieldMappings(fieldMappings);
+
         // Parse the RSQL query into an Abstract Syntax Tree (AST)
-        Node root = rsqlParser.parse(query);
+        Node root = rsqlParser.parse(filter);
         // Validate the parsed AST against the target entity and its @RsqlFilterable fields
         ValidationRSQLVisitor validationVisitor = new ValidationRSQLVisitor(
                 entityClass,
                 fieldMappings,
-                customOperators
+                annotationUtil
         );
         root.accept(validationVisitor);
+
+        // Convert field mappings to aliases map which rsql jpa support library accepts
+        Map<String, String> fieldMappingsMap = Arrays
+                .stream(fieldMappings)
+                .collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
+
+        // Convert the validated RSQL query into a JPA Specification
+        QuerySupport querySupport = QuerySupport
+                .builder()
+                .rsqlQuery(filter)
+                .propertyPathMapper(fieldMappingsMap)
+                .customPredicates(customPredicates)
+                // prevents wildcard parsing for string equality operator
+                // so that "name==John*" is treated as: name equals 'John*'
+                // rather than: name starts with 'John'
+                .strictEquality(true)
+                .build();
+        return RSQLJPASupport.toSpecification(querySupport);
+    }
+
+    private Specification<?> buildDtoModeSpecification(Class<?> entityClass, Class<?> dtoClass, String filter) {
+        DtoValidationRSQLVisitor visitor = new DtoValidationRSQLVisitor(entityClass, dtoClass, annotationUtil);
+        // Parse the RSQL query into an Abstract Syntax Tree (AST)
+        Node root = rsqlParser.parse(filter);
+        // Validate the parsed AST against the target DTO and its @RsqlFilterable fields, while also building field mappings from DTO to entity
+        root.accept(visitor);
+
+        // Convert the validated RSQL query into a JPA Specification
+        QuerySupport querySupport = QuerySupport
+                .builder()
+                .rsqlQuery(filter)
+                .propertyPathMapper(visitor.getFieldMappings())
+                .customPredicates(customPredicates)
+                // prevents wildcard parsing for string equality operator
+                // so that "name==John*" is treated as: name equals 'John*'
+                // rather than: name starts with 'John'
+                .strictEquality(true)
+                .build();
+        return RSQLJPASupport.toSpecification(querySupport);
     }
 }
