@@ -32,6 +32,14 @@ class ReflectionUtilTest {
     }
 
     @Test
+    void resolveFieldPath_returnsFullPath() {
+        java.util.List<Field> fields = ReflectionUtil.resolveFieldPath(ParentEntity.class, "children.name");
+        assertEquals(2, fields.size());
+        assertEquals("children", fields.getFirst().getName());
+        assertEquals("name", fields.getLast().getName());
+    }
+
+    @Test
     void resolveField_throwsForUnknownSegment() {
         RuntimeException ex = assertThrows(
                 RuntimeException.class,

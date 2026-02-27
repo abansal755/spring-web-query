@@ -5,7 +5,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Utility class for performing reflection-based operations on entity classes.
@@ -59,6 +61,32 @@ public class ReflectionUtil {
             current = unwrapContainerType(field);
         }
         return field;
+    }
+
+    /**
+     * Resolves all fields in a dot-separated path, preserving traversal order.
+     *
+     * <p>Unlike {@link #resolveField(Class, String)}, which returns only the
+     * terminal field, this method returns the complete sequence of resolved
+     * fields. It applies the same hierarchy lookup and container unwrapping
+     * rules at each step.</p>
+     *
+     * @param type root class from which traversal starts
+     * @param name dot-separated field path
+     * @return ordered list of fields from first segment to last segment
+     * @throws RuntimeException if any segment cannot be resolved
+     * @throws UnsupportedOperationException if intermediate collection generics cannot be resolved
+     */
+    public static List<Field> resolveFieldPath(Class<?> type, String name) {
+        String[] fieldNames = name.split("\\.");
+        Class<?> current = type;
+        List<Field> path = new ArrayList<>();
+        for(String fieldName : fieldNames) {
+            Field field = resolveFieldUpHierarchy(current, fieldName);
+            path.add(field);
+            current = unwrapContainerType(field);
+        }
+        return path;
     }
 
     /**

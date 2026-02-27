@@ -27,7 +27,22 @@ public @interface WebQuery {
     Class<?> entityClass();
 
     /**
+     * Optional DTO class used as the API-facing query contract.
+     *
+     * <p>When set, incoming filter/sort paths are validated against this DTO and
+     * translated to entity paths (optionally using {@link MapsTo}). When left as
+     * {@code void.class}, entity fields are used directly.</p>
+     *
+     * @return DTO class or {@code void.class} when DTO mapping is disabled
+     */
+    Class<?> dtoClass() default void.class;
+
+    /**
      * Optional field mappings used to expose API-facing aliases for entity fields.
+     *
+     * <p>These mappings are applied in entity-aware mode
+     * ({@code dtoClass = void.class}). In DTO-aware mode, path translation is
+     * driven by {@link MapsTo} annotations on DTO fields.</p>
      *
      * @return mappings between API names and entity paths
      */

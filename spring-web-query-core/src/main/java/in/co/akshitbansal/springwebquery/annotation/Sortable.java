@@ -1,16 +1,20 @@
 package in.co.akshitbansal.springwebquery.annotation;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks an entity field as eligible for sorting in API query requests.
+ * Marks a field as eligible for sorting in API query requests.
  *
  * <p>Fields annotated with {@code @Sortable} may be referenced in
  * {@code sort} query parameters when pagination is enabled via
  * {@link RestrictedPageable}.</p>
+ *
+ * <p>The annotation is applied to whichever type is used as the sorting contract:
+ * entity fields in entity-aware mode, or DTO fields in DTO-aware mode.</p>
  *
  * <p>This annotation is purely declarative and does not impose any
  * persistence or indexing requirements. Its sole purpose is to
@@ -36,5 +40,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
+@Documented
 public @interface Sortable {
 }

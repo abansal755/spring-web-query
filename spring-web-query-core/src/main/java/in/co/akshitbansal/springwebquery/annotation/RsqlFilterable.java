@@ -6,13 +6,16 @@ import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import java.lang.annotation.*;
 
 /**
- * Marks an entity field as filterable via RSQL (RESTful Service Query Language) queries.
+ * Marks a field as filterable via RSQL (RESTful Service Query Language) queries.
  * <p>
  * This annotation allows you to declare which RSQL operators (both default and custom)
  * are permitted on a specific field.
  * When used in combination with a RSQL-to-Spring-Data Specification resolver,
  * only the specified default and custom operators will be allowed for filtering on this field.
  * </p>
+ *
+ * <p>The annotation is applied to whichever type is used as the filtering contract:
+ * entity fields in entity-aware mode, or DTO fields in DTO-aware mode.</p>
  *
  * <p><b>Example usage:</b></p>
  * <pre>{@code

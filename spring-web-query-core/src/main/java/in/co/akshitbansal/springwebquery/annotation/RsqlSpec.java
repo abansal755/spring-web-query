@@ -8,10 +8,18 @@ import java.lang.annotation.*;
  * <p>
  * When applied to a method parameter, the annotated parameter will receive a Specification
  * built from the RSQL query provided in the HTTP request. The RSQL query is parsed,
- * validated against the target entity's {@link RsqlFilterable} annotations, and converted
- * into a Spring Data JPA {@link org.springframework.data.jpa.domain.Specification}. Entity
- * metadata and alias mappings are sourced from {@link WebQuery} on the same controller method.
+ * validated against the configured query contract, and converted into a Spring Data JPA
+ * {@link org.springframework.data.jpa.domain.Specification}.
  * </p>
+ *
+ * <p>Validation behavior depends on {@link WebQuery} configuration on the same method:</p>
+ * <ul>
+ *     <li>Entity-aware mode ({@code dtoClass = void.class}): selectors are validated
+ *         against entity fields annotated with {@link RsqlFilterable}, with optional
+ *         alias support from {@link FieldMapping}.</li>
+ *     <li>DTO-aware mode: selectors are validated against DTO fields annotated with
+ *         {@link RsqlFilterable} and translated to entity paths through {@link MapsTo}.</li>
+ * </ul>
  *
  * <p><b>Example usage in a controller:</b></p>
  * <pre>{@code

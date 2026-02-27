@@ -1,4 +1,4 @@
-package in.co.akshitbansal.springwebquery;
+package in.co.akshitbansal.springwebquery.resolver;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
@@ -9,8 +9,8 @@ import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,86 +29,66 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * A custom {@link HandlerMethodArgumentResolver} that wraps a standard
- * {@link PageableHandlerMethodArgumentResolver} to enforce restrictions
- * on pageable sorting fields based on entity metadata.
- * <p>
- * This resolver only supports controller method parameters that:
- * <ul>
- *     <li>Are of type {@link Pageable}.</li>
- *     <li>Are annotated with {@link RestrictedPageable}.</li>
- * </ul>
- * <p>
- * The resolver delegates the initial parsing of {@code page}, {@code size},
- * and {@code sort} parameters to Spring's {@link PageableHandlerMethodArgumentResolver}.
- * It then validates each requested {@link Sort.Order} against the target entity class
- * specified in {@link WebQuery} on the controller method. Sorting is only allowed
- * on fields explicitly annotated with {@link Sortable}.
- * Alias mappings from {@link WebQuery#fieldMappings()} are also applied so API-facing
- * sort names can be rewritten to entity field paths.
- * <p>
- * If a requested sort field is not annotated as {@link Sortable}, a
- * {@link QueryValidationException} is thrown.
+ * Entity-based resolver for {@link Pageable} parameters annotated with
+ * {@link RestrictedPageable}.
+ *
+ * <p>This resolver validates requested sort properties directly against the
+ * configured entity class and optional {@link FieldMapping} aliases declared
+ * on {@link WebQuery}.</p>
  */
 @RequiredArgsConstructor
-public class RestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
+public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
 
     /**
-     * The delegate {@link PageableHandlerMethodArgumentResolver} used to
-     * parse standard pageable parameters.
+     * Delegate used to parse raw pageable parameters from the request.
      */
     private final PageableHandlerMethodArgumentResolver delegate;
 
     /**
-     * Determines whether the given method parameter is supported by this resolver.
-     * <p>
-     * Supported parameters must:
-     * <ul>
-     *     <li>Be assignable to {@link Pageable}.</li>
-     *     <li>Be annotated with {@link RestrictedPageable}.</li>
-     * </ul>
+     * Utility used to resolve {@link WebQuery} metadata.
+     */
+    private final AnnotationUtil annotationUtil;
+
+    /**
+     * Determines whether this resolver should handle the given parameter.
      *
-     * @param parameter the method parameter to check
-     * @return {@code true} if the parameter is supported, {@code false} otherwise
+     * @param parameter method parameter under inspection
+     * @return {@code true} when parameter is {@code Pageable} with
+     *         {@link RestrictedPageable} and no DTO mapping is configured
      */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return Pageable.class.isAssignableFrom(parameter.getParameterType())
-                && parameter.hasParameterAnnotation(RestrictedPageable.class);
+        if(!Pageable.class.isAssignableFrom(parameter.getParameterType())) return false;
+        if(!parameter.hasParameterAnnotation(RestrictedPageable.class)) return false;
+        WebQuery webQueryAnnotation = annotationUtil.resolveWebQueryFromParameter(parameter);
+        return webQueryAnnotation.dtoClass() == void.class;
     }
 
     /**
-     * Resolves the given {@link Pageable} argument from the web request.
-     * <p>
-     * The process is as follows:
-     * <ol>
-     *     <li>Delegate parsing of page, size, and sort parameters to {@link #delegate}.</li>
-     *     <li>Resolve {@link WebQuery} metadata from the controller method.</li>
-     *     <li>Validate each requested {@link Sort.Order} against the entity's sortable fields.
-     *     If a field is not annotated with {@link Sortable}, a {@link QueryValidationException} is thrown.</li>
-     *     <li>Rewrite alias sort properties to real entity field paths using field mappings.</li>
-     * </ol>
+     * Resolves and validates a {@link Pageable} argument with restricted sorting.
      *
-     * @param methodParameter the method parameter for which the value should be resolved
-     * @param mavContainer the ModelAndViewContainer (can be {@code null})
-     * @param webRequest the current request
-     * @param binderFactory a factory for creating WebDataBinder instances (can be {@code null})
-     * @return a {@link Pageable} object containing page, size, validated sort information,
-     *         and mapped sort field paths
-     * @throws QueryValidationException if any requested sort field is not marked as {@link Sortable}
-     * @throws QueryConfigurationException if resolver metadata or alias configuration cannot be processed
+     * @param parameter controller method parameter being resolved
+     * @param mavContainer current MVC container
+     * @param webRequest current request
+     * @param binderFactory binder factory
+     * @return validated pageable with alias-mapped sort properties
+     * @throws Exception when resolution fails
      */
     @Override
-    public Pageable resolveArgument(
-            @NonNull MethodParameter methodParameter,
-            ModelAndViewContainer mavContainer,
-            @NonNull NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
-    ) {
+    public @Nullable Object resolveArgument(
+            MethodParameter parameter,
+            @Nullable ModelAndViewContainer mavContainer,
+            NativeWebRequest webRequest,
+            @Nullable WebDataBinderFactory binderFactory
+    ) throws Exception
+    {
         try {
+            // Delegate parsing of page, size and sort parameters to Spring
+            Pageable pageable = delegate.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
+
             // Resolve the @WebQuery annotation to access entity metadata for validation
-            WebQuery webQueryAnnotation = AnnotationUtil.resolveWebQueryFromParameter(methodParameter);
-            // Extract entity class and field mappings from the @WebQuery annotation
+            WebQuery webQueryAnnotation = annotationUtil.resolveWebQueryFromParameter(parameter);
+            // Extract entity class and field mappings from the @WebQuery annotation for validation and pageable building
             Class<?> entityClass = webQueryAnnotation.entityClass();
             FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
 
@@ -119,9 +99,6 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
             Map<String, FieldMapping> originalFieldNameMap = Arrays
                     .stream(fieldMappings)
                     .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
-
-            // Delegate parsing of page, size and sort parameters to Spring
-            Pageable pageable = delegate.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 
             // Validate each requested sort order against entity metadata
             for(Sort.Order order : pageable.getSort()) {
@@ -150,10 +127,11 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
                     ), ex);
                 }
                 // Reject sorting on fields not explicitly marked as sortable
-                if(!field.isAnnotationPresent(Sortable.class))
+                if(!field.isAnnotationPresent(Sortable.class)) {
                     throw new QueryValidationException(MessageFormat.format(
                             "Sorting is not allowed on the field ''{0}''", reqFieldName
                     ));
+                }
             }
 
             return reconstructPageable(pageable, fieldMappingMap);
@@ -167,12 +145,11 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
     }
 
     /**
-     * Rebuilds the resolved {@link Pageable} with sort properties rewritten from
-     * public aliases to entity field paths.
+     * Rebuilds pageable sort orders after applying alias-to-entity mapping.
      *
-     * @param pageable the original pageable resolved by Spring
-     * @param fieldMappingMap map of API alias to {@link FieldMapping}
-     * @return a pageable with mapped sort property paths
+     * @param pageable parsed pageable
+     * @param fieldMappingMap lookup map for alias mappings
+     * @return pageable with mapped sort properties
      */
     private Pageable reconstructPageable(Pageable pageable, Map<String, FieldMapping> fieldMappingMap) {
         // Reconstruct sort orders with mapped field names
@@ -188,11 +165,10 @@ public class RestrictedPageableArgumentResolver implements HandlerMethodArgument
     }
 
     /**
-     * Rewrites one sort order from alias property name to entity field path when
-     * a matching mapping is present.
+     * Rewrites a single sort order from API alias to entity path if needed.
      *
-     * @param order original sort order from request
-     * @param fieldMappingMap map of API alias to {@link FieldMapping}
+     * @param order sort order from request
+     * @param fieldMappingMap alias lookup map
      * @return rewritten sort order
      */
     private Sort.Order reconstructSortOrder(Sort.Order order, Map<String, FieldMapping> fieldMappingMap) {

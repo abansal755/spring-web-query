@@ -7,9 +7,15 @@ import java.lang.annotation.*;
  * as subject to field-level sorting restrictions.
  *
  * <p>When applied, the pageable argument is validated so that sorting is only
- * allowed on entity fields explicitly annotated with {@link Sortable}. Entity
- * metadata and alias mappings are resolved from {@link WebQuery} on the same
- * controller method.</p>
+ * allowed on fields explicitly annotated with {@link Sortable}.</p>
+ *
+ * <p>Validation behavior depends on {@link WebQuery} configuration on the same method:</p>
+ * <ul>
+ *     <li>Entity-aware mode ({@code dtoClass = void.class}): sort selectors are validated
+ *         against entity fields and optional {@link FieldMapping} aliases.</li>
+ *     <li>DTO-aware mode: sort selectors are validated against DTO fields and translated
+ *         to entity paths via {@link MapsTo}.</li>
+ * </ul>
  *
  * <p>This annotation does <strong>not</strong> affect pagination parameters
  * such as page number or page size. It only governs which fields may be used
