@@ -13,6 +13,7 @@ import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,6 +29,7 @@ import java.util.*;
 @AutoConfiguration
 @ConditionalOnClass(RSQLJPAAutoConfiguration.class)
 @RequiredArgsConstructor
+@Slf4j
 public class RsqlAutoConfig {
 
     @Bean
@@ -55,6 +57,11 @@ public class RsqlAutoConfig {
             }
             defaultOperators.add(operator);
         }
+        log.info("Registered default RSQL operators: {}", defaultOperators
+                .stream()
+                .map(RsqlOperator::getOperator)
+                .toList()
+        );
         return defaultOperators;
     }
 
@@ -84,6 +91,11 @@ public class RsqlAutoConfig {
                 customOperators.add(operator);
             }
         }
+        log.info("Registered custom RSQL operators: {}", customOperators
+                .stream()
+                .map(RsqlCustomOperator::getComparisonOperator)
+                .toList()
+        );
         return customOperators;
     }
 
