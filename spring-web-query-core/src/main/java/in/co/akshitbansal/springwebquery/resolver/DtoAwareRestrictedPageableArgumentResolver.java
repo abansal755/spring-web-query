@@ -6,7 +6,7 @@ import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
+import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.RequiredArgsConstructor;
@@ -99,15 +99,15 @@ public class DtoAwareRestrictedPageableArgumentResolver implements HandlerMethod
                     dtoFields = ReflectionUtil.resolveFieldPath(dtoClass, dtoPath);
                 }
                 catch (Exception ex) {
-                    throw new QueryValidationException(MessageFormat.format(
+                    throw new QueryFieldValidationException(MessageFormat.format(
                             "Unknown field ''{0}''", dtoPath
-                    ), ex);
+                    ), dtoPath, ex);
                 }
                 // Validate the last field in the path for sortability
                 if(!dtoFields.getLast().isAnnotationPresent(Sortable.class)) {
-                    throw new QueryValidationException(MessageFormat.format(
+                    throw new QueryFieldValidationException(MessageFormat.format(
                             "Sorting is not allowed on the field ''{0}''", dtoPath
-                    ));
+                    ), dtoPath);
                 }
                 // Construct the corresponding entity field path using the @MapsTo annotation if present
                 List<String> entityPathSegments = new ArrayList<>();
@@ -124,10 +124,10 @@ public class DtoAwareRestrictedPageableArgumentResolver implements HandlerMethod
                 try {
                     ReflectionUtil.resolveField(entityClass, entityPath);
                 }
-                catch (Exception x) {
+                catch (Exception ex) {
                     throw new QueryConfigurationException(MessageFormat.format(
                             "Unable to resolve entity field path ''{0}'' mapped from DTO path ''{1}''", entityPath, dtoPath
-                    ));
+                    ), ex);
                 }
                 newOrders.add(new Sort.Order(order.getDirection(), entityPath));
             }

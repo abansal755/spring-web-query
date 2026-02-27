@@ -4,6 +4,8 @@ import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
+import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
@@ -130,9 +132,9 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
             dtoFields = ReflectionUtil.resolveFieldPath(dtoClass, dtoPath);
         }
         catch (Exception ex) {
-            throw new QueryValidationException(MessageFormat.format(
+            throw new QueryFieldValidationException(MessageFormat.format(
                     "Unknown field ''{0}''", dtoPath
-            ), ex);
+            ), dtoPath, ex);
         }
         // Validate the last field in the path for filterability and allowed operators
         validateField(dtoFields.getLast(), operator, dtoPath);
@@ -153,10 +155,10 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         try {
             ReflectionUtil.resolveField(entityClass, entityPath);
         }
-        catch (Exception x) {
+        catch (Exception ex) {
             throw new QueryConfigurationException(MessageFormat.format(
                     "Unable to resolve entity field path ''{0}'' mapped from DTO path ''{1}''", entityPath, dtoPath
-            ));
+            ), ex);
         }
 
         // Store the mapping from DTO path to entity path for later use during query construction
@@ -174,14 +176,19 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         // Retrieve the RsqlFilterable annotation on the field (if present)
         RsqlFilterable filterable = field.getAnnotation(RsqlFilterable.class);
         // Throw exception if the field is not annotated as filterable
-        if(filterable == null) throw new QueryValidationException(MessageFormat.format(
+        if(filterable == null) throw new QueryFieldValidationException(MessageFormat.format(
                 "Filtering not allowed on field ''{0}''", fieldPath
-        ));
+        ), fieldPath);
 
         // Throw exception if the provided operator is not in the allowed set
         Set<ComparisonOperator> allowedOperators = annotationUtil.getAllowedOperators(filterable);
-        if(!allowedOperators.contains(operator)) throw new QueryValidationException(MessageFormat.format(
-                "Operator ''{0}'' not allowed on field ''{1}''", operator, fieldPath
-        ));
+        if(!allowedOperators.contains(operator)) {
+            throw new QueryForbiddenOperatorException(
+                    MessageFormat.format("Operator ''{0}'' not allowed on field ''{1}''", operator, fieldPath),
+                    fieldPath,
+                    operator,
+                    allowedOperators
+            );
+        }
     }
 }

@@ -359,19 +359,27 @@ The starter registers an ISO-8601 converter for `java.sql.Timestamp` values in R
 
 ## Error handling
 
-Exception hierarchy:
+Exception hierarchy, semantics, and metadata:
 
 - `QueryException`
-- `QueryValidationException`
-  - invalid RSQL syntax
-  - unknown fields in filter/sort
-  - filtering/sorting not allowed on requested fields
-  - operator not allowed for a field
-- `QueryConfigurationException`
-  - missing `@WebQuery`
-  - invalid or conflicting mappings
-  - unregistered custom operators referenced in `@RsqlFilterable`
-  - duplicate operator symbols across default/custom operators
+  - generic base exception for all query-related failures
+  - `QueryValidationException`
+    - client-side validation failure (map to 4xx responses)
+    - thrown for invalid RSQL syntax
+    - `QueryFieldValidationException`
+      - field-specific validation failure
+      - thrown when a field is unknown in filter/sort
+      - thrown when filtering/sorting is not allowed on a field
+      - additional metadata: `fieldPath`
+      - `QueryForbiddenOperatorException`
+        - thrown when an operator is not allowed for a field
+        - additional metadata: `fieldPath`, `operator` (used), `allowedOperators` (set of allowed operators)
+  - `QueryConfigurationException`
+    - server-side misconfiguration (map to 5xx responses)
+    - thrown for missing `@WebQuery`
+    - thrown for invalid or conflicting mappings
+    - thrown for unregistered custom operators referenced in `@RsqlFilterable`
+    - thrown for duplicate operator symbols across default/custom operators
 
 Suggested controller advice:
 

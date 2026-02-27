@@ -3,9 +3,7 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
+import in.co.akshitbansal.springwebquery.exception.*;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
@@ -147,9 +145,9 @@ public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         // Find if there exists a field mapping with original field name and throw error if use is not allowed
         FieldMapping originalFieldMapping = originalFieldMappings.get(reqFieldName);
         if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
-            throw new QueryValidationException(MessageFormat.format(
+            throw new QueryFieldValidationException(MessageFormat.format(
                     "Unknown field ''{0}''", reqFieldName
-            ));
+            ), reqFieldName);
 
         // Find original field name if field mapping exists to correctly find the field
         FieldMapping fieldMapping = fieldMappings.get(reqFieldName);
@@ -161,22 +159,27 @@ public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
             field = ReflectionUtil.resolveField(entityClass, fieldName);
         }
         catch (Exception ex) {
-            throw new QueryValidationException(MessageFormat.format(
+            throw new QueryFieldValidationException(MessageFormat.format(
                     "Unknown field ''{0}''", reqFieldName
-            ), ex);
+            ), reqFieldName, ex);
         }
 
         // Retrieve the RsqlFilterable annotation on the field (if present)
         RsqlFilterable filterable = field.getAnnotation(RsqlFilterable.class);
         // Throw exception if the field is not annotated as filterable
-        if(filterable == null) throw new QueryValidationException(MessageFormat.format(
+        if(filterable == null) throw new QueryFieldValidationException(MessageFormat.format(
                 "Filtering not allowed on field ''{0}''", reqFieldName
-        ));
+        ), reqFieldName);
 
         // Throw exception if the provided operator is not in the allowed set
         Set<ComparisonOperator> allowedOperators = annotationUtil.getAllowedOperators(filterable);
-        if(!allowedOperators.contains(operator)) throw new QueryValidationException(MessageFormat.format(
-                "Operator ''{0}'' not allowed on field ''{1}''", operator, reqFieldName
-        ));
+        if(!allowedOperators.contains(operator)) {
+            throw new QueryForbiddenOperatorException(
+                    MessageFormat.format("Operator ''{0}'' not allowed on field ''{1}''", operator, reqFieldName),
+                    reqFieldName,
+                    operator,
+                    allowedOperators
+            );
+        }
     }
 }

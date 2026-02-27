@@ -6,7 +6,7 @@ import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
+import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.RequiredArgsConstructor;
@@ -108,9 +108,9 @@ public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMet
                 // If the field name corresponds to an API alias that does not allow using the original field name, reject it
                 FieldMapping originalFieldMapping = originalFieldNameMap.get(reqFieldName);
                 if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
-                    throw new QueryValidationException(MessageFormat.format(
+                    throw new QueryFieldValidationException(MessageFormat.format(
                             "Unknown field ''{0}''", reqFieldName
-                    ));
+                    ), reqFieldName);
 
                 // Find original field name if field mapping exists to correctly find the field
                 FieldMapping fieldMapping = fieldMappingMap.get(reqFieldName);
@@ -122,15 +122,15 @@ public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMet
                     field = ReflectionUtil.resolveField(entityClass, fieldName);
                 }
                 catch (Exception ex) {
-                    throw new QueryValidationException(MessageFormat.format(
+                    throw new QueryFieldValidationException(MessageFormat.format(
                             "Unknown field ''{0}''", reqFieldName
-                    ), ex);
+                    ), reqFieldName, ex);
                 }
                 // Reject sorting on fields not explicitly marked as sortable
                 if(!field.isAnnotationPresent(Sortable.class)) {
-                    throw new QueryValidationException(MessageFormat.format(
+                    throw new QueryFieldValidationException(MessageFormat.format(
                             "Sorting is not allowed on the field ''{0}''", reqFieldName
-                    ));
+                    ), reqFieldName);
                 }
             }
 
