@@ -1,7 +1,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.resolver.DtoRestrictedPageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.EntityRestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.DtoAwareRestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.EntityAwareRestrictedPageableArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
@@ -15,13 +15,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RestrictedPageableAutoConfig implements WebMvcConfigurer {
 
-    private final EntityRestrictedPageableArgumentResolver entityRestrictedPageableArgumentResolver;
-    private final DtoRestrictedPageableArgumentResolver dtoRestrictedPageableArgumentResolver;
+    private final EntityAwareRestrictedPageableArgumentResolver entityAwareRestrictedPageableArgumentResolver;
+    private final DtoAwareRestrictedPageableArgumentResolver dtoAwareRestrictedPageableArgumentResolver;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         // Ensure these resolvers are checked before Spring Data's default Pageable resolver.
-        resolvers.addFirst(dtoRestrictedPageableArgumentResolver);
-        resolvers.addFirst(entityRestrictedPageableArgumentResolver);
+        resolvers.addFirst(dtoAwareRestrictedPageableArgumentResolver);
+        resolvers.addFirst(entityAwareRestrictedPageableArgumentResolver);
     }
 }

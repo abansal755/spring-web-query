@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public class EntityRestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
+public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
 
     private final PageableHandlerMethodArgumentResolver delegate;
     private final AnnotationUtil annotationUtil;

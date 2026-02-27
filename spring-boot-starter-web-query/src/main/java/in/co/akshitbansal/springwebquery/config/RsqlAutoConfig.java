@@ -4,10 +4,10 @@ import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
-import in.co.akshitbansal.springwebquery.resolver.DtoRestrictedPageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.DtoRsqlSpecArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.EntityRestrictedPageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.EntityRsqlSpecArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.DtoAwareRestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.DtoAwareRsqlSpecArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.EntityAwareRestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.EntityAwareRsqlSpecArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
@@ -93,21 +93,21 @@ public class RsqlAutoConfig {
     }
 
     @Bean
-    public EntityRsqlSpecArgumentResolver entityRsqlSpecArgumentResolver(
+    public EntityAwareRsqlSpecArgumentResolver entityAwareRsqlSpecArgumentResolver(
             Set<RsqlOperator> defaultOperatorSet,
             Set<? extends RsqlCustomOperator<?>> customOperatorSet,
             AnnotationUtil annotationUtil
     ) {
-        return new EntityRsqlSpecArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
+        return new EntityAwareRsqlSpecArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
     }
 
     @Bean
-    public DtoRsqlSpecArgumentResolver dtoRsqlSpecArgumentResolver(
+    public DtoAwareRsqlSpecArgumentResolver dtoAwareRsqlSpecArgumentResolver(
             Set<RsqlOperator> defaultOperatorSet,
             Set<? extends RsqlCustomOperator<?>> customOperatorSet,
             AnnotationUtil annotationUtil
     ) {
-        return new DtoRsqlSpecArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
+        return new DtoAwareRsqlSpecArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
     }
 
     // Allows RSQL to parse ISO-8601 Timestamp fields
@@ -125,18 +125,18 @@ public class RsqlAutoConfig {
     }
 
     @Bean
-    public EntityRestrictedPageableArgumentResolver entityRestrictedPageableArgumentResolver(
+    public EntityAwareRestrictedPageableArgumentResolver entityAwareRestrictedPageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
             AnnotationUtil annotationUtil
     ) {
-        return new EntityRestrictedPageableArgumentResolver(delegate, annotationUtil);
+        return new EntityAwareRestrictedPageableArgumentResolver(delegate, annotationUtil);
     }
 
     @Bean
-    public DtoRestrictedPageableArgumentResolver dtoRestrictedPageableArgumentResolver(
+    public DtoAwareRestrictedPageableArgumentResolver dtoRestrictedPageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
             AnnotationUtil annotationUtil
     ) {
-        return new DtoRestrictedPageableArgumentResolver(delegate, annotationUtil);
+        return new DtoAwareRestrictedPageableArgumentResolver(delegate, annotationUtil);
     }
 }

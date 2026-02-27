@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class DtoRestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
+public class DtoAwareRestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
 
     private final PageableHandlerMethodArgumentResolver delegate;
     private final AnnotationUtil annotationUtil;

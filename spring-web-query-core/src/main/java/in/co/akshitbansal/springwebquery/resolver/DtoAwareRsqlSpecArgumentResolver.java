@@ -1,8 +1,6 @@
 package in.co.akshitbansal.springwebquery.resolver;
 
-import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
-import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.DtoValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
@@ -14,7 +12,6 @@ import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.QuerySupport;
-import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -22,43 +19,14 @@ import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class DtoRsqlSpecArgumentResolver implements HandlerMethodArgumentResolver {
+public class DtoAwareRsqlSpecArgumentResolver extends RsqlSpecArgumentResolver {
 
-    private final RSQLParser rsqlParser;
-    private final List<RSQLCustomPredicate<?>> customPredicates;
-    private final AnnotationUtil annotationUtil;
-
-    public DtoRsqlSpecArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
-        // Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
-        Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
-                .stream()
-                .map(RsqlOperator::getOperator);
-        Stream<ComparisonOperator> customOperatorsStream = customOperators
-                .stream()
-                .map(RsqlCustomOperator::getComparisonOperator);
-        Set<ComparisonOperator> allowedOperators = Stream
-                .concat(defaultOperatorsStream, customOperatorsStream)
-                .collect(Collectors.toSet());
-        rsqlParser = new RSQLParser(allowedOperators);
-
-        // Convert custom operators to the format which rsql jpa support library accepts
-        this.customPredicates = customOperators
-                .stream()
-                .map(operator -> new RSQLCustomPredicate<>(
-                        operator.getComparisonOperator(),
-                        operator.getType(),
-                        operator::toPredicate
-                ))
-                .collect(Collectors.toList());
-        this.annotationUtil = annotationUtil;
+    public DtoAwareRsqlSpecArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
+        super(defaultOperators, customOperators, annotationUtil);
     }
 
     @Override
