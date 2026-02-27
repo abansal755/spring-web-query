@@ -13,6 +13,11 @@ import java.lang.annotation.Target;
  * on the entity.
  * </p>
  *
+ * <p>These mappings are used by entity-aware query resolution
+ * ({@link WebQuery#dtoClass()} is {@code void.class}). When a DTO contract is
+ * configured, path translation is handled through {@link MapsTo} on DTO fields.
+ * </p>
+ *
  * <p><b>Example usage:</b></p>
  * <pre>{@code
  * @GetMapping("/users")
@@ -66,7 +71,7 @@ public @interface FieldMapping {
      * Whether to allow the use of the original field name in addition to the alias.
      * <p>
      * When {@code false} (default), only the alias name defined in {@link #name()}
-     * can be used in filter and sort expressions. When {@code true}, both the alias
+     * can be used in entity-aware filter and sort expressions. When {@code true}, both the alias
      * and the original field name are allowed.
      * </p>
      *

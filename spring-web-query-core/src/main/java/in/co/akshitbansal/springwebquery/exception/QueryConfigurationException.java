@@ -4,7 +4,8 @@ package in.co.akshitbansal.springwebquery.exception;
  * Exception thrown when the library is misconfigured by the developer.
  * <p>
  * This exception indicates an internal configuration error, such as referencing
- * a custom operator that has not been registered with the {@code RsqlSpecificationArgumentResolver}.
+ * a custom operator that has not been registered with the configured
+ * RSQL specification resolver.
  * </p>
  *
  * <p>This exception is intended to be treated as a 5xx server error

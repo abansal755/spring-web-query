@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * <p><b>Usage example:</b></p>
  * <pre>{@code
  * Node root = new RSQLParser().parse("status==ACTIVE;age>30");
- * new ValidationRSQLVisitor(User.class, new FieldMapping[0], Set.of()).visit(root);
+ * new EntityValidationRSQLVisitor(User.class, new FieldMapping[0], annotationUtil).visit(root);
  * }</pre>
  *
  * <p>This visitor is typically used in combination with
@@ -63,14 +63,17 @@ public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      */
     private final Map<String, FieldMapping> originalFieldMappings;
 
+    /**
+     * Helper used to resolve allowed operators from annotation metadata.
+     */
     private final AnnotationUtil annotationUtil;
 
     /**
-     * Creates a new ValidationRSQLVisitor with the specified configuration.
+     * Creates a new entity validation visitor with the specified configuration.
      *
      * @param entityClass    the entity class to validate against
      * @param fieldMappings  array of field mappings (aliases) to consider
-     * @param customOperators set of custom operators to allow in queries
+     * @param annotationUtil helper for annotation resolution and operator checks
      */
     public EntityValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings, AnnotationUtil annotationUtil) {
         this.entityClass = entityClass;

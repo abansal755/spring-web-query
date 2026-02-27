@@ -23,12 +23,34 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.util.Set;
 
+/**
+ * DTO-based resolver for {@link Specification} parameters annotated with
+ * {@link RsqlSpec}.
+ *
+ * <p>This resolver is active when {@link WebQuery#dtoClass()} is configured.
+ * Incoming RSQL selectors are validated against DTO fields and then translated
+ * to entity paths before the specification is produced.</p>
+ */
 public class DtoAwareRsqlSpecArgumentResolver extends RsqlSpecArgumentResolver {
 
+    /**
+     * Creates a DTO-aware RSQL specification resolver.
+     *
+     * @param defaultOperators built-in operators accepted in RSQL expressions
+     * @param customOperators custom operators supported by parser and predicates
+     * @param annotationUtil utility for resolving annotations and configuration checks
+     */
     public DtoAwareRsqlSpecArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
         super(defaultOperators, customOperators, annotationUtil);
     }
 
+    /**
+     * Determines whether this resolver should handle the given parameter.
+     *
+     * @param parameter method parameter under inspection
+     * @return {@code true} when parameter is a {@code Specification} with
+     *         {@link RsqlSpec} and method-level {@link WebQuery} has a DTO class
+     */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         if(!Specification.class.isAssignableFrom(parameter.getParameterType())) return false;
@@ -37,6 +59,16 @@ public class DtoAwareRsqlSpecArgumentResolver extends RsqlSpecArgumentResolver {
         return webQueryAnnotation.dtoClass() != void.class;
     }
 
+    /**
+     * Resolves a {@link Specification} from the configured RSQL request parameter.
+     *
+     * @param parameter controller method parameter being resolved
+     * @param mavContainer current MVC container
+     * @param webRequest current request
+     * @param binderFactory binder factory
+     * @return resolved specification, or {@link Specification#unrestricted()} when no filter exists
+     * @throws Exception when resolution fails
+     */
     @Override
     public @Nullable Object resolveArgument(
             @NonNull MethodParameter parameter,
@@ -86,6 +118,13 @@ public class DtoAwareRsqlSpecArgumentResolver extends RsqlSpecArgumentResolver {
         }
     }
 
+    /**
+     * Reads the configured RSQL query string from the request.
+     *
+     * @param parameter method parameter annotated with {@link RsqlSpec}
+     * @param webRequest current web request
+     * @return raw RSQL query string, or {@code null} if not present
+     */
     private String getRsqlQueryString(@NonNull MethodParameter parameter, @NonNull NativeWebRequest webRequest) {
         // Retrieve the @RsqlSpec annotation from the method parameter to access parameter-specific configuration
         RsqlSpec annotation = parameter.getParameterAnnotation(RsqlSpec.class);

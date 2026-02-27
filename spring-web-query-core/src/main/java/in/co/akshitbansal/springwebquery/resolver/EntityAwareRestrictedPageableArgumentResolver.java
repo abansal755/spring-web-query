@@ -28,12 +28,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Entity-based resolver for {@link Pageable} parameters annotated with
+ * {@link RestrictedPageable}.
+ *
+ * <p>This resolver validates requested sort properties directly against the
+ * configured entity class and optional {@link FieldMapping} aliases declared
+ * on {@link WebQuery}.</p>
+ */
 @RequiredArgsConstructor
 public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
 
+    /**
+     * Delegate used to parse raw pageable parameters from the request.
+     */
     private final PageableHandlerMethodArgumentResolver delegate;
+
+    /**
+     * Utility used to resolve {@link WebQuery} metadata.
+     */
     private final AnnotationUtil annotationUtil;
 
+    /**
+     * Determines whether this resolver should handle the given parameter.
+     *
+     * @param parameter method parameter under inspection
+     * @return {@code true} when parameter is {@code Pageable} with
+     *         {@link RestrictedPageable} and no DTO mapping is configured
+     */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         if(!Pageable.class.isAssignableFrom(parameter.getParameterType())) return false;
@@ -42,6 +64,16 @@ public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMet
         return webQueryAnnotation.dtoClass() == void.class;
     }
 
+    /**
+     * Resolves and validates a {@link Pageable} argument with restricted sorting.
+     *
+     * @param parameter controller method parameter being resolved
+     * @param mavContainer current MVC container
+     * @param webRequest current request
+     * @param binderFactory binder factory
+     * @return validated pageable with alias-mapped sort properties
+     * @throws Exception when resolution fails
+     */
     @Override
     public @Nullable Object resolveArgument(
             MethodParameter parameter,
@@ -112,6 +144,13 @@ public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMet
         }
     }
 
+    /**
+     * Rebuilds pageable sort orders after applying alias-to-entity mapping.
+     *
+     * @param pageable parsed pageable
+     * @param fieldMappingMap lookup map for alias mappings
+     * @return pageable with mapped sort properties
+     */
     private Pageable reconstructPageable(Pageable pageable, Map<String, FieldMapping> fieldMappingMap) {
         // Reconstruct sort orders with mapped field names
         List<Sort.Order> newOrders = pageable
@@ -125,6 +164,13 @@ public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMet
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     }
 
+    /**
+     * Rewrites a single sort order from API alias to entity path if needed.
+     *
+     * @param order sort order from request
+     * @param fieldMappingMap alias lookup map
+     * @return rewritten sort order
+     */
     private Sort.Order reconstructSortOrder(Sort.Order order, Map<String, FieldMapping> fieldMappingMap) {
         String fieldName = order.getProperty();
         FieldMapping fieldMapping = fieldMappingMap.get(fieldName);

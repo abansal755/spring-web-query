@@ -26,12 +26,34 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * DTO-based resolver for {@link Pageable} parameters annotated with
+ * {@link RestrictedPageable}.
+ *
+ * <p>This resolver validates sort selectors against a DTO contract and maps
+ * those selectors to entity paths (using {@link MapsTo} where provided) before
+ * returning the final pageable.</p>
+ */
 @RequiredArgsConstructor
 public class DtoAwareRestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
 
+    /**
+     * Delegate used to parse raw pageable parameters from the request.
+     */
     private final PageableHandlerMethodArgumentResolver delegate;
+
+    /**
+     * Utility used to resolve {@link WebQuery} metadata.
+     */
     private final AnnotationUtil annotationUtil;
 
+    /**
+     * Determines whether this resolver should handle the given parameter.
+     *
+     * @param parameter method parameter under inspection
+     * @return {@code true} when parameter is {@code Pageable} with
+     *         {@link RestrictedPageable} and {@link WebQuery} has a DTO class
+     */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         if(!Pageable.class.isAssignableFrom(parameter.getParameterType())) return false;
@@ -40,6 +62,16 @@ public class DtoAwareRestrictedPageableArgumentResolver implements HandlerMethod
         return webQueryAnnotation.dtoClass() != void.class;
     }
 
+    /**
+     * Resolves and validates a {@link Pageable} argument with DTO-based sorting rules.
+     *
+     * @param parameter controller method parameter being resolved
+     * @param mavContainer current MVC container
+     * @param webRequest current request
+     * @param binderFactory binder factory
+     * @return validated pageable with DTO selectors translated to entity paths
+     * @throws Exception when resolution fails
+     */
     @Override
     public @Nullable Object resolveArgument(
             MethodParameter parameter,

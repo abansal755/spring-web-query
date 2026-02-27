@@ -161,5 +161,8 @@ public enum RsqlOperator {
      */
     NOT_BETWEEN(RSQLOperators.NOT_BETWEEN);
 
+    /**
+     * Underlying parser operator represented by this enum constant.
+     */
     private final ComparisonOperator operator;
 }

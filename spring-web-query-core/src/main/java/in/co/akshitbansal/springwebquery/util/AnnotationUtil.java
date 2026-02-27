@@ -22,8 +22,16 @@ import java.util.stream.Stream;
  */
 public class AnnotationUtil {
 
+    /**
+     * Registered custom operators keyed by their implementation class.
+     */
     private final Map<Class<?>, RsqlCustomOperator<?>> customOperators;
 
+    /**
+     * Creates an annotation utility backed by registered custom operator instances.
+     *
+     * @param customOperators custom operators available to annotation-driven validation
+     */
     public AnnotationUtil(Set<? extends RsqlCustomOperator<?>> customOperators) {
         this.customOperators = customOperators
                 .stream()
