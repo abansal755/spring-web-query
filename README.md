@@ -159,7 +159,7 @@ public class Profile {
 ### 2. Define DTO query contract
 
 ```java
-public class UserQueryDto {
+public class UserRes {
 
     @RsqlFilterable(operators = {RsqlOperator.EQUAL, RsqlOperator.IN})
     @Sortable
@@ -185,12 +185,12 @@ public class UserQueryDto {
 
 ```java
 @GetMapping("/users")
-@WebQuery(entityClass = User.class, dtoClass = UserQueryDto.class)
-public Page<User> search(
+@WebQuery(entityClass = User.class, dtoClass = UserRes.class)
+public Page<UserRes> search(
     @RsqlSpec Specification<User> spec,
     @RestrictedPageable Pageable pageable
 ) {
-    return userRepository.findAll(spec, pageable);
+    return userRepository.findAll(spec, pageable).map(...);
 }
 ```
 
