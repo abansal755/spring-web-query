@@ -3,6 +3,7 @@ package in.co.akshitbansal.springwebquery.util;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
+import in.co.akshitbansal.springwebquery.annotation.RsqlFilterables;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
@@ -12,6 +13,7 @@ import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
@@ -112,9 +114,9 @@ public class AnnotationUtil {
      */
     public void validateFilterableField(@NonNull Field field, ComparisonOperator operator, String fieldPath) {
         // Retrieve the RsqlFilterable annotations on the field (if present)
-        RsqlFilterable[] filterables = field.getAnnotationsByType(RsqlFilterable.class);
+        Set<RsqlFilterable> filterables = collectFilterables(field);
         // Throw exception if the field is not annotated as filterable
-        if(filterables.length == 0) throw new QueryFieldValidationException(MessageFormat.format(
+        if(filterables.isEmpty()) throw new QueryFieldValidationException(MessageFormat.format(
                 "Filtering not allowed on field ''{0}''", fieldPath
         ), fieldPath);
 
@@ -138,17 +140,17 @@ public class AnnotationUtil {
      * @return deduplicated set of allowed comparison operators
      * @throws QueryConfigurationException if a referenced custom operator is not registered
      */
-    private Set<ComparisonOperator> getAllowedOperators(@NonNull RsqlFilterable[] filterables) {
+    private Set<ComparisonOperator> getAllowedOperators(@NonNull Set<RsqlFilterable> filterables) {
         // Collect the set of allowed operators for this field from the annotations
         // Stream of default operators defined in the annotation
-        Stream<ComparisonOperator> defaultOperators = Arrays
-                .stream(filterables)
+        Stream<ComparisonOperator> defaultOperators = filterables
+                .stream()
                 .flatMap(filterable -> Arrays.stream(filterable.operators()))
                 .map(RsqlOperator::getOperator);
         // Stream of custom operators defined in the annotation
         // Note: The annotation references classes, which are looked up in the customOperators map
-        Stream<ComparisonOperator> customOperators = Arrays
-                .stream(filterables)
+        Stream<ComparisonOperator> customOperators = filterables
+                .stream()
                 .flatMap(filterable -> Arrays.stream(filterable.customOperators()))
                 .map(this::getCustomOperator)
                 .map(RsqlCustomOperator::getComparisonOperator);
@@ -170,5 +172,23 @@ public class AnnotationUtil {
                 "Custom operator ''{0}'' referenced in @RsqlFilterable is not registered", clazz.getSimpleName()
         ));
         return operator;
+    }
+
+    private Set<RsqlFilterable> collectFilterables(Field field) {
+        return collectFilterables(field.getAnnotations());
+    }
+
+    private Set<RsqlFilterable> collectFilterables(Annotation[] annotations) {
+        Set<RsqlFilterable> filterables = new HashSet<>();
+        for(Annotation annotation : annotations) {
+            Class<? extends Annotation> type = annotation.annotationType();
+            if(annotation instanceof RsqlFilterable rsqlFilterable)
+                filterables.add(rsqlFilterable);
+            else if(annotation instanceof RsqlFilterables rsqlFilterables)
+                filterables.addAll(Arrays.asList(rsqlFilterables.value()));
+            else if(type.getName().startsWith("in.co.akshitbansal.springwebquery.annotation"))
+                filterables.addAll(collectFilterables(type.getAnnotations()));
+        }
+        return filterables;
     }
 }

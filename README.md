@@ -24,6 +24,7 @@
 - [Entity-aware setup (supported)](#entity-aware-setup-supported)
 - [RestrictedPageable behavior](#restrictedpageable-behavior)
 - [RSQL operator reference (default operators)](#rsql-operator-reference-default-operators)
+- [Composed filter annotations](#composed-filter-annotations)
 - [Advanced configuration](#advanced-configuration)
 - [Error handling](#error-handling)
 - [Compatibility](#compatibility)
@@ -64,6 +65,7 @@ Without a shared contract, this usually becomes either:
 `spring-web-query` provides a declarative contract:
 
 - `@RsqlFilterable`: which fields can be filtered and with which operators
+- Composed shortcuts: `@RsqlFilterableEquality`, `@RsqlFilterableMembership`, `@RsqlFilterableNull`, `@RsqlFilterableRange`, `@RsqlFilterableText`
 - `@Sortable`: which fields can be sorted
 - `@WebQuery`: method-level query context (`entityClass`, optional `dtoClass`, optional `fieldMappings`)
 - `@RsqlSpec` / `@RestrictedPageable`: controller parameters resolved with validation
@@ -291,6 +293,28 @@ Default operators are exposed via `RsqlOperator`.
 - `NOT_BETWEEN` (`=notbetween=`, `=nb=`)
 
 Strict equality is enabled internally for `==` conversion (`name==John*` is treated as literal equality, not wildcard prefix matching).
+
+## Composed filter annotations
+
+For common cases, you can use composed annotations instead of writing `@RsqlFilterable(operators = ...)` repeatedly.
+
+- `@RsqlFilterableEquality` -> `EQUAL`, `NOT_EQUAL`
+- `@RsqlFilterableMembership` -> `IN`, `NOT_IN`
+- `@RsqlFilterableNull` -> `IS_NULL`, `NOT_NULL`
+- `@RsqlFilterableRange` -> `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `BETWEEN`, `NOT_BETWEEN`
+- `@RsqlFilterableText` -> `LIKE`, `NOT_LIKE`, `IGNORE_CASE_LIKE`, `IGNORE_CASE_NOT_LIKE`, `IGNORE_CASE`
+
+You can combine composed annotations on the same field, and you can also combine them with one or more `@RsqlFilterable` declarations.
+
+`@RsqlFilterable` is repeatable, so it can be applied multiple times on a field.
+
+```java
+@RsqlFilterableEquality
+@RsqlFilterableText
+@RsqlFilterable(operators = {RsqlOperator.IN})
+@RsqlFilterable(operators = {RsqlOperator.NOT_IN})
+private String status;
+```
 
 ## Advanced configuration
 

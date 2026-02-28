@@ -34,7 +34,7 @@ import java.lang.annotation.*;
  * @see RsqlOperator
  * @see RsqlFilterables
  */
-@Target(ElementType.FIELD)
+@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Repeatable(RsqlFilterables.class)
