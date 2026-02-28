@@ -5,11 +5,14 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
+import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.*;
@@ -98,29 +101,60 @@ public class AnnotationUtil {
     }
 
     /**
-     * Computes the full set of operators allowed for a field by combining
-     * built-in operators and registered custom operators referenced by
-     * {@link RsqlFilterable}.
+     * Validates that a field is marked as filterable and that the requested
+     * operator is permitted by its {@link RsqlFilterable} declaration(s).
      *
-     * @param filterable field-level filterability metadata
-     * @return allowed comparison operators for the field
+     * @param field field being targeted by the request selector
+     * @param operator comparison operator requested in the query
+     * @param fieldPath original selector path from the request
+     * @throws QueryFieldValidationException if the field is not filterable
+     * @throws QueryForbiddenOperatorException if the operator is not allowed for the field
+     */
+    public void validateFilterableField(@NonNull Field field, ComparisonOperator operator, String fieldPath) {
+        // Retrieve the RsqlFilterable annotations on the field (if present)
+        RsqlFilterable[] filterables = field.getAnnotationsByType(RsqlFilterable.class);
+        // Throw exception if the field is not annotated as filterable
+        if(filterables.length == 0) throw new QueryFieldValidationException(MessageFormat.format(
+                "Filtering not allowed on field ''{0}''", fieldPath
+        ), fieldPath);
+
+        // Throw exception if the provided operator is not in the allowed set
+        Set<ComparisonOperator> allowedOperators = getAllowedOperators(filterables);
+        if(!allowedOperators.contains(operator)) {
+            throw new QueryForbiddenOperatorException(
+                    MessageFormat.format("Operator ''{0}'' not allowed on field ''{1}''", operator, fieldPath),
+                    fieldPath,
+                    operator,
+                    allowedOperators
+            );
+        }
+    }
+
+    /**
+     * Aggregates all allowed operators from one or more {@link RsqlFilterable}
+     * declarations attached to the same field.
+     *
+     * @param filterables repeatable filterability declarations
+     * @return deduplicated set of allowed comparison operators
      * @throws QueryConfigurationException if a referenced custom operator is not registered
      */
-    public Set<ComparisonOperator> getAllowedOperators(@NonNull RsqlFilterable filterable) {
-        // Collect the set of allowed operators for this field from the annotation
+    private Set<ComparisonOperator> getAllowedOperators(@NonNull RsqlFilterable[] filterables) {
+        // Collect the set of allowed operators for this field from the annotations
         // Stream of default operators defined in the annotation
         Stream<ComparisonOperator> defaultOperators = Arrays
-                .stream(filterable.operators())
+                .stream(filterables)
+                .flatMap(filterable -> Arrays.stream(filterable.operators()))
                 .map(RsqlOperator::getOperator);
         // Stream of custom operators defined in the annotation
         // Note: The annotation references classes, which are looked up in the customOperators map
         Stream<ComparisonOperator> customOperators = Arrays
-                .stream(filterable.customOperators())
+                .stream(filterables)
+                .flatMap(filterable -> Arrays.stream(filterable.customOperators()))
                 .map(this::getCustomOperator)
                 .map(RsqlCustomOperator::getComparisonOperator);
         return Stream
                 .concat(defaultOperators, customOperators)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     /**

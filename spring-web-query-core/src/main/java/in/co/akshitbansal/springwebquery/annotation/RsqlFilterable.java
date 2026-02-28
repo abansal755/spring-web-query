@@ -17,6 +17,9 @@ import java.lang.annotation.*;
  * <p>The annotation is applied to whichever type is used as the filtering contract:
  * entity fields in entity-aware mode, or DTO fields in DTO-aware mode.</p>
  *
+ * <p>This annotation is {@linkplain Repeatable repeatable}; multiple declarations
+ * can be used on the same field to compose the final set of allowed operators.</p>
+ *
  * <p><b>Example usage:</b></p>
  * <pre>{@code
  * @RsqlFilterable(operators = {RsqlOperator.EQUAL, RsqlOperator.IN})
@@ -29,10 +32,12 @@ import java.lang.annotation.*;
  * <p>This annotation is retained at runtime and can be inspected via reflection.</p>
  *
  * @see RsqlOperator
+ * @see RsqlFilterables
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Repeatable(RsqlFilterables.class)
 public @interface RsqlFilterable {
 
     /**
@@ -44,6 +49,7 @@ public @interface RsqlFilterable {
 
     /**
      * The set of custom RSQL operators that are allowed for filtering this field.
+     * Referenced operator classes must be registered in the query resolver configuration.
      *
      * @return an array of custom operator classes
      */

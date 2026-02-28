@@ -3,7 +3,10 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.exception.*;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
@@ -12,7 +15,6 @@ import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -164,22 +166,7 @@ public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
             ), reqFieldName, ex);
         }
 
-        // Retrieve the RsqlFilterable annotation on the field (if present)
-        RsqlFilterable filterable = field.getAnnotation(RsqlFilterable.class);
-        // Throw exception if the field is not annotated as filterable
-        if(filterable == null) throw new QueryFieldValidationException(MessageFormat.format(
-                "Filtering not allowed on field ''{0}''", reqFieldName
-        ), reqFieldName);
-
-        // Throw exception if the provided operator is not in the allowed set
-        Set<ComparisonOperator> allowedOperators = annotationUtil.getAllowedOperators(filterable);
-        if(!allowedOperators.contains(operator)) {
-            throw new QueryForbiddenOperatorException(
-                    MessageFormat.format("Operator ''{0}'' not allowed on field ''{1}''", operator, reqFieldName),
-                    reqFieldName,
-                    operator,
-                    allowedOperators
-            );
-        }
+        // Validate that the field is filterable and the operator is allowed
+        annotationUtil.validateFilterableField(field, operator, reqFieldName);
     }
 }

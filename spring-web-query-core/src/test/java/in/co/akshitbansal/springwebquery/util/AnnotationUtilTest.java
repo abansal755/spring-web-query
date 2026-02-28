@@ -59,21 +59,20 @@ class AnnotationUtilTest {
     }
 
     @Test
-    void getAllowedOperators_includesDefaultAndCustomOperators() throws Exception {
+    void validateFilterableField_acceptsDefaultAndCustomOperators() throws Exception {
         AnnotationUtil util = new AnnotationUtil(Set.of(new MockCustomOperator()));
-        RsqlFilterable filterable = FilterableEntity.class.getDeclaredField("name").getAnnotation(RsqlFilterable.class);
+        var field = FilterableEntity.class.getDeclaredField("name");
 
-        Set<ComparisonOperator> operators = util.getAllowedOperators(filterable);
-        assertTrue(operators.contains(RsqlOperator.EQUAL.getOperator()));
-        assertTrue(operators.contains(new ComparisonOperator("=mock=")));
+        assertDoesNotThrow(() -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
+        assertDoesNotThrow(() -> util.validateFilterableField(field, new ComparisonOperator("=mock="), "name"));
     }
 
     @Test
-    void getAllowedOperators_rejectsUnregisteredCustomOperator() throws Exception {
+    void validateFilterableField_rejectsUnregisteredCustomOperator() throws Exception {
         AnnotationUtil util = new AnnotationUtil(Set.of());
-        RsqlFilterable filterable = FilterableEntity.class.getDeclaredField("name").getAnnotation(RsqlFilterable.class);
+        var field = FilterableEntity.class.getDeclaredField("name");
 
-        assertThrows(QueryConfigurationException.class, () -> util.getAllowedOperators(filterable));
+        assertThrows(QueryConfigurationException.class, () -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
     }
 
     private static class MockCustomOperator implements RsqlCustomOperator<String> {
