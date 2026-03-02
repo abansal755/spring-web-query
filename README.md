@@ -22,7 +22,7 @@
 - [How resolution modes work](#how-resolution-modes-work)
 - [Quick start (DTO-aware, recommended)](#quick-start-dto-aware-recommended)
 - [Entity-aware setup (supported)](#entity-aware-setup-supported)
-- [RestrictedPageable behavior](#restrictedpageable-behavior)
+- [Pageable behavior](#pageable-behavior)
 - [RSQL operator reference (default operators)](#rsql-operator-reference-default-operators)
 - [Composed filter annotations](#composed-filter-annotations)
 - [Advanced configuration](#advanced-configuration)
@@ -36,7 +36,7 @@
 This repository publishes two Maven artifacts:
 
 - `in.co.akshitbansal:spring-web-query-core`
-  - Core annotations (`@WebQuery`, `@RsqlSpec`, `@RestrictedPageable`, etc.)
+  - Core annotations (`@WebQuery`, `@RsqlFilterable`, `@Sortable`, etc.)
   - Validation visitors
   - Argument resolvers
   - Reflection/annotation utilities
@@ -68,7 +68,7 @@ Without a shared contract, this usually becomes either:
 - Composed shortcuts: `@RsqlFilterableEquality`, `@RsqlFilterableMembership`, `@RsqlFilterableNull`, `@RsqlFilterableRange`, `@RsqlFilterableText`
 - `@Sortable`: which fields can be sorted
 - `@WebQuery`: method-level query context (`entityClass`, optional `dtoClass`, optional `fieldMappings`)
-- `@RsqlSpec` / `@RestrictedPageable`: controller parameters resolved with validation
+- `Specification<T>` and `Pageable` parameter resolution with validation
 
 ## What is RSQL
 
@@ -189,8 +189,8 @@ public class UserRes {
 @GetMapping("/users")
 @WebQuery(entityClass = User.class, dtoClass = UserRes.class)
 public Page<UserRes> search(
-    @RsqlSpec Specification<User> spec,
-    @RestrictedPageable Pageable pageable
+    Specification<User> spec,
+    Pageable pageable
 ) {
     return userRepository.findAll(spec, pageable).map(...);
 }
@@ -198,9 +198,9 @@ public Page<UserRes> search(
 
 Notes:
 
-- `@WebQuery` is required when using `@RsqlSpec` and/or `@RestrictedPageable`
-- if the filter parameter is missing/blank, `@RsqlSpec` resolves to `Specification.unrestricted()`
-- default RSQL query parameter name is `filter` (override with `@RsqlSpec(paramName = "q")`)
+- `@WebQuery` is required on methods where web-query resolution should apply
+- if the filter parameter is missing/blank, the resolved specification is `Specification.unrestricted()`
+- default RSQL query parameter name is `filter` (override with `@WebQuery(filterParamName = "q")`)
 
 ### 4. Example requests
 
@@ -225,8 +225,8 @@ In this mode, `@RsqlFilterable` and `@Sortable` must be placed on entity fields 
     }
 )
 public Page<User> search(
-    @RsqlSpec Specification<User> spec,
-    @RestrictedPageable Pageable pageable
+    Specification<User> spec,
+    Pageable pageable
 ) {
     return userRepository.findAll(spec, pageable);
 }
@@ -237,9 +237,9 @@ Examples:
 - filter with alias: `/users?filter=joined=gt=2025-01-01T00:00:00Z`
 - sort with alias: `/users?sort=joined,desc`
 
-## RestrictedPageable behavior
+## Pageable behavior
 
-`@RestrictedPageable` does **not** replace Spring’s pageable parser.
+The WebQuery pageable resolver does **not** replace Spring’s pageable parser.
 
 It works as a validation/remapping layer on top of Spring Data Web:
 
@@ -400,7 +400,6 @@ Exception hierarchy, semantics, and metadata:
         - additional metadata: `fieldPath`, `operator` (used), `allowedOperators` (set of allowed operators)
   - `QueryConfigurationException`
     - server-side misconfiguration (map to 5xx responses)
-    - thrown for missing `@WebQuery`
     - thrown for invalid or conflicting mappings
     - thrown for unregistered custom operators referenced in `@RsqlFilterable`
     - thrown for duplicate operator symbols across default/custom operators

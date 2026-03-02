@@ -2,12 +2,11 @@ package in.co.akshitbansal.springwebquery;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
-import in.co.akshitbansal.springwebquery.resolver.DtoAwareRsqlSpecArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
@@ -19,11 +18,14 @@ import org.springframework.web.context.request.ServletWebRequest;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class DtoAwareRsqlSpecArgumentResolverTest {
+class WebQueryDtoAwareSpecificationArgumentResolverTest {
 
-    private final DtoAwareRsqlSpecArgumentResolver resolver = new DtoAwareRsqlSpecArgumentResolver(
+    private final WebQueryDtoAwareSpecificationArgumentResolver resolver = new WebQueryDtoAwareSpecificationArgumentResolver(
             Set.of(RsqlOperator.values()),
             Set.of(),
             new AnnotationUtil(Set.of())
@@ -39,6 +41,19 @@ class DtoAwareRsqlSpecArgumentResolverTest {
     void supportsParameter_returnsFalseForEntityOnlyMethod() throws Exception {
         Method method = TestController.class.getDeclaredMethod("entityOnly", Specification.class);
         assertFalse(resolver.supportsParameter(new MethodParameter(method, 0)));
+    }
+
+    @Test
+    void supportsParameter_returnsFalseWhenWebQueryMissing() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("missingWebQuery", Specification.class);
+        assertFalse(resolver.supportsParameter(new MethodParameter(method, 0)));
+    }
+
+    @Test
+    void resolveArgument_returnsUnrestrictedWhenFilterMissing() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("search", Specification.class);
+        Object spec = resolver.resolveArgument(new MethodParameter(method, 0), null, new ServletWebRequest(new MockHttpServletRequest()), null);
+        assertNotNull(spec);
     }
 
     @Test
@@ -59,20 +74,20 @@ class DtoAwareRsqlSpecArgumentResolverTest {
     }
 
     @Test
-    void resolveArgument_usesCustomParamName() throws Exception {
-        Method method = TestController.class.getDeclaredMethod("searchWithCustomParam", Specification.class);
-        resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("q", "joinedAt==x"), null);
-    }
-
-    @Test
-    void resolveArgument_rejectsWhenWebQueryMissing() throws Exception {
-        Method method = TestController.class.getDeclaredMethod("missingWebQuery", Specification.class);
+    void resolveArgument_rejectsWhenMappedEntityFieldMissing() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("invalidMapping", Specification.class);
         assertThrows(QueryConfigurationException.class, () -> resolver.resolveArgument(
                 new MethodParameter(method, 0),
                 null,
                 requestWith("filter", "joinedAt==x"),
                 null
         ));
+    }
+
+    @Test
+    void resolveArgument_usesWebQueryFilterParamName() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("searchWithCustomParam", Specification.class);
+        resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("q", "joinedAt==x"), null);
     }
 
     private NativeWebRequest requestWith(String key, String value) {
@@ -85,18 +100,22 @@ class DtoAwareRsqlSpecArgumentResolverTest {
     private static class TestController {
 
         @WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class)
-        void search(@RsqlSpec Specification<Entity> spec) {
+        void search(Specification<Entity> spec) {
         }
 
         @WebQuery(entityClass = Entity.class)
-        void entityOnly(@RsqlSpec Specification<Entity> spec) {
+        void entityOnly(Specification<Entity> spec) {
         }
 
-        @WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class)
-        void searchWithCustomParam(@RsqlSpec(paramName = "q") Specification<Entity> spec) {
+        @WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class, filterParamName = "q")
+        void searchWithCustomParam(Specification<Entity> spec) {
         }
 
-        void missingWebQuery(@RsqlSpec Specification<Entity> spec) {
+        @WebQuery(entityClass = Entity.class, dtoClass = InvalidMappingDto.class)
+        void invalidMapping(Specification<Entity> spec) {
+        }
+
+        void missingWebQuery(Specification<Entity> spec) {
         }
     }
 
@@ -108,6 +127,12 @@ class DtoAwareRsqlSpecArgumentResolverTest {
     private static class QueryDto {
         @RsqlFilterable(operators = {RsqlOperator.EQUAL})
         @MapsTo(field = "createdAt")
+        private String joinedAt;
+    }
+
+    private static class InvalidMappingDto {
+        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
+        @MapsTo(field = "missing")
         private String joinedAt;
     }
 }

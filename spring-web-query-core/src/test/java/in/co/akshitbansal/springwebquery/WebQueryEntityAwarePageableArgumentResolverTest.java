@@ -1,12 +1,10 @@
 package in.co.akshitbansal.springwebquery;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
-import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.resolver.EntityAwareRestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
@@ -19,11 +17,14 @@ import org.springframework.web.context.request.ServletWebRequest;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class EntityAwareRestrictedPageableArgumentResolverTest {
+class WebQueryEntityAwarePageableArgumentResolverTest {
 
-    private final EntityAwareRestrictedPageableArgumentResolver resolver = new EntityAwareRestrictedPageableArgumentResolver(
+    private final WebQueryEntityAwarePageableArgumentResolver resolver = new WebQueryEntityAwarePageableArgumentResolver(
             new PageableHandlerMethodArgumentResolver(),
             new AnnotationUtil(Set.of())
     );
@@ -37,6 +38,12 @@ class EntityAwareRestrictedPageableArgumentResolverTest {
     @Test
     void supportsParameter_returnsFalseForDtoAwarePageable() throws Exception {
         Method method = TestController.class.getDeclaredMethod("dtoAware", Pageable.class);
+        assertFalse(resolver.supportsParameter(new MethodParameter(method, 0)));
+    }
+
+    @Test
+    void supportsParameter_returnsFalseWhenWebQueryMissing() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("missingWebQuery", Pageable.class);
         assertFalse(resolver.supportsParameter(new MethodParameter(method, 0)));
     }
 
@@ -55,23 +62,23 @@ class EntityAwareRestrictedPageableArgumentResolverTest {
     }
 
     @Test
+    void resolveArgument_rejectsOriginalMappedFieldWhenDisallowed() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("searchWithMapping", Pageable.class);
+        assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(
+                new MethodParameter(method, 0),
+                null,
+                requestWithSort("name,asc"),
+                null
+        ));
+    }
+
+    @Test
     void resolveArgument_rejectsNonSortableField() throws Exception {
         Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
         assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(
                 new MethodParameter(method, 0),
                 null,
                 requestWithSort("secret,asc"),
-                null
-        ));
-    }
-
-    @Test
-    void resolveArgument_rejectsWhenWebQueryMissing() throws Exception {
-        Method method = TestController.class.getDeclaredMethod("missingWebQuery", Pageable.class);
-        assertThrows(QueryConfigurationException.class, () -> resolver.resolveArgument(
-                new MethodParameter(method, 0),
-                null,
-                requestWithSort("name,asc"),
                 null
         ));
     }
@@ -86,20 +93,20 @@ class EntityAwareRestrictedPageableArgumentResolverTest {
     private static class TestController {
 
         @WebQuery(entityClass = Entity.class)
-        void search(@RestrictedPageable Pageable pageable) {
+        void search(Pageable pageable) {
         }
 
         @WebQuery(entityClass = Entity.class, dtoClass = Object.class)
-        void dtoAware(@RestrictedPageable Pageable pageable) {
+        void dtoAware(Pageable pageable) {
         }
 
         @WebQuery(entityClass = Entity.class, fieldMappings = {
-                @FieldMapping(name = "displayName", field = "name")
+                @FieldMapping(name = "displayName", field = "name", allowOriginalFieldName = false)
         })
-        void searchWithMapping(@RestrictedPageable Pageable pageable) {
+        void searchWithMapping(Pageable pageable) {
         }
 
-        void missingWebQuery(@RestrictedPageable Pageable pageable) {
+        void missingWebQuery(Pageable pageable) {
         }
     }
 

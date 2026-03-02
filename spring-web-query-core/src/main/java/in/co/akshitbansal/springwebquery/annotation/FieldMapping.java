@@ -23,14 +23,15 @@ import java.lang.annotation.Target;
  * @GetMapping("/users")
  * @WebQuery(
  *     entityClass = User.class,
+ *     filterParamName = "q",
  *     fieldMappings = {
  *         @FieldMapping(name = "id", field = "userId"),
  *         @FieldMapping(name = "fullName", field = "profile.name")
  *     }
  * )
  * public List<User> search(
- *     @RsqlSpec Specification<User> spec,
- *     @RestrictedPageable Pageable pageable
+ *     Specification<User> spec,
+ *     Pageable pageable
  * ) {
  *     return userRepository.findAll(spec);
  * }

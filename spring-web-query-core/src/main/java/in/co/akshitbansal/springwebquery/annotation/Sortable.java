@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  *
  * <p>Fields annotated with {@code @Sortable} may be referenced in
  * {@code sort} query parameters when pagination is enabled via
- * {@link RestrictedPageable}.</p>
+ * method-level {@link WebQuery} configuration.</p>
  *
  * <p>The annotation is applied to whichever type is used as the sorting contract:
  * entity fields in entity-aware mode, or DTO fields in DTO-aware mode.</p>

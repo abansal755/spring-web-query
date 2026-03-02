@@ -1,12 +1,11 @@
 package in.co.akshitbansal.springwebquery;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
-import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.resolver.DtoAwareRestrictedPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
@@ -19,11 +18,14 @@ import org.springframework.web.context.request.ServletWebRequest;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class DtoAwareRestrictedPageableArgumentResolverTest {
+class WebQueryDtoAwarePageableArgumentResolverTest {
 
-    private final DtoAwareRestrictedPageableArgumentResolver resolver = new DtoAwareRestrictedPageableArgumentResolver(
+    private final WebQueryDtoAwarePageableArgumentResolver resolver = new WebQueryDtoAwarePageableArgumentResolver(
             new PageableHandlerMethodArgumentResolver(),
             new AnnotationUtil(Set.of())
     );
@@ -37,6 +39,12 @@ class DtoAwareRestrictedPageableArgumentResolverTest {
     @Test
     void supportsParameter_returnsFalseForEntityAwarePageable() throws Exception {
         Method method = TestController.class.getDeclaredMethod("entityAware", Pageable.class);
+        assertFalse(resolver.supportsParameter(new MethodParameter(method, 0)));
+    }
+
+    @Test
+    void supportsParameter_returnsFalseWhenWebQueryMissing() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("missingWebQuery", Pageable.class);
         assertFalse(resolver.supportsParameter(new MethodParameter(method, 0)));
     }
 
@@ -79,15 +87,18 @@ class DtoAwareRestrictedPageableArgumentResolverTest {
     private static class TestController {
 
         @WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class)
-        void search(@RestrictedPageable Pageable pageable) {
+        void search(Pageable pageable) {
         }
 
         @WebQuery(entityClass = Entity.class)
-        void entityAware(@RestrictedPageable Pageable pageable) {
+        void entityAware(Pageable pageable) {
         }
 
         @WebQuery(entityClass = Entity.class, dtoClass = InvalidMappingDto.class)
-        void invalidMapping(@RestrictedPageable Pageable pageable) {
+        void invalidMapping(Pageable pageable) {
+        }
+
+        void missingWebQuery(Pageable pageable) {
         }
     }
 

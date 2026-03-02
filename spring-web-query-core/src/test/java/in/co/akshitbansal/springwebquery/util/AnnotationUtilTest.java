@@ -3,45 +3,26 @@ package in.co.akshitbansal.springwebquery.util;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.annotation.RsqlSpec;
-import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.annotation.RsqlFilterableEquality;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
+import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.MethodParameter;
-import org.springframework.data.jpa.domain.Specification;
 
-import java.lang.reflect.Method;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AnnotationUtilTest {
 
     @Test
-    void resolveWebQueryFromParameter_returnsAnnotation() throws Exception {
-        AnnotationUtil util = new AnnotationUtil(Set.of());
-        Method method = TestController.class.getDeclaredMethod("search", Specification.class);
-
-        WebQuery annotation = util.resolveWebQueryFromParameter(new MethodParameter(method, 0));
-        assertEquals(TestEntity.class, annotation.entityClass());
-    }
-
-    @Test
-    void resolveWebQueryFromParameter_throwsWhenMissing() throws Exception {
-        AnnotationUtil util = new AnnotationUtil(Set.of());
-        Method method = TestController.class.getDeclaredMethod("searchWithoutWebQuery", Specification.class);
-
-        assertThrows(QueryConfigurationException.class, () -> util.resolveWebQueryFromParameter(new MethodParameter(method, 0)));
-    }
-
-    @Test
     void validateFieldMappings_rejectsDuplicateAlias() {
         AnnotationUtil util = new AnnotationUtil(Set.of());
-
         assertThrows(QueryConfigurationException.class, () -> util.validateFieldMappings(new FieldMapping[]{
                 mapping("name", "a"),
                 mapping("name", "b")
@@ -51,7 +32,6 @@ class AnnotationUtilTest {
     @Test
     void validateFieldMappings_rejectsDuplicateTargetField() {
         AnnotationUtil util = new AnnotationUtil(Set.of());
-
         assertThrows(QueryConfigurationException.class, () -> util.validateFieldMappings(new FieldMapping[]{
                 mapping("a", "field"),
                 mapping("b", "field")
@@ -59,11 +39,16 @@ class AnnotationUtilTest {
     }
 
     @Test
-    void validateFilterableField_acceptsDefaultAndCustomOperators() throws Exception {
+    void validateFilterableField_acceptsDefaultOperator() throws Exception {
+        AnnotationUtil util = new AnnotationUtil(Set.of());
+        var field = DefaultOnlyFilterableEntity.class.getDeclaredField("name");
+        assertDoesNotThrow(() -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
+    }
+
+    @Test
+    void validateFilterableField_acceptsCustomOperatorWhenRegistered() throws Exception {
         AnnotationUtil util = new AnnotationUtil(Set.of(new MockCustomOperator()));
         var field = FilterableEntity.class.getDeclaredField("name");
-
-        assertDoesNotThrow(() -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
         assertDoesNotThrow(() -> util.validateFilterableField(field, new ComparisonOperator("=mock="), "name"));
     }
 
@@ -71,8 +56,28 @@ class AnnotationUtilTest {
     void validateFilterableField_rejectsUnregisteredCustomOperator() throws Exception {
         AnnotationUtil util = new AnnotationUtil(Set.of());
         var field = FilterableEntity.class.getDeclaredField("name");
+        assertThrows(QueryConfigurationException.class, () -> util.validateFilterableField(field, new ComparisonOperator("=mock="), "name"));
+    }
 
-        assertThrows(QueryConfigurationException.class, () -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
+    @Test
+    void validateFilterableField_rejectsDisallowedOperator() throws Exception {
+        AnnotationUtil util = new AnnotationUtil(Set.of());
+        var field = DefaultOnlyFilterableEntity.class.getDeclaredField("name");
+        assertThrows(QueryForbiddenOperatorException.class, () -> util.validateFilterableField(field, RsqlOperator.NOT_EQUAL.getOperator(), "name"));
+    }
+
+    @Test
+    void validateFilterableField_rejectsNonFilterableField() throws Exception {
+        AnnotationUtil util = new AnnotationUtil(Set.of());
+        var field = NonFilterableEntity.class.getDeclaredField("name");
+        assertThrows(QueryFieldValidationException.class, () -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
+    }
+
+    @Test
+    void validateFilterableField_supportsComposedAnnotations() throws Exception {
+        AnnotationUtil util = new AnnotationUtil(Set.of());
+        var field = ComposedFilterableEntity.class.getDeclaredField("name");
+        assertDoesNotThrow(() -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
     }
 
     private static class MockCustomOperator implements RsqlCustomOperator<String> {
@@ -92,23 +97,23 @@ class AnnotationUtilTest {
         }
     }
 
-    @SuppressWarnings("unused")
-    private static class TestController {
-
-        @WebQuery(entityClass = TestEntity.class)
-        void search(@RsqlSpec Specification<TestEntity> specification) {
-        }
-
-        void searchWithoutWebQuery(@RsqlSpec Specification<TestEntity> specification) {
-        }
-    }
-
     private static class FilterableEntity {
         @RsqlFilterable(operators = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }
 
-    private static class TestEntity {
+    private static class DefaultOnlyFilterableEntity {
+        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
+        private String name;
+    }
+
+    private static class NonFilterableEntity {
+        private String name;
+    }
+
+    private static class ComposedFilterableEntity {
+        @RsqlFilterableEquality
+        private String name;
     }
 
     private static FieldMapping mapping(String name, String field) {

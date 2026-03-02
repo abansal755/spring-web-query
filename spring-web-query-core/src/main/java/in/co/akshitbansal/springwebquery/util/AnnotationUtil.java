@@ -11,19 +11,20 @@ import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorExcepti
 import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import lombok.NonNull;
-import org.springframework.core.MethodParameter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Utility methods for resolving query-related annotations from controller metadata
- * and validating {@link FieldMapping} declarations.
+ * Utility methods for validating query-related annotation metadata.
+ *
+ * <p>This utility validates {@link FieldMapping} declarations and resolves
+ * filterability/operator constraints from {@link RsqlFilterable} annotations,
+ * including composed annotations in this library's annotation package.</p>
  */
 public class AnnotationUtil {
 
@@ -41,32 +42,6 @@ public class AnnotationUtil {
         this.customOperators = customOperators
                 .stream()
                 .collect(Collectors.toMap(RsqlCustomOperator::getClass, operator -> operator));
-    }
-
-    /**
-     * Resolves {@link WebQuery} from the controller method that declares the
-     * provided Spring MVC method parameter.
-     *
-     * @param parameter controller method parameter currently being resolved
-     * @return resolved {@link WebQuery} annotation
-     * @throws QueryConfigurationException if the method cannot be resolved or is not annotated with {@link WebQuery}
-     */
-    public WebQuery resolveWebQueryFromParameter(@NonNull MethodParameter parameter) {
-        // Retrieve the controller method
-        Method controllerMethod = parameter.getMethod();
-        // Ensure that the method is not null (should not happen for valid controller parameters)
-        if(controllerMethod == null) throw new QueryConfigurationException(MessageFormat.format(
-                "Unable to resolve controller method for parameter {0}", parameter
-        ));
-        // Retrieve the @WebQuery annotation from the controller method to access query configuration
-        WebQuery webQueryAnnotation = controllerMethod.getAnnotation(WebQuery.class);
-        // Ensure that the method is annotated with @WebQuery to access query configuration
-        if(webQueryAnnotation == null)
-            throw new QueryConfigurationException(MessageFormat.format(
-                    "Controller method {0} must be annotated with @WebQuery to use query argument resolvers",
-                    controllerMethod
-            ));
-        return webQueryAnnotation;
     }
 
     /**

@@ -1,7 +1,6 @@
 package in.co.akshitbansal.springwebquery.resolver;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
-import in.co.akshitbansal.springwebquery.annotation.RestrictedPageable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
@@ -22,6 +21,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
@@ -29,15 +29,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Entity-based resolver for {@link Pageable} parameters annotated with
- * {@link RestrictedPageable}.
+ * Entity-based resolver for {@link Pageable} parameters handled via
+ * method-level {@link WebQuery}.
  *
  * <p>This resolver validates requested sort properties directly against the
  * configured entity class and optional {@link FieldMapping} aliases declared
  * on {@link WebQuery}.</p>
  */
 @RequiredArgsConstructor
-public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMethodArgumentResolver {
+public class WebQueryEntityAwarePageableArgumentResolver implements HandlerMethodArgumentResolver {
 
     /**
      * Delegate used to parse raw pageable parameters from the request.
@@ -45,7 +45,7 @@ public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMet
     private final PageableHandlerMethodArgumentResolver delegate;
 
     /**
-     * Utility used to resolve {@link WebQuery} metadata.
+     * Shared annotation utility dependency for resolver-level validation concerns.
      */
     private final AnnotationUtil annotationUtil;
 
@@ -54,13 +54,15 @@ public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMet
      *
      * @param parameter method parameter under inspection
      * @return {@code true} when parameter is {@code Pageable} with
-     *         {@link RestrictedPageable} and no DTO mapping is configured
+     *         method-level {@link WebQuery} and no DTO mapping is configured
      */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         if(!Pageable.class.isAssignableFrom(parameter.getParameterType())) return false;
-        if(!parameter.hasParameterAnnotation(RestrictedPageable.class)) return false;
-        WebQuery webQueryAnnotation = annotationUtil.resolveWebQueryFromParameter(parameter);
+        Method controlllerMethod = parameter.getMethod();
+        if(controlllerMethod == null) return false;
+        WebQuery webQueryAnnotation = controlllerMethod.getAnnotation(WebQuery.class);
+        if(webQueryAnnotation == null) return false;
         return webQueryAnnotation.dtoClass() == void.class;
     }
 
@@ -87,7 +89,7 @@ public class EntityAwareRestrictedPageableArgumentResolver implements HandlerMet
             Pageable pageable = delegate.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
 
             // Resolve the @WebQuery annotation to access entity metadata for validation
-            WebQuery webQueryAnnotation = annotationUtil.resolveWebQueryFromParameter(parameter);
+            WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
             // Extract entity class and field mappings from the @WebQuery annotation for validation and pageable building
             Class<?> entityClass = webQueryAnnotation.entityClass();
             FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();

@@ -47,4 +47,14 @@ public @interface WebQuery {
      * @return mappings between API names and entity paths
      */
     FieldMapping[] fieldMappings() default {};
+
+    /**
+     * Request parameter name from which RSQL filter expressions are read.
+     *
+     * <p>This setting applies to specification resolution in both entity-aware
+     * and DTO-aware modes.</p>
+     *
+     * @return HTTP query parameter name containing the RSQL filter expression
+     */
+    String filterParamName() default "filter";
 }

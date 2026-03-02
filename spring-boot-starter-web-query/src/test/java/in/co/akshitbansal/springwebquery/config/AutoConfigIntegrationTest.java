@@ -1,10 +1,10 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
-import in.co.akshitbansal.springwebquery.resolver.DtoAwareRestrictedPageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.DtoAwareRsqlSpecArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.EntityAwareRestrictedPageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.EntityAwareRsqlSpecArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +23,16 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {
         PaginationCustomizationAutoConfig.class,
-        RestrictedPageableAutoConfig.class,
-        RsqlAutoConfig.class,
-        RsqlSpecResolverAutoConfig.class
+        WebQueryPageableArgumentResolverAutoConfig.class,
+        WebQueryBeanAutoConfig.class,
+        WebQuerySpecificationArgumentResolverAutoConfig.class
 })
 @TestPropertySource(properties = "api.pagination.max-page-size=50")
 class AutoConfigIntegrationTest {
@@ -41,20 +44,20 @@ class AutoConfigIntegrationTest {
     private PaginationCustomizationAutoConfig paginationConfig;
 
     @Autowired
-    private RestrictedPageableAutoConfig restrictedPageableConfig;
+    private WebQueryPageableArgumentResolverAutoConfig pageableResolverConfig;
 
     @Autowired
-    private RsqlSpecResolverAutoConfig rsqlSpecResolverConfig;
+    private WebQuerySpecificationArgumentResolverAutoConfig specificationResolverConfig;
 
     @Test
     void beansAreRegistered() {
         assertNotNull(context.getBean(PageableHandlerMethodArgumentResolverCustomizer.class));
         assertNotNull(context.getBean(RsqlCustomOperatorsConfigurer.class));
         assertNotNull(context.getBean(AnnotationUtil.class));
-        assertNotNull(context.getBean(EntityAwareRestrictedPageableArgumentResolver.class));
-        assertNotNull(context.getBean(DtoAwareRestrictedPageableArgumentResolver.class));
-        assertNotNull(context.getBean(EntityAwareRsqlSpecArgumentResolver.class));
-        assertNotNull(context.getBean(DtoAwareRsqlSpecArgumentResolver.class));
+        assertNotNull(context.getBean(WebQueryEntityAwarePageableArgumentResolver.class));
+        assertNotNull(context.getBean(WebQueryDtoAwarePageableArgumentResolver.class));
+        assertNotNull(context.getBean(WebQueryEntityAwareSpecificationArgumentResolver.class));
+        assertNotNull(context.getBean(WebQueryDtoAwareSpecificationArgumentResolver.class));
     }
 
     @Test
@@ -64,23 +67,23 @@ class AutoConfigIntegrationTest {
     }
 
     @Test
-    void restrictedPageableConfigAddsEntityThenDtoResolvers() {
+    void pageableConfigAddsEntityThenDtoResolvers() {
         List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>();
-        restrictedPageableConfig.addArgumentResolvers(resolvers);
+        pageableResolverConfig.addArgumentResolvers(resolvers);
 
         assertEquals(2, resolvers.size());
-        assertInstanceOf(EntityAwareRestrictedPageableArgumentResolver.class, resolvers.get(0));
-        assertInstanceOf(DtoAwareRestrictedPageableArgumentResolver.class, resolvers.get(1));
+        assertInstanceOf(WebQueryEntityAwarePageableArgumentResolver.class, resolvers.get(0));
+        assertInstanceOf(WebQueryDtoAwarePageableArgumentResolver.class, resolvers.get(1));
     }
 
     @Test
-    void rsqlSpecConfigAddsEntityThenDtoResolvers() {
+    void specificationConfigAddsEntityThenDtoResolvers() {
         List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>();
-        rsqlSpecResolverConfig.addArgumentResolvers(resolvers);
+        specificationResolverConfig.addArgumentResolvers(resolvers);
 
         assertEquals(2, resolvers.size());
-        assertInstanceOf(EntityAwareRsqlSpecArgumentResolver.class, resolvers.get(0));
-        assertInstanceOf(DtoAwareRsqlSpecArgumentResolver.class, resolvers.get(1));
+        assertInstanceOf(WebQueryEntityAwareSpecificationArgumentResolver.class, resolvers.get(0));
+        assertInstanceOf(WebQueryDtoAwareSpecificationArgumentResolver.class, resolvers.get(1));
     }
 
     @Test

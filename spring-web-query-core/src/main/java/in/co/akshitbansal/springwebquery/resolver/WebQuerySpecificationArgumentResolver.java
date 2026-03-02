@@ -22,7 +22,7 @@ import java.util.stream.Stream;
  * {@link RSQLCustomPredicate} instances accepted by the underlying
  * {@code rsql-jpa} integration.</p>
  */
-public abstract class RsqlSpecArgumentResolver implements HandlerMethodArgumentResolver {
+public abstract class WebQuerySpecificationArgumentResolver implements HandlerMethodArgumentResolver {
 
     /**
      * Parser configured with the allowed default and custom comparison operators.
@@ -46,7 +46,7 @@ public abstract class RsqlSpecArgumentResolver implements HandlerMethodArgumentR
      * @param customOperators custom operators to register for parsing and predicate generation
      * @param annotationUtil utility for annotation resolution and validation
      */
-    public RsqlSpecArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
+    public WebQuerySpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
         // Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
         Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
                 .stream()
