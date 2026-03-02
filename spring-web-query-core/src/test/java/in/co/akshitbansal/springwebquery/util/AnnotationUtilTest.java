@@ -98,12 +98,12 @@ class AnnotationUtilTest {
     }
 
     private static class FilterableEntity {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
+        @RsqlFilterable(value = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }
 
     private static class DefaultOnlyFilterableEntity {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
+        @RsqlFilterable({RsqlOperator.EQUAL})
         private String name;
     }
 

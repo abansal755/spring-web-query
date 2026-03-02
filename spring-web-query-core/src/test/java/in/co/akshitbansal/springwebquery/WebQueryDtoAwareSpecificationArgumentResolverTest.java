@@ -125,14 +125,14 @@ class WebQueryDtoAwareSpecificationArgumentResolverTest {
     }
 
     private static class QueryDto {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
-        @MapsTo(field = "createdAt")
+        @RsqlFilterable({RsqlOperator.EQUAL})
+        @MapsTo("createdAt")
         private String joinedAt;
     }
 
     private static class InvalidMappingDto {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
-        @MapsTo(field = "missing")
+        @RsqlFilterable({RsqlOperator.EQUAL})
+        @MapsTo("missing")
         private String joinedAt;
     }
 }

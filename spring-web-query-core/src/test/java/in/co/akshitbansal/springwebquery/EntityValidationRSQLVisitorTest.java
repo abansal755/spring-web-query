@@ -120,7 +120,7 @@ class EntityValidationRSQLVisitorTest {
 
     private static class TestEntity {
 
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
+        @RsqlFilterable({RsqlOperator.EQUAL})
         private String name;
 
         private Integer age;
@@ -128,7 +128,7 @@ class EntityValidationRSQLVisitorTest {
 
     private static class TestEntityWithCustom {
 
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
+        @RsqlFilterable(value = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }
 

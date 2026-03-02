@@ -19,7 +19,7 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@RsqlFilterable(operators = {
+@RsqlFilterable({
         RsqlOperator.GREATER_THAN, RsqlOperator.GREATER_THAN_OR_EQUAL,
         RsqlOperator.LESS_THAN, RsqlOperator.LESS_THAN_OR_EQUAL,
         RsqlOperator.BETWEEN, RsqlOperator.NOT_BETWEEN

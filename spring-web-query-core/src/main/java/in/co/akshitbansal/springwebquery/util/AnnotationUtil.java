@@ -120,7 +120,7 @@ public class AnnotationUtil {
         // Stream of default operators defined in the annotation
         Stream<ComparisonOperator> defaultOperators = filterables
                 .stream()
-                .flatMap(filterable -> Arrays.stream(filterable.operators()))
+                .flatMap(filterable -> Arrays.stream(filterable.value()))
                 .map(RsqlOperator::getOperator);
         // Stream of custom operators defined in the annotation
         // Note: The annotation references classes, which are looked up in the customOperators map

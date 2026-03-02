@@ -163,21 +163,21 @@ public class Profile {
 ```java
 public class UserRes {
 
-    @RsqlFilterable(operators = {RsqlOperator.EQUAL, RsqlOperator.IN})
+    @RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.IN})
     @Sortable
     private String status;
 
-    @RsqlFilterable(operators = {RsqlOperator.GREATER_THAN, RsqlOperator.LESS_THAN})
+    @RsqlFilterable({RsqlOperator.GREATER_THAN, RsqlOperator.LESS_THAN})
     @Sortable
-    @MapsTo(field = "createdAt")
+    @MapsTo("createdAt")
     private Instant joinedAt;
 
-    @MapsTo(field = "profile")
+    @MapsTo("profile")
     private ProfileQueryDto profile;
 
     public static class ProfileQueryDto {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
-        @MapsTo(field = "city")
+        @RsqlFilterable({RsqlOperator.EQUAL})
+        @MapsTo("city")
         private String city;
     }
 }
@@ -296,7 +296,7 @@ Strict equality is enabled internally for `==` conversion (`name==John*` is trea
 
 ## Composed filter annotations
 
-For common cases, you can use composed annotations instead of writing `@RsqlFilterable(operators = ...)` repeatedly.
+For common cases, you can use composed annotations instead of writing `@RsqlFilterable(...)` repeatedly.
 
 - `@RsqlFilterableEquality` -> `EQUAL`, `NOT_EQUAL`
 - `@RsqlFilterableMembership` -> `IN`, `NOT_IN`
@@ -311,8 +311,8 @@ You can combine composed annotations on the same field, and you can also combine
 ```java
 @RsqlFilterableEquality
 @RsqlFilterableText
-@RsqlFilterable(operators = {RsqlOperator.IN})
-@RsqlFilterable(operators = {RsqlOperator.NOT_IN})
+@RsqlFilterable({RsqlOperator.IN})
+@RsqlFilterable({RsqlOperator.NOT_IN})
 private String status;
 ```
 
@@ -320,8 +320,8 @@ private String status;
 
 ### DTO path mapping with `@MapsTo`
 
-- annotate DTO fields with `@MapsTo(field = "...")` to map each path segment
-- use `@MapsTo(absolute = true)` when you need to reset accumulated parent segments and map from the entity root
+- annotate DTO fields with `@MapsTo("...")` to map each path segment
+- use `@MapsTo(value = "...", absolute = true)` when you need to reset accumulated parent segments and map from the entity root
 
 ### Custom operators
 
@@ -363,7 +363,7 @@ public class RsqlConfig {
 
 ```java
 @RsqlFilterable(
-    operators = {RsqlOperator.EQUAL},
+    value = {RsqlOperator.EQUAL},
     customOperators = {IsMondayOperator.class}
 )
 private LocalDateTime createdAt;

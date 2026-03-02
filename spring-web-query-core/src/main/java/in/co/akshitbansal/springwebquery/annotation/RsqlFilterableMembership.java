@@ -14,6 +14,6 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@RsqlFilterable(operators = { RsqlOperator.IN, RsqlOperator.NOT_IN })
+@RsqlFilterable({ RsqlOperator.IN, RsqlOperator.NOT_IN })
 public @interface RsqlFilterableMembership {
 }

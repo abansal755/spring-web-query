@@ -18,7 +18,7 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@RsqlFilterable(operators = {
+@RsqlFilterable({
         RsqlOperator.LIKE, RsqlOperator.NOT_LIKE,
         RsqlOperator.IGNORE_CASE_LIKE, RsqlOperator.IGNORE_CASE_NOT_LIKE,
         RsqlOperator.IGNORE_CASE

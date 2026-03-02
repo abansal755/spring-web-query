@@ -22,7 +22,7 @@ import java.lang.annotation.*;
  *
  * <p><b>Example usage:</b></p>
  * <pre>{@code
- * @RsqlFilterable(operators = {RsqlOperator.EQUAL, RsqlOperator.IN})
+ * @RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.IN})
  * private String status;
  * }</pre>
  *
@@ -45,7 +45,7 @@ public @interface RsqlFilterable {
      *
      * @return an array of allowed {@link RsqlOperator} values
      */
-    RsqlOperator[] operators();
+    RsqlOperator[] value();
 
     /**
      * The set of custom RSQL operators that are allowed for filtering this field.

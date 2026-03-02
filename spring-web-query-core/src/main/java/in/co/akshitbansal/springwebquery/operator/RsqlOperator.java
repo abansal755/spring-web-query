@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
  *
  * <p><b>Example usage:</b></p>
  * <pre>{@code
- * @RsqlFilterable(operators = {RsqlOperator.EQUAL, RsqlOperator.IN})
+ * @RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.IN})
  * private String status;
  * }</pre>
  *

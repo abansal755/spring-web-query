@@ -109,13 +109,13 @@ class WebQueryDtoAwarePageableArgumentResolverTest {
 
     private static class QueryDto {
         @Sortable
-        @MapsTo(field = "createdAt")
+        @MapsTo("createdAt")
         private String joinedAt;
     }
 
     private static class InvalidMappingDto {
         @Sortable
-        @MapsTo(field = "missing")
+        @MapsTo("missing")
         private String joinedAt;
     }
 }

@@ -70,7 +70,7 @@ class DtoValidationRSQLVisitorTest {
     }
 
     private static class QueryDto {
-        @MapsTo(field = "profile")
+        @MapsTo("profile")
         private ProfileDto profile;
 
         @SuppressWarnings("unused")
@@ -78,23 +78,23 @@ class DtoValidationRSQLVisitorTest {
     }
 
     private static class ProfileDto {
-        @MapsTo(field = "address")
+        @MapsTo("address")
         private AddressDto address;
 
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
-        @MapsTo(field = "address.city")
+        @RsqlFilterable({RsqlOperator.EQUAL})
+        @MapsTo("address.city")
         private String city;
     }
 
     private static class AddressDto {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
-        @MapsTo(field = "city")
+        @RsqlFilterable({RsqlOperator.EQUAL})
+        @MapsTo("city")
         private String city;
     }
 
     private static class InvalidMappingDto {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
-        @MapsTo(field = "doesNotExist")
+        @RsqlFilterable({RsqlOperator.EQUAL})
+        @MapsTo("doesNotExist")
         private String city;
     }
 
@@ -103,8 +103,8 @@ class DtoValidationRSQLVisitorTest {
     }
 
     private static class NestedDto {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
-        @MapsTo(field = "profile.address.city", absolute = true)
+        @RsqlFilterable({RsqlOperator.EQUAL})
+        @MapsTo(value = "profile.address.city", absolute = true)
         private String city;
     }
 }

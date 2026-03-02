@@ -146,7 +146,7 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
             if(mapsToAnnotation == null) entityPathSegments.add(dtoField.getName());
             else {
                 if(mapsToAnnotation.absolute()) entityPathSegments.clear();
-                entityPathSegments.add(mapsToAnnotation.field());
+                entityPathSegments.add(mapsToAnnotation.value());
             }
         }
         String entityPath = String.join(".", entityPathSegments);

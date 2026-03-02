@@ -152,12 +152,12 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
     }
 
     private static class Entity {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL})
+        @RsqlFilterable({RsqlOperator.EQUAL})
         private String name;
     }
 
     private static class EntityWithCustom {
-        @RsqlFilterable(operators = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
+        @RsqlFilterable(value = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }
 }

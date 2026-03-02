@@ -13,11 +13,11 @@ import java.lang.annotation.*;
  * <p>Example:</p>
  * <pre>{@code
  * class UserDto {
- *   @MapsTo(field = "profile")
+ *   @MapsTo("profile")
  *   private ProfileDto details;
  *
  *   class ProfileDto {
- *     @MapsTo(field = "displayName")
+ *     @MapsTo("displayName")
  *     private String name;
  *   }
  * }
@@ -33,7 +33,7 @@ public @interface MapsTo {
      *
      * @return mapped entity path segment
      */
-    String field();
+    String value();
 
     /**
      * Whether this mapping starts a new absolute path from the entity root.
