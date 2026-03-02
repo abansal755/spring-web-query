@@ -1,10 +1,7 @@
 package in.co.akshitbansal.springwebquery.util;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterables;
-import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.annotation.*;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
@@ -108,6 +105,21 @@ public class AnnotationUtil {
     }
 
     /**
+     * Validates that the requested field is explicitly marked as sortable.
+     *
+     * @param field field being targeted by sort selector
+     * @param fieldPath original selector path from the request
+     * @throws QueryFieldValidationException if sorting is not allowed for the field
+     */
+    public void validateSortableField(@NonNull Field field, String fieldPath) {
+        if(!field.isAnnotationPresent(Sortable.class)) {
+            throw new QueryFieldValidationException(MessageFormat.format(
+                    "Sorting is not allowed on the field ''{0}''", fieldPath
+            ), fieldPath);
+        }
+    }
+
+    /**
      * Aggregates all allowed operators from one or more {@link RsqlFilterable}
      * declarations attached to the same field.
      *
@@ -149,10 +161,24 @@ public class AnnotationUtil {
         return operator;
     }
 
+    /**
+     * Collects all {@link RsqlFilterable} declarations present on a field,
+     * including repeatable and composed annotations.
+     *
+     * @param field field whose annotations are to be inspected
+     * @return collected filterability declarations
+     */
     private Set<RsqlFilterable> collectFilterables(Field field) {
         return collectFilterables(field.getAnnotations());
     }
 
+    /**
+     * Recursively collects {@link RsqlFilterable} declarations from a set of
+     * annotations, supporting both direct and meta-annotation usage.
+     *
+     * @param annotations annotations to inspect
+     * @return collected filterability declarations
+     */
     private Set<RsqlFilterable> collectFilterables(Annotation[] annotations) {
         Set<RsqlFilterable> filterables = new HashSet<>();
         for(Annotation annotation : annotations) {

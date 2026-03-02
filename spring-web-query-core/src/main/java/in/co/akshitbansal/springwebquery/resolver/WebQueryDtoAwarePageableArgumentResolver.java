@@ -1,13 +1,11 @@
 package in.co.akshitbansal.springwebquery.resolver;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
-import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
-import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -20,9 +18,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -95,42 +91,13 @@ public class WebQueryDtoAwarePageableArgumentResolver implements HandlerMethodAr
             List<Sort.Order> newOrders = new ArrayList<>();
             for(Sort.Order order : pageable.getSort()) {
                 String dtoPath = order.getProperty();
-                // Resolve the field path in the DTO class
-                List<Field> dtoFields;
-                try {
-                    dtoFields = ReflectionUtil.resolveFieldPath(dtoClass, dtoPath);
-                }
-                catch (Exception ex) {
-                    throw new QueryFieldValidationException(MessageFormat.format(
-                            "Unknown field ''{0}''", dtoPath
-                    ), dtoPath, ex);
-                }
-                // Validate the last field in the path for sortability
-                if(!dtoFields.getLast().isAnnotationPresent(Sortable.class)) {
-                    throw new QueryFieldValidationException(MessageFormat.format(
-                            "Sorting is not allowed on the field ''{0}''", dtoPath
-                    ), dtoPath);
-                }
-                // Construct the corresponding entity field path using the @MapsTo annotation if present
-                List<String> entityPathSegments = new ArrayList<>();
-                for(Field dtoField : dtoFields) {
-                    MapsTo mapsToAnnotation = dtoField.getAnnotation(MapsTo.class);
-                    if(mapsToAnnotation == null) entityPathSegments.add(dtoField.getName());
-                    else {
-                        if(mapsToAnnotation.absolute()) entityPathSegments.clear();
-                        entityPathSegments.add(mapsToAnnotation.value());
-                    }
-                }
-                String entityPath = String.join(".", entityPathSegments);
-                // Validate that the constructed entity field path is resolvable in the entity class
-                try {
-                    ReflectionUtil.resolveField(entityClass, entityPath);
-                }
-                catch (Exception ex) {
-                    throw new QueryConfigurationException(MessageFormat.format(
-                            "Unable to resolve entity field path ''{0}'' mapped from DTO path ''{1}''", entityPath, dtoPath
-                    ), ex);
-                }
+                // Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
+                String entityPath = FieldResolvingUtil.buildEntityPathFromDtoPath(
+                        entityClass,
+                        dtoClass,
+                        dtoPath,
+                        terminalField -> annotationUtil.validateSortableField(terminalField, dtoPath)
+                );
                 newOrders.add(new Sort.Order(order.getDirection(), entityPath));
             }
             Sort sort = Sort.by(newOrders);

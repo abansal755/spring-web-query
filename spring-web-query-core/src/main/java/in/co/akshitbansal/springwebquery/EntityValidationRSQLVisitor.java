@@ -5,14 +5,11 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
-import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 
-import java.lang.reflect.Field;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -141,32 +138,15 @@ public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
     private void validate(ComparisonNode node) {
         // Extract the field name and operator from the RSQL node
         String reqFieldName = node.getSelector();
-        String fieldName = reqFieldName; // Actual entity path to validate against, may be rewritten if field mapping exists
         ComparisonOperator operator = node.getOperator();
 
-        // Find if there exists a field mapping with original field name and throw error if use is not allowed
-        FieldMapping originalFieldMapping = originalFieldMappings.get(reqFieldName);
-        if(originalFieldMapping != null && !originalFieldMapping.allowOriginalFieldName())
-            throw new QueryFieldValidationException(MessageFormat.format(
-                    "Unknown field ''{0}''", reqFieldName
-            ), reqFieldName);
-
-        // Find original field name if field mapping exists to correctly find the field
-        FieldMapping fieldMapping = fieldMappings.get(reqFieldName);
-        if(fieldMapping != null) fieldName = fieldMapping.field();
-
-        // Resolve the Field object from the entity class using reflection
-        Field field;
-        try {
-            field = ReflectionUtil.resolveField(entityClass, fieldName);
-        }
-        catch (Exception ex) {
-            throw new QueryFieldValidationException(MessageFormat.format(
-                    "Unknown field ''{0}''", reqFieldName
-            ), reqFieldName, ex);
-        }
-
-        // Validate that the field is filterable and the operator is allowed
-        annotationUtil.validateFilterableField(field, operator, reqFieldName);
+        // Resolve the field on the entity class using the requested field name and field mappings
+        FieldResolvingUtil.resolveEntityPath(
+                entityClass,
+                reqFieldName,
+                fieldMappings,
+                originalFieldMappings,
+                terminalField -> annotationUtil.validateFilterableField(terminalField, operator, reqFieldName)
+        );
     }
 }

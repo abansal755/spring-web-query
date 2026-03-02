@@ -1,17 +1,10 @@
 package in.co.akshitbansal.springwebquery;
 
 import cz.jirutka.rsql.parser.ast.*;
-import in.co.akshitbansal.springwebquery.annotation.MapsTo;
-import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
-import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 
-import java.lang.reflect.Field;
-import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -126,39 +119,13 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
         String dtoPath = node.getSelector();
         ComparisonOperator operator = node.getOperator();
 
-        // Resolve the field path in the DTO class
-        List<Field> dtoFields;
-        try {
-            dtoFields = ReflectionUtil.resolveFieldPath(dtoClass, dtoPath);
-        }
-        catch (Exception ex) {
-            throw new QueryFieldValidationException(MessageFormat.format(
-                    "Unknown field ''{0}''", dtoPath
-            ), dtoPath, ex);
-        }
-        // Validate the last field in the path for filterability and allowed operators
-        annotationUtil.validateFilterableField(dtoFields.getLast(), operator, dtoPath);
-
-        // Construct the corresponding entity field path using the @MapsTo annotation if present
-        List<String> entityPathSegments = new ArrayList<>();
-        for(Field dtoField : dtoFields) {
-            MapsTo mapsToAnnotation = dtoField.getAnnotation(MapsTo.class);
-            if(mapsToAnnotation == null) entityPathSegments.add(dtoField.getName());
-            else {
-                if(mapsToAnnotation.absolute()) entityPathSegments.clear();
-                entityPathSegments.add(mapsToAnnotation.value());
-            }
-        }
-        String entityPath = String.join(".", entityPathSegments);
-        // Validate that the constructed entity field path is resolvable in the entity class
-        try {
-            ReflectionUtil.resolveField(entityClass, entityPath);
-        }
-        catch (Exception ex) {
-            throw new QueryConfigurationException(MessageFormat.format(
-                    "Unable to resolve entity field path ''{0}'' mapped from DTO path ''{1}''", entityPath, dtoPath
-            ), ex);
-        }
+        // Build the corresponding entity field path from the DTO path and validate the terminal field for filterability
+        String entityPath = FieldResolvingUtil.buildEntityPathFromDtoPath(
+                entityClass,
+                dtoClass,
+                dtoPath,
+                terminalField -> annotationUtil.validateFilterableField(terminalField, operator, dtoPath)
+        );
 
         // Store the mapping from DTO path to entity path for later use during query construction
         fieldMappings.put(dtoPath, entityPath);
