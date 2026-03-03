@@ -11,6 +11,8 @@ import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -75,13 +77,25 @@ public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
     public EntityValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings, AnnotationUtil annotationUtil) {
         this.entityClass = entityClass;
         // Map from name to FieldMapping
-        this.fieldMappings = Arrays
+        this.fieldMappings = Collections.unmodifiableMap(Arrays
                 .stream(fieldMappings)
-                .collect(Collectors.toMap(FieldMapping::name, mapping -> mapping));
+                .collect(Collectors.toMap(
+                        FieldMapping::name,
+                        mapping -> mapping,
+                        // Should not happen due to validation in AnnotationUtil
+                        (existing, duplicate) -> existing,
+                        HashMap::new
+                )));
         // Map from original field name to FieldMapping
-        this.originalFieldMappings = Arrays
+        this.originalFieldMappings = Collections.unmodifiableMap(Arrays
                 .stream(fieldMappings)
-                .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
+                .collect(Collectors.toMap(
+                        FieldMapping::field,
+                        mapping -> mapping,
+                        // Should not happen due to validation in AnnotationUtil
+                        (existing, duplicate) -> existing,
+                        HashMap::new
+                )));
         this.annotationUtil = annotationUtil;
     }
 

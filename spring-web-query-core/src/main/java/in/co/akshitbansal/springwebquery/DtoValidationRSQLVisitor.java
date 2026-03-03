@@ -4,6 +4,7 @@ import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,7 +68,7 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      * @return map from request DTO path to resolved entity path
      */
     public Map<String, String> getFieldMappings() {
-        return Map.copyOf(fieldMappings);
+        return Collections.unmodifiableMap(fieldMappings);
     }
 
     /**

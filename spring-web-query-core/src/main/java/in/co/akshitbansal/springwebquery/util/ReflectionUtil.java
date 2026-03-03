@@ -1,5 +1,7 @@
 package in.co.akshitbansal.springwebquery.util;
 
+import lombok.NoArgsConstructor;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -16,7 +18,9 @@ import java.util.List;
  * handling inheritance hierarchies, and unwrapping container types (arrays and collections).
  * </p>
  */
-public class ReflectionUtil {
+// Private constructor to prevent instantiation
+@NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+public final class ReflectionUtil {
 
     /**
      * Resolves a {@link Field} for the given dot-separated field path, starting from
@@ -113,7 +117,7 @@ public class ReflectionUtil {
                 current = current.getSuperclass();
             }
         }
-        throw new RuntimeException(MessageFormat.format(
+        throw new IllegalArgumentException(MessageFormat.format(
                 "Field ''{0}'' not found in class hierarchy of {1}", name, type
         ));
     }

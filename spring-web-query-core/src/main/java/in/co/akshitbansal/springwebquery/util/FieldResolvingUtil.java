@@ -4,6 +4,7 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
+import lombok.NoArgsConstructor;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -26,10 +27,9 @@ import java.util.function.Consumer;
  * <p>Methods throw library-specific query exceptions so resolver and visitor
  * layers can surface consistent validation/configuration errors.</p>
  */
-public class FieldResolvingUtil {
-
-    private FieldResolvingUtil() {
-    }
+// Private constructor to prevent instantiation
+@NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+public final class FieldResolvingUtil {
 
     /**
      * Resolves a DTO selector path, validates its terminal DTO field, maps it to

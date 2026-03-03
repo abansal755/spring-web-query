@@ -8,8 +8,7 @@ import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,7 +45,7 @@ public abstract class WebQuerySpecificationArgumentResolver implements HandlerMe
      * @param customOperators custom operators to register for parsing and predicate generation
      * @param annotationUtil utility for annotation resolution and validation
      */
-    public WebQuerySpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
+    protected WebQuerySpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
         // Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
         Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
                 .stream()
@@ -54,20 +53,22 @@ public abstract class WebQuerySpecificationArgumentResolver implements HandlerMe
         Stream<ComparisonOperator> customOperatorsStream = customOperators
                 .stream()
                 .map(RsqlCustomOperator::getComparisonOperator);
-        Set<ComparisonOperator> allowedOperators = Stream
+        HashSet<ComparisonOperator> allowedOperators = Stream
                 .concat(defaultOperatorsStream, customOperatorsStream)
-                .collect(Collectors.toSet());
-        rsqlParser = new RSQLParser(allowedOperators);
+                .collect(Collectors.toCollection(HashSet::new));
+        rsqlParser = new RSQLParser(Collections.unmodifiableSet(allowedOperators));
 
         // Convert custom operators to the format which rsql jpa support library accepts
-        this.customPredicates = customOperators
-                .stream()
-                .map(operator -> new RSQLCustomPredicate<>(
-                        operator.getComparisonOperator(),
-                        operator.getType(),
-                        operator::toPredicate
-                ))
-                .collect(Collectors.toList());
+        List<RSQLCustomPredicate<?>> customPredicates = new ArrayList<>();
+        for(RsqlCustomOperator<?> operator : customOperators) {
+            RSQLCustomPredicate<?> predicate = new RSQLCustomPredicate<>(
+                    operator.getComparisonOperator(),
+                    operator.getType(),
+                    operator::toPredicate
+            );
+            customPredicates.add(predicate);
+        }
+        this.customPredicates = Collections.unmodifiableList(customPredicates);
         this.annotationUtil = annotationUtil;
     }
 }

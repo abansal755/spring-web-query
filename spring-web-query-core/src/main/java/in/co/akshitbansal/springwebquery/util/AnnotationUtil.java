@@ -36,9 +36,16 @@ public class AnnotationUtil {
      * @param customOperators custom operators available to annotation-driven validation
      */
     public AnnotationUtil(Set<? extends RsqlCustomOperator<?>> customOperators) {
-        this.customOperators = customOperators
+        this.customOperators = Collections.unmodifiableMap(customOperators
                 .stream()
-                .collect(Collectors.toMap(RsqlCustomOperator::getClass, operator -> operator));
+                .collect(Collectors.toMap(
+                        RsqlCustomOperator::getClass,
+                        operator -> operator,
+                        // Might happen in case multiple instances of an operator are registered
+                        // In that case, we can just keep one of them since they should be functionally equivalent
+                        (existing, duplicate) -> existing,
+                        HashMap::new
+                )));
     }
 
     /**

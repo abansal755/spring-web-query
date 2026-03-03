@@ -62,7 +62,7 @@ public class WebQueryBeanAutoConfig {
                 .map(RsqlOperator::getOperator)
                 .toList()
         );
-        return defaultOperators;
+        return Collections.unmodifiableSet(defaultOperators);
     }
 
     @Bean
@@ -96,7 +96,7 @@ public class WebQueryBeanAutoConfig {
                 .map(RsqlCustomOperator::getComparisonOperator)
                 .toList()
         );
-        return customOperators;
+        return Collections.unmodifiableSet(customOperators);
     }
 
     @Bean
