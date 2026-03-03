@@ -1,7 +1,6 @@
 # Spring Web Query
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat
-)](https://www.apache.org/licenses/LICENSE-2.0)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Java 21+](https://img.shields.io/badge/Java-21%2B-blue?style=flat&color=orange)](https://www.oracle.com/java/technologies/javase-jdk21-downloads.html)
 [![Spring Boot 4.0.2+](https://img.shields.io/badge/Spring_Boot-4.0.2%2B-orange?style=flat&logo=springboot)](https://spring.io/projects/spring-boot)
 
@@ -11,83 +10,157 @@
 [![Maven Central (spring-boot-starter-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fin%2Fco%2Fakshitbansal%2Fspring-boot-starter-web-query%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Maven%20Central%20(Starter)&color=brightgreen&logo=apachemaven)](https://central.sonatype.com/artifact/in.co.akshitbansal/spring-boot-starter-web-query)
 [![Maven Central (spring-boot-starter-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fin%2Fco%2Fakshitbansal%2Fspring-boot-starter-web-query%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Snapshot%20(Starter)&color=yellow&logo=apachemaven)](https://central.sonatype.com/repository/maven-snapshots/in/co/akshitbansal/spring-boot-starter-web-query/maven-metadata.xml)
 
-`spring-web-query` adds safe, declarative filtering and sorting to Spring Web APIs using RSQL and Spring Data JPA `Specification`.
+`spring-web-query` allows you to add **filtering**, **pagination**, and **sorting** to your Spring MVC APIs in a **declarative** manner.
 
-## Table of Contents
+It uses **RSQL** (a URL-friendly query language for filtering, e.g. `status==ACTIVE;age>18`) and resolves validated `Specification<T>` + `Pageable` automatically.
 
-- [Project modules](#project-modules)
+You declare what clients can query, and the library enforces that contract at the API boundary.
+
+```java
+@GetMapping("/users")
+@WebQuery(entityClass = User.class, dtoClass = UserQuery.class)
+public Page<UserResponse> search(Specification<User> spec, Pageable pageable) {
+    return userRepository.findAll(spec, pageable).map(this::toResponse);
+}
+```
+
+Example request:
+
+```http
+GET /users?filter=status==ACTIVE;joinedAt>=2025-01-01T00:00:00Z&sort=joinedAt,desc&page=0&size=20
+```
+
+It also supports nested JPA relationship paths (join-style queries), for example filtering by `profile.city`.
+
+## Table of contents
+
 - [Why this library exists](#why-this-library-exists)
-- [What is RSQL](#what-is-rsql)
+- [What you get](#what-you-get)
+- [How it works](#how-it-works)
+- [Project modules](#project-modules)
 - [Installation](#installation)
-- [How resolution modes work](#how-resolution-modes-work)
 - [Quick start (DTO-aware, recommended)](#quick-start-dto-aware-recommended)
-- [Entity-aware setup (supported)](#entity-aware-setup-supported)
+- [Entity-aware mode](#entity-aware-mode)
+- [RSQL guide](#rsql-guide)
+- [Annotation reference](#annotation-reference)
+- [Custom operators](#custom-operators)
 - [Pageable behavior](#pageable-behavior)
-- [RSQL operator reference (default operators)](#rsql-operator-reference-default-operators)
-- [Composed filter annotations](#composed-filter-annotations)
-- [Advanced configuration](#advanced-configuration)
-- [Error handling](#error-handling)
+- [Exception Handling](#exception-handling)
+- [Best practices](#best-practices)
 - [Compatibility](#compatibility)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Project modules
-
-This repository publishes two Maven artifacts:
-
-- `in.co.akshitbansal:spring-web-query-core`
-  - Core annotations (`@WebQuery`, `@RsqlFilterable`, `@Sortable`, etc.)
-  - Validation visitors
-  - Argument resolvers
-  - Reflection/annotation utilities
-  - Custom operator extension contracts
-- `in.co.akshitbansal:spring-boot-starter-web-query`
-  - Spring Boot auto-configuration
-  - Resolver registration
-  - Pageable max-page-size customization (`api.pagination.max-page-size`)
-  - ISO-8601 to `Timestamp` converter registration for RSQL parsing
-
-For most applications, use the starter.
-
 ## Why this library exists
 
-Most APIs eventually need dynamic querying:
+Most production APIs eventually need dynamic querying.
 
-- `GET /users?status=ACTIVE&city=London`
-- OR expressions, ranges, IN/NOT IN, nested fields
-- constrained sorting and pagination
+Initial requirements look simple:
 
-Without a shared contract, this usually becomes either:
+- `GET /users?status=ACTIVE`
+- `GET /users?city=London`
 
-- controller-level if/else parsing that is hard to maintain, or
-- unrestricted query surfaces that are unsafe
+Soon, you need:
 
-`spring-web-query` provides a declarative contract:
+- nested fields
+- OR/AND logic
+- range and set operations
+- controlled sorting and pagination
 
-- `@RsqlFilterable`: which fields can be filtered and with which operators
-- Composed shortcuts: `@RsqlFilterableEquality`, `@RsqlFilterableMembership`, `@RsqlFilterableNull`, `@RsqlFilterableRange`, `@RsqlFilterableText`
+Typical outcomes without a shared query layer:
+
+- repeated parser/mapper logic in controllers/services
+- inconsistent query behavior across endpoints
+- accidental exposure of internal entity fields
+- unsafe or expensive queries slipping into production
+
+`spring-web-query` solves this by turning querying into a contract:
+
+- `@RsqlFilterable`: which fields are filterable and which operators are allowed
 - `@Sortable`: which fields can be sorted
-- `@WebQuery`: method-level query context (`entityClass`, optional `dtoClass`, optional `fieldMappings`)
-- `Specification<T>` and `Pageable` parameter resolution with validation
+- `@WebQuery`: endpoint-level query context (`entityClass`, optional `dtoClass`, aliases, filter param name)
+- framework-provided argument resolvers for `Specification<T>` and `Pageable`
 
-## What is RSQL
+You keep endpoint code focused on business behavior, not query parsing.
 
-RSQL (RESTful Service Query Language) is a URL-friendly query language.
+## What you get
 
-- Comparison: `field==value`, `field=gt=10`, `field=in=(A,B)`
-- Logical AND: `;`
-- Logical OR: `,`
-- Grouping: `( ... )`
+### Core functional value
 
-Examples:
+- Declarative query contracts through annotations
+- RSQL parsing and validation before query execution
+- Automatic conversion to Spring Data JPA `Specification<T>`
+- Sort validation and path mapping for `Pageable`
+- Join-style filtering and sorting across JPA entity relationships via nested paths
 
-- `status==ACTIVE`
-- `status==ACTIVE;createdAt=ge=2025-01-01T00:00:00Z`
-- `(status==ACTIVE,status==PENDING);age=gt=18`
+### Safety and governance
+
+- Whitelist-only filtering and sorting
+- Operator-level permissions per field
+- Field-level exceptions with meaningful context
+- Configuration-time guardrails for duplicate aliases/operator symbols
+
+### API design flexibility
+
+- DTO-aware mode to decouple API query names from entity model
+- Entity-aware mode for simpler setups
+- Alias mapping in entity-aware mode (`@FieldMapping`)
+- DTO path translation in DTO-aware mode (`@MapsTo`)
+
+### Spring Boot integration
+
+- Auto-configuration for resolvers and utility beans
+- Optional custom operator registration hook
+- configurable max page size via property
+- built-in ISO-8601 `Timestamp` converter for RSQL values
+
+## How it works
+
+At request time, `spring-web-query` follows this flow:
+
+1. Read `@WebQuery` metadata from your controller method.
+2. Parse filter expression from request query param (default: `filter`).
+3. Validate all selectors and operators against your annotations.
+4. Translate request paths to entity paths (DTO-aware or alias-aware).
+5. Build a JPA `Specification<T>`.
+6. Parse `Pageable` using Spring’s standard resolver.
+7. Validate and remap sort fields.
+8. Return validated `Specification<T>` + `Pageable` to your controller method.
+
+This means the query contract is consistently enforced at the web boundary.
+
+Because nested paths are validated and mapped, you can expose relationship-based querying (joins) safely instead of hand-building join logic per endpoint.
+
+## Project modules
+
+This repository publishes two Maven artifacts.
+
+### `spring-boot-starter-web-query` (recommended)
+
+Use this for most projects.
+
+Includes:
+
+- core library
+- auto-configured argument resolvers
+- auto-configured beans (`AnnotationUtil`, operator sets)
+- pagination max-size customizer
+
+### `spring-web-query-core`
+
+Use this if you want full manual wiring of beans/resolvers.
+
+Includes:
+
+- annotations
+- validation visitors
+- resolver implementations
+- utility layer
+- custom operator contracts
 
 ## Installation
 
-### Option 1: Spring Boot starter (recommended)
+### Option 1: Starter (recommended)
 
 ```xml
 <dependency>
@@ -97,7 +170,7 @@ Examples:
 </dependency>
 ```
 
-### Option 2: Core only (manual wiring)
+### Option 2: Core only
 
 ```xml
 <dependency>
@@ -107,43 +180,24 @@ Examples:
 </dependency>
 ```
 
-If you use `core` directly, you must register the argument resolvers and supporting beans yourself.
-
-## How resolution modes work
-
-The library supports two resolution modes chosen by `@WebQuery`:
-
-### DTO-aware mode (recommended)
-
-Use `@WebQuery(dtoClass = ...)`.
-
-- Filter selectors are validated against DTO fields annotated with `@RsqlFilterable`
-- Sort selectors are validated against DTO fields annotated with `@Sortable`
-- DTO selectors are mapped to entity paths via `@MapsTo`
-- Mapped entity paths are validated against the entity class
-
-Why this is recommended:
-
-- clean API contract decoupled from persistence model
-- safer evolution of entities without breaking API queries
-- explicit external naming and path control
-
-### Entity-aware mode
-
-Use `@WebQuery` without `dtoClass` (default `void.class`).
-
-- selectors are validated directly on entity fields
-- optional aliasing supported with `@FieldMapping`
-
-`@FieldMapping` is only used in entity-aware mode.
+If you use core directly, register resolver beans and MVC configuration manually.
 
 ## Quick start (DTO-aware, recommended)
+
+DTO-aware mode is the preferred approach for external/public APIs.
+
+Why:
+
+- your public query contract is explicit and stable
+- entity refactors are less likely to break clients
+- you control naming and structure exposed to consumers
 
 ### 1. Define entity model
 
 ```java
 @Entity
 public class User {
+
     private String status;
     private Instant createdAt;
     private String username;
@@ -154,29 +208,39 @@ public class User {
 
 @Entity
 public class Profile {
+
     private String city;
 }
 ```
 
-### 2. Define DTO query contract
+### 2. Define query DTO contract
 
 ```java
-public class UserRes {
+public class UserQuery {
 
     @RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.IN})
     @Sortable
     private String status;
 
-    @RsqlFilterable({RsqlOperator.GREATER_THAN, RsqlOperator.LESS_THAN})
+    @RsqlFilterable({
+        RsqlOperator.GREATER_THAN,
+        RsqlOperator.GREATER_THAN_OR_EQUAL,
+        RsqlOperator.LESS_THAN,
+        RsqlOperator.LESS_THAN_OR_EQUAL
+    })
     @Sortable
     @MapsTo("createdAt")
     private Instant joinedAt;
 
-    @MapsTo("profile")
-    private ProfileQueryDto profile;
+    @RsqlFilterableText
+    @Sortable
+    private String username;
 
-    public static class ProfileQueryDto {
-        @RsqlFilterable({RsqlOperator.EQUAL})
+    private ProfileQuery profile;
+
+    public static class ProfileQuery {
+
+        @RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.NOT_EQUAL})
         @MapsTo("city")
         private String city;
     }
@@ -187,148 +251,268 @@ public class UserRes {
 
 ```java
 @GetMapping("/users")
-@WebQuery(entityClass = User.class, dtoClass = UserRes.class)
-public Page<UserRes> search(
-    Specification<User> spec,
-    Pageable pageable
+@WebQuery(entityClass = User.class, dtoClass = UserQuery.class)
+public Page<UserResponse> search(
+        Specification<User> spec,
+        Pageable pageable
 ) {
-    return userRepository.findAll(spec, pageable).map(...);
+    return userRepository.findAll(spec, pageable)
+            .map(this::toResponse);
 }
 ```
 
-Notes:
+Your repository interface should extend `JpaSpecificationExecutor<User>` (typically alongside `JpaRepository`) so Spring Data can execute `findAll(spec, pageable)`.
 
-- `@WebQuery` is required on methods where web-query resolution should apply
-- if the filter parameter is missing/blank, the resolved specification is `Specification.unrestricted()`
-- default RSQL query parameter name is `filter` (override with `@WebQuery(filterParamName = "q")`)
+```java
+public interface UserRepository
+        extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+}
+```
 
-### 4. Example requests
+### 4. Call it
 
-- `/users?filter=status==ACTIVE`
-- `/users?filter=joinedAt=gt=2025-01-01T00:00:00Z`
-- `/users?filter=profile.city==London`
-- `/users?sort=joinedAt,desc`
+```http
+GET /users?filter=status==ACTIVE
+GET /users?filter=joinedAt=ge=2025-01-01T00:00:00Z;joinedAt=lt=2026-01-01T00:00:00Z
+GET /users?filter=(status==ACTIVE,status==PENDING);profile.city==London
+GET /users?sort=joinedAt,desc&sort=username,asc&page=0&size=20
+```
 
-## Entity-aware setup (supported)
+## Entity-aware mode
 
-Use entity fields directly and optionally define aliases via `@FieldMapping`.
+Entity-aware mode validates directly against entity fields.
 
-In this mode, `@RsqlFilterable` and `@Sortable` must be placed on entity fields because validation is performed on the entity model.
+Use this when:
 
+- you control both API consumers and persistence model tightly
+- you want minimal setup
+- you do not need a separate query DTO contract
 
 ```java
 @GetMapping("/users")
 @WebQuery(
     entityClass = User.class,
     fieldMappings = {
-        @FieldMapping(name = "joined", field = "createdAt", allowOriginalFieldName = false)
+        @FieldMapping(name = "joined", field = "createdAt", allowOriginalFieldName = false),
+        @FieldMapping(name = "city", field = "profile.city", allowOriginalFieldName = true)
     }
 )
 public Page<User> search(
-    Specification<User> spec,
-    Pageable pageable
+        Specification<User> spec,
+        Pageable pageable
 ) {
     return userRepository.findAll(spec, pageable);
 }
 ```
 
+In entity-aware mode:
+
+- put `@RsqlFilterable` (or composed variants) on entity fields
+- put `@Sortable` on entity fields
+- optionally expose aliases via `@FieldMapping`
+
+Example requests:
+
+```http
+GET /users?filter=joined=gt=2025-01-01T00:00:00Z
+GET /users?filter=city==London
+GET /users?sort=joined,desc
+```
+
+## RSQL guide
+
+RSQL is a compact, URL-friendly query language. In this library, RSQL powers the `filter` parameter and is validated against your `@RsqlFilterable` contract.
+
+### Query shape
+
+Each expression is:
+
+`<selector><operator><argument>`
+
 Examples:
 
-- filter with alias: `/users?filter=joined=gt=2025-01-01T00:00:00Z`
-- sort with alias: `/users?sort=joined,desc`
+- `status==ACTIVE`
+- `age=gt=18`
+- `profile.city==London`
+- `createdAt=between=(2025-01-01T00:00:00Z,2026-01-01T00:00:00Z)`
 
-## Pageable behavior
+### Logical composition
 
-The WebQuery pageable resolver does **not** replace Spring’s pageable parser.
+- AND: `;`
+- OR: `,`
+- Parentheses for precedence: `(status==ACTIVE,status==PENDING);age=ge=18`
 
-It works as a validation/remapping layer on top of Spring Data Web:
+### Operator reference
 
-1. delegates parsing of `page`, `size`, `sort` to `PageableHandlerMethodArgumentResolver`
-2. validates each requested sort field against your query contract
-3. rewrites sort properties when aliasing/mapping is configured
-4. returns a validated `Pageable`
+#### Equality
 
-So pagination behavior remains Spring-standard; this library only adds constraints and safe mapping for sort fields.
+- `==` (equal)
+- `!=` (not equal)
 
-## RSQL operator reference (default operators)
+#### Ordering
 
-Default operators are exposed via `RsqlOperator`.
+- `=gt=` or `>` (greater than)
+- `=ge=` or `>=` (greater than or equal)
+- `=lt=` or `<` (less than)
+- `=le=` or `<=` (less than or equal)
 
-### Equality and inequality
+#### Membership
 
-- `EQUAL` (`==`)
-- `NOT_EQUAL` (`!=`)
+- `=in=`: `status=in=(ACTIVE,PENDING)`
+- `=out=`: `status=out=(DELETED,BLOCKED)`
 
-### Ordering comparisons
+#### Null checks
 
-- `GREATER_THAN` (`>`, `=gt=`)
-- `GREATER_THAN_OR_EQUAL` (`>=`, `=ge=`)
-- `LESS_THAN` (`<`, `=lt=`)
-- `LESS_THAN_OR_EQUAL` (`<=`, `=le=`)
+- `=null=` / `=isnull=` / `=na=`
+- `=notnull=` / `=isnotnull=` / `=nn=`
 
-### Set membership
+#### Text
 
-- `IN` (`=in=`)
-- `NOT_IN` (`=out=`)
+- `=like=` / `=ke=`
+- `=notlike=` / `=nk=`
+- `=icase=` / `=ic=`
+- `=ilike=` / `=ik=`
+- `=inotlike=` / `=ni=`
 
-### Null checks
+#### Range
 
-- `IS_NULL` (`=null=`, `=isnull=`, `=na=`)
-- `NOT_NULL` (`=notnull=`, `=isnotnull=`, `=nn=`)
+- `=between=` / `=bt=`
+- `=notbetween=` / `=nb=`
 
-### Pattern matching
+### Common API patterns
 
-- `LIKE` (`=like=`, `=ke=`)
-- `NOT_LIKE` (`=notlike=`, `=nk=`)
+#### Multi-value status filter with OR
 
-### Case-insensitive variants
+```http
+GET /users?filter=(status==ACTIVE,status==PENDING)
+```
 
-- `IGNORE_CASE` (`=icase=`, `=ic=`)
-- `IGNORE_CASE_LIKE` (`=ilike=`, `=ik=`)
-- `IGNORE_CASE_NOT_LIKE` (`=inotlike=`, `=ni=`)
+#### Date window filter (inclusive lower bound, exclusive upper bound)
 
-### Range comparisons
+```http
+GET /users?filter=createdAt=ge=2025-01-01T00:00:00Z;createdAt=lt=2026-01-01T00:00:00Z
+```
 
-- `BETWEEN` (`=between=`, `=bt=`)
-- `NOT_BETWEEN` (`=notbetween=`, `=nb=`)
+#### Nested field filter + sort + pagination
 
-Strict equality is enabled internally for `==` conversion (`name==John*` is treated as literal equality, not wildcard prefix matching).
+```http
+GET /users?filter=profile.city==London;status==ACTIVE&sort=joinedAt,desc&page=0&size=20
+```
 
-## Composed filter annotations
+Here, `profile.city` is a relationship path (join-style query across associated entities).
 
-For common cases, you can use composed annotations instead of writing `@RsqlFilterable(...)` repeatedly.
+#### IN list + not-null constraint
 
-- `@RsqlFilterableEquality` -> `EQUAL`, `NOT_EQUAL`
-- `@RsqlFilterableMembership` -> `IN`, `NOT_IN`
-- `@RsqlFilterableNull` -> `IS_NULL`, `NOT_NULL`
-- `@RsqlFilterableRange` -> `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `BETWEEN`, `NOT_BETWEEN`
-- `@RsqlFilterableText` -> `LIKE`, `NOT_LIKE`, `IGNORE_CASE_LIKE`, `IGNORE_CASE_NOT_LIKE`, `IGNORE_CASE`
+```http
+GET /users?filter=role=in=(ADMIN,MANAGER);email=notnull=
+```
 
-You can combine composed annotations on the same field, and you can also combine them with one or more `@RsqlFilterable` declarations.
+### URL and encoding notes
 
-`@RsqlFilterable` is repeatable, so it can be applied multiple times on a field.
+- RSQL is sent in the query string, so URL encoding may be required by clients/proxies.
+- ISO timestamps with `+` offset must encode `+` as `%2B`.
+- Example:
+
+```http
+GET /users?filter=createdAt=ge=2025-12-08T00:00:00%2B00:00
+```
+
+### Strict equality behavior
+
+This library enables strict equality conversion for `==`.
+
+`name==John*` is treated as a literal equality against `John*`, not wildcard prefix matching.
+
+## Annotation reference
+
+### `@WebQuery`
+
+Applied on controller methods.
+
+- `entityClass`: required
+- `dtoClass`: optional, default `void.class`
+- `fieldMappings`: optional aliases (entity-aware mode)
+- `filterParamName`: optional, default `filter`
+
+Example custom filter param name:
 
 ```java
-@RsqlFilterableEquality
-@RsqlFilterableText
-@RsqlFilterable({RsqlOperator.IN})
-@RsqlFilterable({RsqlOperator.NOT_IN})
+@WebQuery(entityClass = User.class, dtoClass = UserQuery.class, filterParamName = "q")
+```
+
+Request:
+
+```http
+GET /users?q=status==ACTIVE
+```
+
+### `@RsqlFilterable`
+
+Marks field as filterable and declares allowed operators.
+
+```java
+@RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.NOT_EQUAL})
 private String status;
 ```
 
-## Advanced configuration
+Also supports custom operators via `customOperators`.
 
-### DTO path mapping with `@MapsTo`
+### `@Sortable`
 
-- annotate DTO fields with `@MapsTo("...")` to map each path segment
-- use `@MapsTo(value = "...", absolute = true)` when you need to reset accumulated parent segments and map from the entity root
+Whitelists a field for `sort` query usage.
 
-### Custom operators
+```java
+@Sortable
+private Instant createdAt;
+```
 
-1. Implement `RsqlCustomOperator`
+### `@MapsTo`
+
+DTO-aware path mapping from DTO field segment to entity field segment/path.
+
+```java
+@MapsTo("createdAt")
+private Instant joinedAt;
+```
+
+Absolute mapping reset is supported:
+
+```java
+@MapsTo(value = "profile.address.city", absolute = true)
+private String city;
+```
+
+### `@FieldMapping`
+
+Entity-aware alias mapping.
+
+```java
+@FieldMapping(name = "joined", field = "createdAt", allowOriginalFieldName = false)
+```
+
+When `allowOriginalFieldName = false`, only the alias is accepted in requests.
+
+### Composed filter annotations
+
+Composed annotations are shortcuts for common filter behavior, so you do not have to repeat long `@RsqlFilterable(...)` lists on every field.
+
+- `@RsqlFilterableEquality` enables equality checks (`EQUAL`, `NOT_EQUAL`) for exact match / mismatch scenarios.
+- `@RsqlFilterableMembership` enables set checks (`IN`, `NOT_IN`) when clients pass a list of allowed or excluded values.
+- `@RsqlFilterableNull` enables nullability checks (`IS_NULL`, `NOT_NULL`) for presence/absence filters.
+- `@RsqlFilterableRange` enables range and comparison operations (`GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `BETWEEN`, `NOT_BETWEEN`) for numeric/date bounds.
+- `@RsqlFilterableText` enables text-oriented matching (`LIKE`, `NOT_LIKE`, `IGNORE_CASE`, `IGNORE_CASE_LIKE`, `IGNORE_CASE_NOT_LIKE`) for case-sensitive or case-insensitive text search patterns.
+
+You can combine them and/or mix with explicit `@RsqlFilterable`.
+
+## Custom operators
+
+`spring-web-query` supports pluggable custom operators.
+
+### 1. Implement `RsqlCustomOperator`
 
 ```java
 public class IsMondayOperator implements RsqlCustomOperator<Long> {
+
     @Override
     public ComparisonOperator getComparisonOperator() {
         return new ComparisonOperator("=monday=");
@@ -347,19 +531,22 @@ public class IsMondayOperator implements RsqlCustomOperator<Long> {
 }
 ```
 
-2. Register one or more `RsqlCustomOperatorsConfigurer` beans
+### 2. Register configurer bean(s)
 
 ```java
 @Configuration
-public class RsqlConfig {
+public class QueryConfig {
+
     @Bean
-    public RsqlCustomOperatorsConfigurer customOperators() {
+    RsqlCustomOperatorsConfigurer customOperators() {
         return () -> Set.of(new IsMondayOperator());
     }
 }
 ```
 
-3. Whitelist the custom operator on each filterable field using `@RsqlFilterable(customOperators = ...)`
+You can define multiple `RsqlCustomOperatorsConfigurer` beans; all operators are aggregated.
+
+### 3. Whitelist operator at field level
 
 ```java
 @RsqlFilterable(
@@ -369,72 +556,138 @@ public class RsqlConfig {
 private LocalDateTime createdAt;
 ```
 
-### Page size cap
+Important:
+
+- Custom operator symbols must be unique.
+- They must not overlap with default operator symbols.
+- Referencing an unregistered custom operator in `@RsqlFilterable` throws a configuration exception.
+
+## Pageable behavior
+
+This library does not replace Spring’s pageable parsing. It adds a validation and mapping layer on top of Spring’s default `Pageable` resolution.
+
+Under the hood, the resolver in this library delegates argument resolution to Spring’s `PageableHandlerMethodArgumentResolver`, then applies query-contract checks and path translation.
+
+Flow:
+
+1. parse page/size/sort using Spring defaults
+2. validate each sort selector against your contract
+3. remap selector to entity path when aliasing/DTO mapping is configured
+4. return validated `Pageable`
+
+### Max page size
+
+Max page size is configured globally to `100` by default.
 
 ```properties
 api.pagination.max-page-size=500
 ```
 
-Default is `100`.
+This default can be changed via the property above.
 
-### Timestamp parsing
+## Exception Handling
 
-The starter registers an ISO-8601 converter for `java.sql.Timestamp` values in RSQL expressions.
+`spring-web-query` separates request problems from configuration problems so API consumers get clear feedback and backend teams can quickly identify misconfiguration.
 
-## Error handling
+In practice:
 
-Exception hierarchy, semantics, and metadata:
+- **Validation exceptions** indicate the client request is invalid for your declared query contract (typically return `4xx`).
+- **Configuration exceptions** indicate your application setup is inconsistent or incomplete (typically return `5xx`).
 
-- `QueryException`
-  - generic base exception for all query-related failures
-  - `QueryValidationException`
-    - client-side validation failure (map to 4xx responses)
-    - thrown for invalid RSQL syntax
-    - `QueryFieldValidationException`
-      - field-specific validation failure
-      - thrown when a field is unknown in filter/sort
-      - thrown when filtering/sorting is not allowed on a field
-      - additional metadata: `fieldPath`
-      - `QueryForbiddenOperatorException`
-        - thrown when an operator is not allowed for a field
-        - additional metadata: `fieldPath`, `operator` (used), `allowedOperators` (set of allowed operators)
-  - `QueryConfigurationException`
-    - server-side misconfiguration (map to 5xx responses)
-    - thrown for invalid or conflicting mappings
-    - thrown for unregistered custom operators referenced in `@RsqlFilterable`
-    - thrown for duplicate operator symbols across default/custom operators
+This split is important for production APIs because it avoids treating user mistakes and server defects as the same class of error.
 
-Suggested controller advice:
+Exception hierarchy:
+
+```text
+QueryException
+├── QueryValidationException                        (client-side request issues, map to 4xx)
+│   └── QueryFieldValidationException              (field-specific validation issue)
+│       └── QueryForbiddenOperatorException        (operator not allowed for a field)
+└── QueryConfigurationException                    (server/developer config issues, map to 5xx)
+```
+
+How to read this hierarchy:
+
+- `QueryException` is the common parent for all query-related failures.
+- `QueryValidationException` is raised when the incoming filter/sort expression is invalid.
+- `QueryFieldValidationException` narrows that to field-level issues (unknown field, non-filterable, non-sortable).
+- `QueryForbiddenOperatorException` is the most specific validation case: field exists, but the operator is not permitted for that field.
+- `QueryConfigurationException` indicates a developer-side setup issue (for example, conflicting mappings or missing operator registration).
+
+### Typical validation failures
+
+- unknown field in `filter` or `sort`
+- filtering on a field that is not annotated with `@RsqlFilterable`
+- sorting on a field that is not annotated with `@Sortable`
+- using an operator that is not allowed for the target field
+- malformed RSQL expression syntax
+
+### Typical configuration failures
+
+- duplicate alias names in `@FieldMapping`
+- multiple aliases mapped to the same entity field
+- duplicate operator symbols across default and custom operators
+- unregistered custom operator referenced in `@RsqlFilterable(customOperators = ...)`
+- invalid DTO-to-entity mapping path via `@MapsTo`
+
+### Recommended API response strategy
+
+- Map `QueryValidationException` (and subclasses) to `400 Bad Request`.
+- Return a concise error message so clients can correct the query quickly.
+- Map `QueryConfigurationException` to `500 Internal Server Error`.
+- Avoid leaking internal stack/config details in `5xx` responses.
+
+### Controller advice template
 
 ```java
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(QueryValidationException.class)
-    public ResponseEntity<String> handleValidationException(QueryValidationException ex) {
+    public ResponseEntity<String> handleValidation(QueryValidationException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
     @ExceptionHandler(QueryConfigurationException.class)
-    public ResponseEntity<String> handleConfigurationException(QueryConfigurationException ex) {
+    public ResponseEntity<String> handleConfiguration(QueryConfigurationException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Internal configuration error");
+                .body("Internal query configuration error");
     }
 }
 ```
 
+## Why teams adopt this in production
+
+- It standardizes query semantics across endpoints.
+- It lowers maintenance cost by removing repeated query parsing code.
+- It protects your API surface with explicit whitelists.
+- It provides a clean migration path from entity-coupled contracts to DTO contracts.
+- It scales from basic filtering to advanced operators without custom DSL infrastructure.
+
+In short, it gives you power for consumers and control for maintainers.
+
+## Best practices
+
+- Prefer DTO-aware mode for public/external APIs.
+- Keep DTO query contracts focused and stable.
+- Only mark fields `@Sortable` if they are truly supported and safe.
+- Keep operator sets minimal per field (principle of least power).
+- Use aliases deliberately; avoid exposing persistence-only field names.
+- Treat `QueryConfigurationException` as a deployment/configuration defect.
+
 ## Compatibility
 
-- Java: `21+`
-- Spring Boot: `4.0.2+`
-- Spring Data JPA + Spring Web MVC
+- Java `21+`
+- Spring Boot `4.0.2+`
+- Spring Web MVC
+- Spring Data JPA
 
 ## Contributing
 
-Issues and PRs are welcome.
+Issues and pull requests are welcome.
+
+If you are contributing code changes, include tests covering resolver behavior and validation outcomes.
 
 ## License
 
-Licensed under the Apache License, Version 2.0.
-
-https://www.apache.org/licenses/LICENSE-2.0
+Apache License 2.0: [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
