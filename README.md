@@ -1,6 +1,6 @@
 # Spring Web Query
 
-[![License](https://img.shields.io/github/license/abansal755/spring-web-query?style=flat&label=License&color=blue
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat
 )](https://www.apache.org/licenses/LICENSE-2.0)
 [![Java 21+](https://img.shields.io/badge/Java-21%2B-blue?style=flat&color=orange)](https://www.oracle.com/java/technologies/javase-jdk21-downloads.html)
 [![Spring Boot 4.0.2+](https://img.shields.io/badge/Spring_Boot-4.0.2%2B-orange?style=flat&logo=springboot)](https://spring.io/projects/spring-boot)
