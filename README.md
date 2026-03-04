@@ -47,6 +47,7 @@ It also supports nested JPA relationship paths (join-style queries), for example
 - [Pageable behavior](#pageable-behavior)
 - [Exception Handling](#exception-handling)
 - [Best practices](#best-practices)
+- [Documentation](#documentation)
 - [Compatibility](#compatibility)
 - [Contributing](#contributing)
 - [License](#license)
@@ -674,6 +675,10 @@ In short, it gives you power for consumers and control for maintainers.
 - Keep operator sets minimal per field (principle of least power).
 - Use aliases deliberately; avoid exposing persistence-only field names.
 - Treat `QueryConfigurationException` as a deployment/configuration defect.
+
+## Documentation
+
+- Javadoc: [https://javadoc.akshitbansal.co.in](https://javadoc.akshitbansal.co.in)
 
 ## Compatibility
 
