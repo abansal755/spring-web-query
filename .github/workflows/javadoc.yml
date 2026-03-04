@@ -1,0 +1,165 @@
+name: Publish Javadoc
+on:
+    workflow_dispatch:
+    release:
+        types: [published]
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install dependencies
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y libxml2-utils unzip
+
+            - name: Fetch versions from maven central metadata
+              run: |
+                curl -s https://repo1.maven.org/maven2/in/co/akshitbansal/spring-web-query-core/maven-metadata.xml \
+                | xmllint --xpath '//versioning/versions/version/text()' - \
+                > versions.txt
+
+            - name: Build javadoc site
+              run: |
+                set -e
+                mkdir -p site/spring-web-query-core
+                
+                while read VERSION; do
+                    mkdir -p site/spring-web-query-core/${VERSION}
+                    curl -fL -o javadoc.jar https://repo1.maven.org/maven2/in/co/akshitbansal/spring-web-query-core/${VERSION}/spring-web-query-core-${VERSION}-javadoc.jar
+                    unzip -q javadoc.jar -d site/spring-web-query-core/${VERSION}
+                    rm -f javadoc.jar
+                done < versions.txt
+
+            - name: Generate root index page
+              run: |
+                set -e
+
+                INDEX=site/index.html
+
+                cat > $INDEX <<'EOF'
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                <meta charset="UTF-8" />
+                <title>Index of /</title>
+                <style>
+                    body {
+                    font-family: monospace;
+                    background: #ffffff;
+                    color: #000000;
+                    padding: 20px;
+                    }
+                    h1 {
+                    font-size: 18px;
+                    font-weight: normal;
+                    }
+                    a {
+                    text-decoration: none;
+                    color: #0000ee;
+                    }
+                    a:visited {
+                    color: #551a8b;
+                    }
+                    hr {
+                    border: none;
+                    border-top: 1px solid #000;
+                    margin: 10px 0;
+                    }
+                    ul {
+                    list-style: none;
+                    padding-left: 0;
+                    }
+                    li {
+                    line-height: 1.6;
+                    }
+                </style>
+                </head>
+                <body>
+                <h1>Index of /</h1>
+                <hr>
+                <ul>
+                EOF
+
+                for dir in site/*/; do
+                    name=$(basename "$dir")
+                    echo "<li><a href=\"./${name}/\">${name}/</a></li>" >> $INDEX
+                done
+
+                cat >> $INDEX <<'EOF'
+                </ul>
+                <hr>
+                </body>
+                </html>
+                EOF
+
+            - name: Generate versions index page
+              run: |
+                set -e
+
+                INDEX=site/spring-web-query-core/index.html
+
+                cat > $INDEX <<'EOF'
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                <meta charset="UTF-8" />
+                <title>Index of /spring-web-query-core</title>
+                <style>
+                    body {
+                    font-family: monospace;
+                    background: #ffffff;
+                    color: #000000;
+                    padding: 20px;
+                    }
+                    h1 {
+                    font-size: 18px;
+                    font-weight: normal;
+                    }
+                    a {
+                    text-decoration: none;
+                    color: #0000ee;
+                    }
+                    a:visited {
+                    color: #551a8b;
+                    }
+                    hr {
+                    border: none;
+                    border-top: 1px solid #000;
+                    margin: 10px 0;
+                    }
+                    ul {
+                    list-style: none;
+                    padding-left: 0;
+                    }
+                    li {
+                    line-height: 1.6;
+                    }
+                </style>
+                </head>
+                <body>
+                <h1>Index of /spring-web-query-core</h1>
+                <hr>
+                <ul>
+                    <li><a href="../">../</a></li>
+                EOF
+
+                for dir in site/spring-web-query-core/*/; do
+                    name=$(basename "$dir")
+                    echo "<li><a href=\"./${name}/\">${name}/</a></li>" >> $INDEX
+                done
+
+                cat >> $INDEX <<'EOF'
+                </ul>
+                <hr>
+                </body>
+                </html>
+                EOF
+            
+            - name: Cloudflare pages deploy
+              uses: cloudflare/wrangler-action@v3
+              with:
+                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                command: pages deploy site --project-name=spring-web-query-javadoc
