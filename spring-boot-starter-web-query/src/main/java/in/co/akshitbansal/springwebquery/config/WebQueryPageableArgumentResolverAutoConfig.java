@@ -12,7 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.List;
 
 @AutoConfiguration
-@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
+@EnableSpringDataWebSupport
 @RequiredArgsConstructor
 @Slf4j
 public class WebQueryPageableArgumentResolverAutoConfig implements WebMvcConfigurer {
