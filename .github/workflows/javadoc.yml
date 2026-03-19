@@ -21,19 +21,7 @@ jobs:
                 aws lambda invoke \
                 --function-name cloudflare_javadoc_deploy \
                 --log-type Tail \
-                --payload '{
-                    "packages": [
-                        {
-                            "groupId": "in.co.akshitbansal",
-                            "artifactId": "spring-web-query-core"
-                        },
-                    
-                        {
-                            "groupId": "in.co.akshitbansal",
-                            "artifactId": "spring-boot-starter-web-query"
-                        }
-                    ]
-                }' \
+                --payload '{"deploymentIds": []}' \
                 out \
                 --cli-binary-format raw-in-base64-out \
                 --query 'LogResult' --output text \
