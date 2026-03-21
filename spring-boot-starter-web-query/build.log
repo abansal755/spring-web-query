@@ -1,0 +1,139 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for in.co.akshitbansal:spring-boot-starter-web-query:jar:0.5.0
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-compiler-plugin is missing. @ line 111, column 12
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] Inspecting build with total of 1 modules
+[INFO] Installing Central Publishing features
+[INFO] 
+[INFO] ----------< in.co.akshitbansal:spring-boot-starter-web-query >----------
+[INFO] Building in.co.akshitbansal:spring-boot-starter-web-query 0.5.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ spring-boot-starter-web-query ---
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ spring-boot-starter-web-query ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ spring-boot-starter-web-query ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 4 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ spring-boot-starter-web-query ---
+[INFO] skip non existing resourceDirectory /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ spring-boot-starter-web-query ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ spring-boot-starter-web-query ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running in.co.akshitbansal.springwebquery.config.AutoConfigIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.2)
+
+2026-03-21T18:07:18.816Z  INFO 2801 --- [           main] i.c.a.s.c.AutoConfigIntegrationTest      : Starting AutoConfigIntegrationTest using Java 21.0.10 with PID 2801 (started by runner in /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query)
+2026-03-21T18:07:18.821Z  INFO 2801 --- [           main] i.c.a.s.c.AutoConfigIntegrationTest      : No active profile set, falling back to 1 default profile: "default"
+2026-03-21T18:07:19.073Z  INFO 2801 --- [           main] i.g.perplexhub.rsql.RSQLCommonSupport    : Adding entity converter for class java.sql.Timestamp
+2026-03-21T18:07:19.080Z  INFO 2801 --- [           main] .a.s.c.PaginationCustomizationAutoConfig : PageableHandlerMethodArgumentResolverCustomizer registered to set max page size to 50
+2026-03-21T18:07:19.087Z  INFO 2801 --- [           main] i.c.a.s.config.WebQueryBeanAutoConfig    : Registered default RSQL operators: [=out=, !=, =nn=, =bt=, =ke=, =ik=, =lt=, =le=, =gt=, =ge=, ==, =na=, =nb=, =ni=, =nk=, =in=, =ic=]
+2026-03-21T18:07:19.088Z  INFO 2801 --- [           main] i.c.a.s.config.WebQueryBeanAutoConfig    : Registered custom RSQL operators: []
+2026-03-21T18:07:19.114Z  INFO 2801 --- [           main] i.c.a.s.c.AutoConfigIntegrationTest      : Started AutoConfigIntegrationTest in 0.615 seconds (process running for 1.625)
+2026-03-21T18:07:19.789Z  INFO 2801 --- [           main] bQueryPageableArgumentResolverAutoConfig : Registered WebQueryEntityAwarePageableArgumentResolver for handling @RestrictedPageable parameters
+2026-03-21T18:07:19.789Z  INFO 2801 --- [           main] bQueryPageableArgumentResolverAutoConfig : Registered WebQueryDtoAwarePageableArgumentResolver for handling @RestrictedPageable parameters
+2026-03-21T18:07:19.795Z  INFO 2801 --- [           main] ySpecificationArgumentResolverAutoConfig : Registered WebQueryEntityAwareSpecificationArgumentResolver for handling @RsqlSpec parameters
+2026-03-21T18:07:19.795Z  INFO 2801 --- [           main] ySpecificationArgumentResolverAutoConfig : Registered WebQueryDtoAwareSpecificationArgumentResolver for handling @RsqlSpec parameters
+2026-03-21T18:07:19.801Z  INFO 2801 --- [           main] .a.s.c.PaginationCustomizationAutoConfig : PageableHandlerMethodArgumentResolverCustomizer registered to set max page size to 50
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.669 s -- in in.co.akshitbansal.springwebquery.config.AutoConfigIntegrationTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ spring-boot-starter-web-query ---
+[INFO] Building jar: /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.jar
+[INFO] 
+[INFO] --- javadoc:3.12.0:jar (attach-javadocs) @ spring-boot-starter-web-query ---
+[INFO] Building jar: /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-javadoc.jar
+[INFO] 
+[INFO] >>> source:3.4.0:jar (attach-sources) > generate-sources @ spring-boot-starter-web-query >>>
+[INFO] 
+[INFO] <<< source:3.4.0:jar (attach-sources) < generate-sources @ spring-boot-starter-web-query <<<
+[INFO] 
+[INFO] 
+[INFO] --- source:3.4.0:jar (attach-sources) @ spring-boot-starter-web-query ---
+[INFO] Building jar: /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-sources.jar
+[INFO] 
+[INFO] --- gpg:3.2.8:sign (sign-artifacts) @ spring-boot-starter-web-query ---
+[WARNING] 
+[WARNING] W A R N I N G
+[WARNING] 
+[WARNING] Do not store passphrase in any file (disk or SCM repository),
+[WARNING] instead rely on GnuPG agent or provide passphrase in 
+[WARNING] MAVEN_GPG_PASSPHRASE environment variable for batch mode.
+[WARNING] 
+[WARNING] Sensitive content loaded from settings.xml
+[WARNING] 
+[INFO] Signer 'gpg' is signing 4 files with key default
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ spring-boot-starter-web-query ---
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/pom.xml to /home/runner/.m2/repository/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0.pom
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.jar to /home/runner/.m2/repository/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0.jar
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-javadoc.jar to /home/runner/.m2/repository/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0-javadoc.jar
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-sources.jar to /home/runner/.m2/repository/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0-sources.jar
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.jar.asc to /home/runner/.m2/repository/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0.jar.asc
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.pom.asc to /home/runner/.m2/repository/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0.pom.asc
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-javadoc.jar.asc to /home/runner/.m2/repository/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0-javadoc.jar.asc
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-sources.jar.asc to /home/runner/.m2/repository/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0-sources.jar.asc
+[INFO] 
+[INFO] --- central-publishing:0.10.0:publish (injected-central-publishing) @ spring-boot-starter-web-query ---
+[INFO] Using Central baseUrl: https://central.sonatype.com
+[INFO] Using credentials from server id central in settings.xml
+[INFO] Using Usertoken auth, with namecode: fCyjBm
+[INFO] Staging 7 files
+[INFO] Staging /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.jar
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.jar to /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0.jar
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/pom.xml to /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0.pom
+[INFO] Staging /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-javadoc.jar
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-javadoc.jar to /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0-javadoc.jar
+[INFO] Staging /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-sources.jar
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-sources.jar to /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0-sources.jar
+[INFO] Staging /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.jar.asc
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.jar.asc to /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0.jar.asc
+[INFO] Staging /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.pom.asc
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0.pom.asc to /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0.pom.asc
+[INFO] Staging /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-javadoc.jar.asc
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-javadoc.jar.asc to /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0-javadoc.jar.asc
+[INFO] Staging /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-sources.jar.asc
+[INFO] Installing /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/spring-boot-starter-web-query-0.5.0-sources.jar.asc to /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/0.5.0/spring-boot-starter-web-query-0.5.0-sources.jar.asc
+[INFO] Pre Bundling - deleted /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/in/co/akshitbansal/spring-boot-starter-web-query/maven-metadata-central-staging.xml
+[INFO] Generate checksums for dir: in/co/akshitbansal/spring-boot-starter-web-query/0.5.0
+[INFO] Going to create /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-publishing/central-bundle.zip by bundling content at /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging
+[INFO] Created bundle successfully /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-staging/central-bundle.zip
+[INFO] Going to upload /home/runner/work/spring-web-query/spring-web-query/spring-boot-starter-web-query/target/central-publishing/central-bundle.zip
+[INFO] Uploaded bundle successfully, deployment name: Deployment, deploymentId: 9a42dcce-02b9-4a87-8e6a-9d7981abc00b. Deployment will require manual publishing
+[INFO] Waiting until Deployment 9a42dcce-02b9-4a87-8e6a-9d7981abc00b is validated
+[INFO] Deployment 9a42dcce-02b9-4a87-8e6a-9d7981abc00b has been validated. To finish publishing visit https://central.sonatype.com/publishing/deployments
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  15.770 s
+[INFO] Finished at: 2026-03-21T18:07:30Z
+[INFO] ------------------------------------------------------------------------
