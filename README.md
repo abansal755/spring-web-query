@@ -262,6 +262,16 @@ public Page<UserResponse> search(
 }
 ```
 
+If you need logical OR in filters, enable it explicitly:
+
+```java
+@WebQuery(
+    entityClass = User.class,
+    dtoClass = UserQuery.class,
+    allowOrOperator = true
+)
+```
+
 Your repository interface should extend `JpaSpecificationExecutor<User>` (typically alongside `JpaRepository`) so Spring Data can execute `findAll(spec, pageable)`.
 
 ```java
@@ -275,7 +285,7 @@ public interface UserRepository
 ```http
 GET /users?filter=status==ACTIVE
 GET /users?filter=joinedAt=ge=2025-01-01T00:00:00Z;joinedAt=lt=2026-01-01T00:00:00Z
-GET /users?filter=(status==ACTIVE,status==PENDING);profile.city==London
+GET /users?filter=(status==ACTIVE,status==PENDING);profile.city==London  // requires allowOrOperator = true
 GET /users?sort=joinedAt,desc&sort=username,asc&page=0&size=20
 ```
 
@@ -342,6 +352,8 @@ Examples:
 - AND: `;`
 - OR: `,`
 - Parentheses for precedence: `(status==ACTIVE,status==PENDING);age=ge=18`
+
+By default, AND is allowed and OR is disabled. You can control this per endpoint via `@WebQuery(allowAndOperator = ..., allowOrOperator = ...)`.
 
 ### Operator reference
 
@@ -434,6 +446,8 @@ Applied on controller methods.
 - `dtoClass`: optional, default `void.class`
 - `fieldMappings`: optional aliases (entity-aware mode)
 - `filterParamName`: optional, default `filter`
+- `allowAndOperator`: optional, default `true`
+- `allowOrOperator`: optional, default `false`
 
 Example custom filter param name:
 
@@ -445,6 +459,16 @@ Request:
 
 ```http
 GET /users?q=status==ACTIVE
+```
+
+Example enabling OR:
+
+```java
+@WebQuery(
+    entityClass = User.class,
+    dtoClass = UserQuery.class,
+    allowOrOperator = true
+)
 ```
 
 ### `@RsqlFilterable`
