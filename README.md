@@ -18,7 +18,7 @@ You declare what clients can query, and the library enforces that contract at th
 
 ```java
 @GetMapping("/users")
-@WebQuery(entityClass = User.class, dtoClass = UserQuery.class)
+@WebQuery(entityClass = User.class, dtoClass = UserResponse.class)
 public Page<UserResponse> search(Specification<User> spec, Pageable pageable) {
     return userRepository.findAll(spec, pageable).map(this::toResponse);
 }
