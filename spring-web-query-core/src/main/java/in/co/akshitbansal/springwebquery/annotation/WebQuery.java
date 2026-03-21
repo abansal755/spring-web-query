@@ -57,4 +57,22 @@ public @interface WebQuery {
      * @return HTTP query parameter name containing the RSQL filter expression
      */
     String filterParamName() default "filter";
+
+    /**
+     * Whether logical AND operator ({@code ;}) is allowed in RSQL filters.
+     *
+     * <p>Defaults to {@code true}.</p>
+     *
+     * @return true if AND operator is allowed, false otherwise
+     */
+    boolean allowAndOperator() default true;
+
+    /**
+     * Whether logical OR operator ({@code ,}) is allowed in RSQL filters.
+     *
+     * <p>Defaults to {@code false}.</p>
+     *
+     * @return true if OR operator is allowed, false otherwise
+     */
+    boolean allowOrOperator() default false;
 }

@@ -1,6 +1,7 @@
 package in.co.akshitbansal.springwebquery;
 
 import cz.jirutka.rsql.parser.ast.*;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 
@@ -49,17 +50,31 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
     private final AnnotationUtil annotationUtil;
 
     /**
+     * Whether logical AND operator is allowed in the query.
+     */
+    private final boolean andNodeAllowed;
+
+    /**
+     * Whether logical OR operator is allowed in the query.
+     */
+    private final boolean orNodeAllowed;
+
+    /**
      * Creates a DTO-aware validation visitor.
      *
      * @param entityClass target entity type used for final path validation
      * @param dtoClass DTO type used to validate incoming selector paths
      * @param annotationUtil helper for resolving allowed operators from annotations
+     * @param andNodeAllowed whether logical AND operator is allowed
+     * @param orNodeAllowed whether logical OR operator is allowed
      */
-    public DtoValidationRSQLVisitor(Class<?> entityClass, Class<?> dtoClass, AnnotationUtil annotationUtil) {
+    public DtoValidationRSQLVisitor(Class<?> entityClass, Class<?> dtoClass, AnnotationUtil annotationUtil, boolean andNodeAllowed, boolean orNodeAllowed) {
         this.entityClass = entityClass;
         this.dtoClass = dtoClass;
         this.fieldMappings = new HashMap<>();
         this.annotationUtil = annotationUtil;
+        this.andNodeAllowed = andNodeAllowed;
+        this.orNodeAllowed = orNodeAllowed;
     }
 
     /**
@@ -72,27 +87,31 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
     }
 
     /**
-     * Visits a logical AND node and validates each child expression.
+     * Visits a logical AND node and validates whether it is allowed.
      *
      * @param node AND node
      * @param param unused visitor parameter
      * @return {@code null}
+     * @throws QueryValidationException if AND operator is not allowed
      */
     @Override
     public Void visit(AndNode node, Void param) {
+        if(!andNodeAllowed) throw new QueryValidationException("Logical AND operator is not allowed");
         node.forEach(child -> child.accept(this));
         return null;
     }
 
     /**
-     * Visits a logical OR node and validates each child expression.
+     * Visits a logical OR node and validates whether it is allowed.
      *
      * @param node OR node
      * @param param unused visitor parameter
      * @return {@code null}
+     * @throws QueryValidationException if OR operator is not allowed
      */
     @Override
     public Void visit(OrNode node, Void param) {
+        if(!orNodeAllowed) throw new QueryValidationException("Logical OR operator is not allowed");
         node.forEach(child -> child.accept(this));
         return null;
     }

@@ -82,9 +82,11 @@ public class WebQueryDtoAwareSpecificationArgumentResolver extends WebQuerySpeci
         try {
             // Retrieve the @WebQuery annotation from the method parameter to access configuration
             WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
-            // Extract entity and dto class
+            // Extract relevant configuration from the annotation
             Class<?> entityClass = webQueryAnnotation.entityClass();
             Class<?> dtoClass = webQueryAnnotation.dtoClass();
+            boolean andNodeAllowed = webQueryAnnotation.allowAndOperator();
+            boolean orNodeAllowed = webQueryAnnotation.allowOrOperator();
 
             // Extract the RSQL query string from the request using the parameter name defined in @WebQuery
             String filter = webRequest.getParameter(webQueryAnnotation.filterParamName());
@@ -93,7 +95,13 @@ public class WebQueryDtoAwareSpecificationArgumentResolver extends WebQuerySpeci
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);
             // Validate the parsed AST against the target DTO and its @RsqlFilterable fields, while also building field mappings from DTO to entity
-            DtoValidationRSQLVisitor visitor = new DtoValidationRSQLVisitor(entityClass, dtoClass, annotationUtil);
+            DtoValidationRSQLVisitor visitor = new DtoValidationRSQLVisitor(
+                    entityClass,
+                    dtoClass,
+                    annotationUtil,
+                    andNodeAllowed,
+                    orNodeAllowed
+            );
             root.accept(visitor);
 
             // Convert the validated RSQL query into a JPA Specification
