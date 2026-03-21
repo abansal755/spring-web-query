@@ -16,6 +16,8 @@ permissions:
 jobs:
     release:
         runs-on: ubuntu-latest
+        env:
+            AWS_REGION: ${{ vars.AWS_REGION }}
         
         steps:
             - name: Checkout
@@ -58,7 +60,14 @@ jobs:
 
             - name: Release core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B clean deploy -Prelease
+              run: |
+                mvn -B clean deploy -Prelease | tee build.log
+                DEPLOYMENT_ID1=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
+                if [ -z "$DEPLOYMENT_ID1" ]; then
+                  echo "Failed to extract DEPLOYMENT_ID1"
+                  exit 1
+                fi
+                echo "DEPLOYMENT_ID1=$DEPLOYMENT_ID1" >> $GITHUB_ENV
               env:
                 GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                 MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -66,7 +75,14 @@ jobs:
                 
             - name: Release spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B clean deploy -Prelease
+              run: |
+                mvn -B clean deploy -Prelease | tee build.log 
+                DEPLOYMENT_ID2=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
+                if [ -z "$DEPLOYMENT_ID2" ]; then
+                  echo "Failed to extract DEPLOYMENT_ID1"
+                  exit 1
+                fi
+                echo "DEPLOYMENT_ID2=$DEPLOYMENT_ID2" >> $GITHUB_ENV
               env:
                 GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                 MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -75,7 +91,7 @@ jobs:
             - name: Push commit and tag
               run: |
                 git push origin release/${{ inputs.version }}
-                git tag -a ${{ inputs.version }} -m "Relase ${{ inputs.version }}"
+                git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
                 git push origin ${{ inputs.version }}
 
             - name: Change versions in main branch
@@ -99,3 +115,20 @@ jobs:
                 labels: automated,post-release
                 author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
                 committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+
+            - name: Setup AWS Credentials
+              run: |
+                aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws configure set region $AWS_REGION
+
+            - name: Trigger Lambda Function
+              run: |
+                aws lambda invoke \
+                --function-name cloudflare_javadoc_deploy \
+                --log-type Tail \
+                --payload "{\"deploymentIds\": [\"$DEPLOYMENT_ID1\", \"$DEPLOYMENT_ID2\"]}" \
+                out \
+                --cli-binary-format raw-in-base64-out \
+                --query 'LogResult' --output text \
+                | base64 --decode
