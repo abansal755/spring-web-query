@@ -115,6 +115,9 @@ jobs:
                 labels: automated,post-release
                 author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
                 committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+                add-paths: |
+                  spring-web-query-core/pom.xml
+                  spring-boot-starter-web-query/pom.xml
 
             - name: Setup AWS Credentials
               run: |
