@@ -75,4 +75,13 @@ public @interface WebQuery {
      * @return true if OR operator is allowed, false otherwise
      */
     boolean allowOrOperator() default false;
+
+    /**
+     * Maximum allowed depth of the RSQL Abstract Syntax Tree.
+     *
+     * <p>Depth starts at {@code 0} for the root node.</p>
+     *
+     * @return maximum allowed AST depth
+     */
+    int maxASTDepth() default 1;
 }

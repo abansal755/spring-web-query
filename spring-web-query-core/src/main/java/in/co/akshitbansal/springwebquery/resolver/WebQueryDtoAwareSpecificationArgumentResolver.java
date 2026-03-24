@@ -3,6 +3,7 @@ package in.co.akshitbansal.springwebquery.resolver;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.DtoValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.NodeMetadata;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
@@ -87,6 +88,7 @@ public class WebQueryDtoAwareSpecificationArgumentResolver extends WebQuerySpeci
             Class<?> dtoClass = webQueryAnnotation.dtoClass();
             boolean andNodeAllowed = webQueryAnnotation.allowAndOperator();
             boolean orNodeAllowed = webQueryAnnotation.allowOrOperator();
+            int maxDepth = webQueryAnnotation.maxASTDepth();
 
             // Extract the RSQL query string from the request using the parameter name defined in @WebQuery
             String filter = webRequest.getParameter(webQueryAnnotation.filterParamName());
@@ -100,9 +102,10 @@ public class WebQueryDtoAwareSpecificationArgumentResolver extends WebQuerySpeci
                     dtoClass,
                     annotationUtil,
                     andNodeAllowed,
-                    orNodeAllowed
+                    orNodeAllowed,
+                    maxDepth
             );
-            root.accept(visitor);
+            root.accept(visitor, NodeMetadata.of(0));
 
             // Convert the validated RSQL query into a JPA Specification
             QuerySupport querySupport = QuerySupport
