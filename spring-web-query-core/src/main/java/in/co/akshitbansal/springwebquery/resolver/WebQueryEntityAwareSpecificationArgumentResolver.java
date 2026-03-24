@@ -3,6 +3,7 @@ package in.co.akshitbansal.springwebquery.resolver;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.EntityValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.NodeMetadata;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
@@ -95,6 +96,9 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
             // Extract entity class and field mappings from the @WebQuery annotation for validation and specification building
             Class<?> entityClass = webQueryAnnotation.entityClass();
             FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
+            boolean andNodeAllowed = webQueryAnnotation.allowAndOperator();
+            boolean orNodeAllowed = webQueryAnnotation.allowOrOperator();
+            int maxDepth = webQueryAnnotation.maxASTDepth();
 
             // Validate field mappings to ensure they are well-formed and do not contain conflicts
             annotationUtil.validateFieldMappings(fieldMappings);
@@ -105,9 +109,12 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
             EntityValidationRSQLVisitor validationVisitor = new EntityValidationRSQLVisitor(
                     entityClass,
                     fieldMappings,
-                    annotationUtil
+                    annotationUtil,
+                    andNodeAllowed,
+                    orNodeAllowed,
+                    maxDepth
             );
-            root.accept(validationVisitor);
+            root.accept(validationVisitor, NodeMetadata.of(0));
 
             // Convert field mappings to aliases map which rsql jpa support library accepts
             Map<String, String> fieldMappingsMap = Arrays

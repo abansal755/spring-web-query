@@ -26,10 +26,13 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{},
-                annotationUtil
+                annotationUtil,
+                true,
+                false,
+                1
         );
 
-        new RSQLParser().parse("name==john").accept(visitor);
+        new RSQLParser().parse("name==john").accept(visitor, NodeMetadata.of(0));
     }
 
     @Test
@@ -37,10 +40,15 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{},
-                annotationUtil
+                annotationUtil,
+                true,
+                false,
+                1
         );
 
-        assertThrows(QueryValidationException.class, () -> new RSQLParser().parse("missing==x").accept(visitor));
+        assertThrows(QueryValidationException.class, () ->
+                new RSQLParser().parse("missing==x").accept(visitor, NodeMetadata.of(0))
+        );
     }
 
     @Test
@@ -48,10 +56,15 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{},
-                annotationUtil
+                annotationUtil,
+                true,
+                false,
+                1
         );
 
-        assertThrows(QueryValidationException.class, () -> new RSQLParser().parse("name!=x").accept(visitor));
+        assertThrows(QueryValidationException.class, () ->
+                new RSQLParser().parse("name!=x").accept(visitor, NodeMetadata.of(0))
+        );
     }
 
     @Test
@@ -59,10 +72,13 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{mapping("displayName", "name", false)},
-                annotationUtil
+                annotationUtil,
+                true,
+                false,
+                1
         );
 
-        new RSQLParser().parse("displayName==john").accept(visitor);
+        new RSQLParser().parse("displayName==john").accept(visitor, NodeMetadata.of(0));
     }
 
     @Test
@@ -70,10 +86,15 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{mapping("displayName", "name", false)},
-                annotationUtil
+                annotationUtil,
+                true,
+                false,
+                1
         );
 
-        assertThrows(QueryValidationException.class, () -> new RSQLParser().parse("name==john").accept(visitor));
+        assertThrows(QueryValidationException.class, () ->
+                new RSQLParser().parse("name==john").accept(visitor, NodeMetadata.of(0))
+        );
     }
 
     @Test
@@ -82,10 +103,13 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntityWithCustom.class,
                 new FieldMapping[]{},
-                annotationUtil
+                annotationUtil,
+                true,
+                false,
+                1
         );
 
-        new RSQLParser(ops).parse("name=mock=value").accept(visitor);
+        new RSQLParser(ops).parse("name=mock=value").accept(visitor, NodeMetadata.of(0));
     }
 
     @Test
@@ -94,10 +118,15 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntityWithCustom.class,
                 new FieldMapping[]{},
-                new AnnotationUtil(Set.of())
+                new AnnotationUtil(Set.of()),
+                true,
+                false,
+                1
         );
 
-        assertThrows(QueryConfigurationException.class, () -> new RSQLParser(ops).parse("name=mock=value").accept(visitor));
+        assertThrows(QueryConfigurationException.class, () ->
+                new RSQLParser(ops).parse("name=mock=value").accept(visitor, NodeMetadata.of(0))
+        );
     }
 
     private static class MockCustomOperator implements RSQLCustomOperator<String> {

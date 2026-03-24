@@ -34,7 +34,9 @@ import java.util.stream.Collectors;
  * <p><b>Usage example:</b></p>
  * <pre>{@code
  * Node root = new RSQLParser().parse("status==ACTIVE;age>30");
- * new EntityValidationRSQLVisitor(User.class, new FieldMapping[0], annotationUtil).visit(root);
+ * EntityValidationRSQLVisitor visitor =
+ *         new EntityValidationRSQLVisitor(User.class, new FieldMapping[0], annotationUtil, true, false, 1);
+ * root.accept(visitor, NodeMetadata.of(0));
  * }</pre>
  *
  * <p>This visitor is typically used in combination with
@@ -45,7 +47,7 @@ import java.util.stream.Collectors;
  * @see RSQLDefaultOperator
  * @see cz.jirutka.rsql.parser.ast.Node
  */
-public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
+public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
 
     /**
      * The entity class against which RSQL queries are validated.
@@ -73,8 +75,19 @@ public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
      * @param entityClass    the entity class to validate against
      * @param fieldMappings  array of field mappings (aliases) to consider
      * @param annotationUtil helper for annotation resolution and operator checks
+     * @param andNodeAllowed whether logical AND operator is allowed
+     * @param orNodeAllowed whether logical OR operator is allowed
+     * @param maxDepth maximum allowed depth for the RSQL AST
      */
-    public EntityValidationRSQLVisitor(Class<?> entityClass, FieldMapping[] fieldMappings, AnnotationUtil annotationUtil) {
+    public EntityValidationRSQLVisitor(
+            Class<?> entityClass,
+            FieldMapping[] fieldMappings,
+            AnnotationUtil annotationUtil,
+            boolean andNodeAllowed,
+            boolean orNodeAllowed,
+            int maxDepth
+    ) {
+        super(andNodeAllowed, orNodeAllowed, maxDepth);
         this.entityClass = entityClass;
         // Map from name to FieldMapping
         this.fieldMappings = Collections.unmodifiableMap(Arrays
@@ -100,56 +113,14 @@ public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {
     }
 
     /**
-     * Visits an {@link AndNode} in the RSQL AST and recursively validates all child nodes.
-     *
-     * @param andNode the AND node
-     * @param unused  unused parameter
-     * @return null
-     */
-    @Override
-    public Void visit(AndNode andNode, Void unused) {
-        andNode.forEach(node -> node.accept(this));
-        return null;
-    }
-
-    /**
-     * Visits an {@link OrNode} in the RSQL AST and recursively validates all child nodes.
-     *
-     * @param orNode the OR node
-     * @param unused unused parameter
-     * @return null
-     */
-    @Override
-    public Void visit(OrNode orNode, Void unused) {
-        orNode.forEach(node -> node.accept(this));
-        return null;
-    }
-
-    /**
-     * Visits a {@link ComparisonNode} in the RSQL AST and validates the field
-     * and operator against the entity class.
-     *
-     * @param comparisonNode the comparison node
-     * @param unused         unused parameter
-     * @return null
-     * @throws QueryValidationException if the field does not exist, is not filterable,
-     *                       or the operator is not allowed
-     * @throws QueryConfigurationException if a custom operator or field mapping is misconfigured
-     */
-    @Override
-    public Void visit(ComparisonNode comparisonNode, Void unused) {
-        validate(comparisonNode);
-        return null;
-    }
-
-    /**
      * Validates a comparison node against the entity class.
      *
      * @param node the comparison node to validate
      * @throws QueryValidationException if the field is not allowed or operator is invalid
      * @throws QueryConfigurationException if the field mapping is misconfigured
      */
-    private void validate(ComparisonNode node) {
+    @Override
+    protected void validateComparisonNode(ComparisonNode node) {
         // Extract the field name and operator from the RSQL node
         String reqFieldName = node.getSelector();
         ComparisonOperator operator = node.getOperator();
