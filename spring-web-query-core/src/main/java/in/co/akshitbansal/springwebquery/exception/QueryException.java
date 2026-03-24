@@ -1,6 +1,6 @@
 package in.co.akshitbansal.springwebquery.exception;
 
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 
 /**
@@ -23,7 +23,7 @@ import in.co.akshitbansal.springwebquery.annotation.Sortable;
  *
  * @see QueryValidationException
  * @see QueryConfigurationException
- * @see RsqlFilterable
+ * @see RSQLFilterable
  * @see Sortable
  */
 public class QueryException extends RuntimeException {

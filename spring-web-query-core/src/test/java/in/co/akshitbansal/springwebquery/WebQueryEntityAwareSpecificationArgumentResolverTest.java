@@ -2,11 +2,11 @@ package in.co.akshitbansal.springwebquery;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
     private final WebQueryEntityAwareSpecificationArgumentResolver resolver = new WebQueryEntityAwareSpecificationArgumentResolver(
-            Set.of(RsqlOperator.values()),
+            Set.of(RSQLDefaultOperator.values()),
             Set.of(new MockCustomOperator()),
             new AnnotationUtil(Set.of(new MockCustomOperator()))
     );
@@ -105,7 +105,7 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
         return new ServletWebRequest(req);
     }
 
-    private static class MockCustomOperator implements RsqlCustomOperator<String> {
+    private static class MockCustomOperator implements RSQLCustomOperator<String> {
         @Override
         public ComparisonOperator getComparisonOperator() {
             return new ComparisonOperator("=mock=");
@@ -152,12 +152,12 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
     }
 
     private static class Entity {
-        @RsqlFilterable({RsqlOperator.EQUAL})
+        @RSQLFilterable({RSQLDefaultOperator.EQUAL})
         private String name;
     }
 
     private static class EntityWithCustom {
-        @RsqlFilterable(value = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
+        @RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }
 }

@@ -1,6 +1,6 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import java.util.List;
 public class WebQueryPageableArgumentResolverAutoConfig implements WebMvcConfigurer {
 
     private final WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver;
-    private final WebQueryDtoAwarePageableArgumentResolver dtoAwarePageableArgumentResolver;
+    private final WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
@@ -26,6 +26,6 @@ public class WebQueryPageableArgumentResolverAutoConfig implements WebMvcConfigu
         resolvers.addFirst(dtoAwarePageableArgumentResolver);
         resolvers.addFirst(entityAwarePageableArgumentResolver);
         log.info("Registered {} for handling @RestrictedPageable parameters", WebQueryEntityAwarePageableArgumentResolver.class.getSimpleName());
-        log.info("Registered {} for handling @RestrictedPageable parameters", WebQueryDtoAwarePageableArgumentResolver.class.getSimpleName());
+        log.info("Registered {} for handling @RestrictedPageable parameters", WebQueryDTOAwarePageableArgumentResolver.class.getSimpleName());
     }
 }

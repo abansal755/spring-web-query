@@ -8,8 +8,8 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
@@ -45,7 +45,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
      * @param customOperators custom operators supported by parser and predicates
      * @param annotationUtil utility for resolving annotations and configuration checks
      */
-    public WebQueryEntityAwareSpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
+    public WebQueryEntityAwareSpecificationArgumentResolver(Set<RSQLDefaultOperator> defaultOperators, Set<? extends RSQLCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
         super(defaultOperators, customOperators, annotationUtil);
     }
 
@@ -101,7 +101,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
 
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);
-            // Validate the parsed AST against the target entity and its @RsqlFilterable fields
+            // Validate the parsed AST against the target entity and its @RSQLFilterable fields
             EntityValidationRSQLVisitor validationVisitor = new EntityValidationRSQLVisitor(
                     entityClass,
                     fieldMappings,

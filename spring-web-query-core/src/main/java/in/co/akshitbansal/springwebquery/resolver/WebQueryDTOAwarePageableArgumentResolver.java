@@ -31,7 +31,7 @@ import java.util.List;
  * returning the final pageable.</p>
  */
 @RequiredArgsConstructor
-public class WebQueryDtoAwarePageableArgumentResolver implements HandlerMethodArgumentResolver {
+public class WebQueryDTOAwarePageableArgumentResolver implements HandlerMethodArgumentResolver {
 
     /**
      * Delegate used to parse raw pageable parameters from the request.

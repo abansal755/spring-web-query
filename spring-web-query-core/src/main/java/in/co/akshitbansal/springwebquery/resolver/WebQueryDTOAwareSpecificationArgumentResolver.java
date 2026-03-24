@@ -2,14 +2,14 @@ package in.co.akshitbansal.springwebquery.resolver;
 
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
-import in.co.akshitbansal.springwebquery.DtoValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.DTOValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.NodeMetadata;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
@@ -32,7 +32,7 @@ import java.util.Set;
  * Incoming RSQL selectors are validated against DTO fields and then translated
  * to entity paths before the specification is produced.</p>
  */
-public class WebQueryDtoAwareSpecificationArgumentResolver extends WebQuerySpecificationArgumentResolver {
+public class WebQueryDTOAwareSpecificationArgumentResolver extends WebQuerySpecificationArgumentResolver {
 
     /**
      * Creates a DTO-aware RSQL specification resolver.
@@ -41,7 +41,7 @@ public class WebQueryDtoAwareSpecificationArgumentResolver extends WebQuerySpeci
      * @param customOperators custom operators supported by parser and predicates
      * @param annotationUtil utility for resolving annotations and configuration checks
      */
-    public WebQueryDtoAwareSpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
+    public WebQueryDTOAwareSpecificationArgumentResolver(Set<RSQLDefaultOperator> defaultOperators, Set<? extends RSQLCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
         super(defaultOperators, customOperators, annotationUtil);
     }
 
@@ -96,8 +96,8 @@ public class WebQueryDtoAwareSpecificationArgumentResolver extends WebQuerySpeci
 
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);
-            // Validate the parsed AST against the target DTO and its @RsqlFilterable fields, while also building field mappings from DTO to entity
-            DtoValidationRSQLVisitor visitor = new DtoValidationRSQLVisitor(
+            // Validate the parsed AST against the target DTO and its @RSQLFilterable fields, while also building field mappings from DTO to entity
+            DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(
                     entityClass,
                     dtoClass,
                     annotationUtil,

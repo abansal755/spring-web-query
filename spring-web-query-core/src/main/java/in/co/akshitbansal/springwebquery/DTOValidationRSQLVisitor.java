@@ -1,6 +1,7 @@
 package in.co.akshitbansal.springwebquery;
 
 import cz.jirutka.rsql.parser.ast.*;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
@@ -19,7 +20,7 @@ import java.util.Map;
  * <ul>
  *     <li>The requested selector exists on the DTO type.</li>
  *     <li>The terminal DTO field is annotated with
- *         {@link in.co.akshitbansal.springwebquery.annotation.RsqlFilterable}.</li>
+ *         {@link RSQLFilterable}.</li>
  *     <li>The requested operator is allowed for that DTO field.</li>
  *     <li>The resulting mapped entity path can be resolved on the configured entity type.</li>
  * </ul>
@@ -28,7 +29,7 @@ import java.util.Map;
  * {@link #getFieldMappings()} so downstream query construction can apply
  * DTO-to-entity path translation.</p>
  */
-public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
+public class DTOValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 
     /**
      * Target entity type used for mapped-path validation.
@@ -75,7 +76,7 @@ public class DtoValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata>
      * @param orNodeAllowed whether logical OR operator is allowed
      * @param maxDepth maximum allowed depth for the RSQL AST
      */
-    public DtoValidationRSQLVisitor(
+    public DTOValidationRSQLVisitor(
             Class<?> entityClass,
             Class<?> dtoClass,
             AnnotationUtil annotationUtil,

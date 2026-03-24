@@ -1,8 +1,8 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwarePageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.RSQLCustomOperatorsConfigurer;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
@@ -52,17 +52,17 @@ class AutoConfigIntegrationTest {
     @Test
     void beansAreRegistered() {
         assertNotNull(context.getBean(PageableHandlerMethodArgumentResolverCustomizer.class));
-        assertNotNull(context.getBean(RsqlCustomOperatorsConfigurer.class));
+        assertNotNull(context.getBean(RSQLCustomOperatorsConfigurer.class));
         assertNotNull(context.getBean(AnnotationUtil.class));
         assertNotNull(context.getBean(WebQueryEntityAwarePageableArgumentResolver.class));
-        assertNotNull(context.getBean(WebQueryDtoAwarePageableArgumentResolver.class));
+        assertNotNull(context.getBean(WebQueryDTOAwarePageableArgumentResolver.class));
         assertNotNull(context.getBean(WebQueryEntityAwareSpecificationArgumentResolver.class));
-        assertNotNull(context.getBean(WebQueryDtoAwareSpecificationArgumentResolver.class));
+        assertNotNull(context.getBean(WebQueryDTOAwareSpecificationArgumentResolver.class));
     }
 
     @Test
     void defaultCustomOperatorsConfigurerReturnsEmptySet() {
-        RsqlCustomOperatorsConfigurer configurer = context.getBean(RsqlCustomOperatorsConfigurer.class);
+        RSQLCustomOperatorsConfigurer configurer = context.getBean(RSQLCustomOperatorsConfigurer.class);
         assertTrue(configurer.getCustomOperators().isEmpty());
     }
 
@@ -73,7 +73,7 @@ class AutoConfigIntegrationTest {
 
         assertEquals(2, resolvers.size());
         assertInstanceOf(WebQueryEntityAwarePageableArgumentResolver.class, resolvers.get(0));
-        assertInstanceOf(WebQueryDtoAwarePageableArgumentResolver.class, resolvers.get(1));
+        assertInstanceOf(WebQueryDTOAwarePageableArgumentResolver.class, resolvers.get(1));
     }
 
     @Test
@@ -83,7 +83,7 @@ class AutoConfigIntegrationTest {
 
         assertEquals(2, resolvers.size());
         assertInstanceOf(WebQueryEntityAwareSpecificationArgumentResolver.class, resolvers.get(0));
-        assertInstanceOf(WebQueryDtoAwareSpecificationArgumentResolver.class, resolvers.get(1));
+        assertInstanceOf(WebQueryDTOAwareSpecificationArgumentResolver.class, resolvers.get(1));
     }
 
     @Test

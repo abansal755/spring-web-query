@@ -1,6 +1,6 @@
 package in.co.akshitbansal.springwebquery;
 
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 
 import java.util.Set;
 
@@ -12,17 +12,17 @@ import java.util.Set;
  * </p>
  */
 @FunctionalInterface
-public interface RsqlCustomOperatorsConfigurer {
+public interface RSQLCustomOperatorsConfigurer {
 
     /**
      * Returns a set of custom RSQL operators to be registered.
      * <p>
-     * If multiple {@code RsqlCustomOperatorsConfigurer} beans are present in the
+     * If multiple {@code RSQLCustomOperatorsConfigurer} beans are present in the
      * Spring context, their results will be combined into a single set of
      * operators available for query resolution.
      * </p>
      *
      * @return a set of custom operators, or an empty set if none
      */
-    Set<? extends RsqlCustomOperator<?>> getCustomOperators();
+    Set<? extends RSQLCustomOperator<?>> getCustomOperators();
 }

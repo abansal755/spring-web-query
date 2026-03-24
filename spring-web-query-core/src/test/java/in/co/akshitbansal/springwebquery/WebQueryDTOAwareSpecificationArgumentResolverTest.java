@@ -1,12 +1,12 @@
 package in.co.akshitbansal.springwebquery;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
@@ -23,10 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class WebQueryDtoAwareSpecificationArgumentResolverTest {
+class WebQueryDTOAwareSpecificationArgumentResolverTest {
 
-    private final WebQueryDtoAwareSpecificationArgumentResolver resolver = new WebQueryDtoAwareSpecificationArgumentResolver(
-            Set.of(RsqlOperator.values()),
+    private final WebQueryDTOAwareSpecificationArgumentResolver resolver = new WebQueryDTOAwareSpecificationArgumentResolver(
+            Set.of(RSQLDefaultOperator.values()),
             Set.of(),
             new AnnotationUtil(Set.of())
     );
@@ -125,13 +125,13 @@ class WebQueryDtoAwareSpecificationArgumentResolverTest {
     }
 
     private static class QueryDto {
-        @RsqlFilterable({RsqlOperator.EQUAL})
+        @RSQLFilterable({RSQLDefaultOperator.EQUAL})
         @MapsTo("createdAt")
         private String joinedAt;
     }
 
     private static class InvalidMappingDto {
-        @RsqlFilterable({RsqlOperator.EQUAL})
+        @RSQLFilterable({RSQLDefaultOperator.EQUAL})
         @MapsTo("missing")
         private String joinedAt;
     }

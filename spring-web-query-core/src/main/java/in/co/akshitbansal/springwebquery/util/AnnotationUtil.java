@@ -5,8 +5,8 @@ import in.co.akshitbansal.springwebquery.annotation.*;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import lombok.NonNull;
 
 import java.lang.annotation.Annotation;
@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  * Utility methods for validating query-related annotation metadata.
  *
  * <p>This utility validates {@link FieldMapping} declarations and resolves
- * filterability/operator constraints from {@link RsqlFilterable} annotations,
+ * filterability/operator constraints from {@link RSQLFilterable} annotations,
  * including composed annotations in this library's annotation package.</p>
  */
 public class AnnotationUtil {
@@ -28,18 +28,18 @@ public class AnnotationUtil {
     /**
      * Registered custom operators keyed by their implementation class.
      */
-    private final Map<Class<?>, RsqlCustomOperator<?>> customOperators;
+    private final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
 
     /**
      * Creates an annotation utility backed by registered custom operator instances.
      *
      * @param customOperators custom operators available to annotation-driven validation
      */
-    public AnnotationUtil(Set<? extends RsqlCustomOperator<?>> customOperators) {
+    public AnnotationUtil(Set<? extends RSQLCustomOperator<?>> customOperators) {
         this.customOperators = Collections.unmodifiableMap(customOperators
                 .stream()
                 .collect(Collectors.toMap(
-                        RsqlCustomOperator::getClass,
+                        RSQLCustomOperator::getClass,
                         operator -> operator,
                         // Might happen in case multiple instances of an operator are registered
                         // In that case, we can just keep one of them since they should be functionally equivalent
@@ -83,7 +83,7 @@ public class AnnotationUtil {
 
     /**
      * Validates that a field is marked as filterable and that the requested
-     * operator is permitted by its {@link RsqlFilterable} declaration(s).
+     * operator is permitted by its {@link RSQLFilterable} declaration(s).
      *
      * @param field field being targeted by the request selector
      * @param operator comparison operator requested in the query
@@ -92,8 +92,8 @@ public class AnnotationUtil {
      * @throws QueryForbiddenOperatorException if the operator is not allowed for the field
      */
     public void validateFilterableField(@NonNull Field field, ComparisonOperator operator, String fieldPath) {
-        // Retrieve the RsqlFilterable annotations on the field (if present)
-        Set<RsqlFilterable> filterables = collectFilterables(field);
+        // Retrieve the RSQLFilterable annotations on the field (if present)
+        Set<RSQLFilterable> filterables = collectFilterables(field);
         // Throw exception if the field is not annotated as filterable
         if(filterables.isEmpty()) throw new QueryFieldValidationException(MessageFormat.format(
                 "Filtering not allowed on field ''{0}''", fieldPath
@@ -127,27 +127,27 @@ public class AnnotationUtil {
     }
 
     /**
-     * Aggregates all allowed operators from one or more {@link RsqlFilterable}
+     * Aggregates all allowed operators from one or more {@link RSQLFilterable}
      * declarations attached to the same field.
      *
      * @param filterables repeatable filterability declarations
      * @return deduplicated set of allowed comparison operators
      * @throws QueryConfigurationException if a referenced custom operator is not registered
      */
-    private Set<ComparisonOperator> getAllowedOperators(@NonNull Set<RsqlFilterable> filterables) {
+    private Set<ComparisonOperator> getAllowedOperators(@NonNull Set<RSQLFilterable> filterables) {
         // Collect the set of allowed operators for this field from the annotations
         // Stream of default operators defined in the annotation
         Stream<ComparisonOperator> defaultOperators = filterables
                 .stream()
                 .flatMap(filterable -> Arrays.stream(filterable.value()))
-                .map(RsqlOperator::getOperator);
+                .map(RSQLDefaultOperator::getOperator);
         // Stream of custom operators defined in the annotation
         // Note: The annotation references classes, which are looked up in the customOperators map
         Stream<ComparisonOperator> customOperators = filterables
                 .stream()
                 .flatMap(filterable -> Arrays.stream(filterable.customOperators()))
                 .map(this::getCustomOperator)
-                .map(RsqlCustomOperator::getComparisonOperator);
+                .map(RSQLCustomOperator::getComparisonOperator);
         return Stream
                 .concat(defaultOperators, customOperators)
                 .collect(Collectors.toCollection(HashSet::new));
@@ -160,39 +160,39 @@ public class AnnotationUtil {
      * @return the registered custom operator instance
      * @throws QueryConfigurationException if the custom operator class is not registered
      */
-    private RsqlCustomOperator<?> getCustomOperator(@NonNull Class<?> clazz) {
-        RsqlCustomOperator<?> operator = customOperators.get(clazz);
+    private RSQLCustomOperator<?> getCustomOperator(@NonNull Class<?> clazz) {
+        RSQLCustomOperator<?> operator = customOperators.get(clazz);
         if(operator == null) throw new QueryConfigurationException(MessageFormat.format(
-                "Custom operator ''{0}'' referenced in @RsqlFilterable is not registered", clazz.getSimpleName()
+                "Custom operator ''{0}'' referenced in @RSQLFilterable is not registered", clazz.getSimpleName()
         ));
         return operator;
     }
 
     /**
-     * Collects all {@link RsqlFilterable} declarations present on a field,
+     * Collects all {@link RSQLFilterable} declarations present on a field,
      * including repeatable and composed annotations.
      *
      * @param field field whose annotations are to be inspected
      * @return collected filterability declarations
      */
-    private Set<RsqlFilterable> collectFilterables(Field field) {
+    private Set<RSQLFilterable> collectFilterables(Field field) {
         return collectFilterables(field.getAnnotations());
     }
 
     /**
-     * Recursively collects {@link RsqlFilterable} declarations from a set of
+     * Recursively collects {@link RSQLFilterable} declarations from a set of
      * annotations, supporting both direct and meta-annotation usage.
      *
      * @param annotations annotations to inspect
      * @return collected filterability declarations
      */
-    private Set<RsqlFilterable> collectFilterables(Annotation[] annotations) {
-        Set<RsqlFilterable> filterables = new HashSet<>();
+    private Set<RSQLFilterable> collectFilterables(Annotation[] annotations) {
+        Set<RSQLFilterable> filterables = new HashSet<>();
         for(Annotation annotation : annotations) {
             Class<? extends Annotation> type = annotation.annotationType();
-            if(annotation instanceof RsqlFilterable rsqlFilterable)
+            if(annotation instanceof RSQLFilterable rsqlFilterable)
                 filterables.add(rsqlFilterable);
-            else if(annotation instanceof RsqlFilterables rsqlFilterables)
+            else if(annotation instanceof RSQLFilterables rsqlFilterables)
                 filterables.addAll(Arrays.asList(rsqlFilterables.value()));
             else if(type.getName().startsWith("in.co.akshitbansal.springwebquery.annotation"))
                 filterables.addAll(collectFilterables(type.getAnnotations()));

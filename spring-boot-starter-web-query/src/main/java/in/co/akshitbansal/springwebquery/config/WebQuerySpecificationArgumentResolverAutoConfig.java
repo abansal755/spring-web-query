@@ -1,6 +1,6 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +19,13 @@ import java.util.List;
 public class WebQuerySpecificationArgumentResolverAutoConfig implements WebMvcConfigurer {
 
     private final WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecResolver;
-    private final WebQueryDtoAwareSpecificationArgumentResolver dtoAwareSpecResolver;
+    private final WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecResolver;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(entityAwareSpecResolver);
         resolvers.add(dtoAwareSpecResolver);
         log.info("Registered {} for handling @RsqlSpec parameters", WebQueryEntityAwareSpecificationArgumentResolver.class.getSimpleName());
-        log.info("Registered {} for handling @RsqlSpec parameters", WebQueryDtoAwareSpecificationArgumentResolver.class.getSimpleName());
+        log.info("Registered {} for handling @RsqlSpec parameters", WebQueryDTOAwareSpecificationArgumentResolver.class.getSimpleName());
     }
 }

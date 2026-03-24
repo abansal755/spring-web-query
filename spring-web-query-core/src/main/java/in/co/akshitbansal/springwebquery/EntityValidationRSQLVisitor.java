@@ -2,11 +2,11 @@ package in.co.akshitbansal.springwebquery;
 
 import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 
@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
  * and ensures that:
  * <ul>
  *     <li>All fields referenced in the query exist on the entity class</li>
- *     <li>Only fields annotated with {@link RsqlFilterable} are filterable</li>
- *     <li>Only allowed RSQL operators (as defined in the {@link RsqlFilterable} annotation) are used</li>
+ *     <li>Only fields annotated with {@link RSQLFilterable} are filterable</li>
+ *     <li>Only allowed RSQL operators (as defined in the {@link RSQLFilterable} annotation) are used</li>
  * </ul>
  * <p>
  * If any violation is detected, a {@link QueryException} is thrown describing the
@@ -41,8 +41,8 @@ import java.util.stream.Collectors;
  * {@link io.github.perplexhub.rsql.RSQLJPASupport} to ensure that only valid queries are converted into
  * Spring Data JPA {@link org.springframework.data.jpa.domain.Specification}s.</p>
  *
- * @see RsqlFilterable
- * @see RsqlOperator
+ * @see RSQLFilterable
+ * @see RSQLDefaultOperator
  * @see cz.jirutka.rsql.parser.ast.Node
  */
 public class EntityValidationRSQLVisitor implements RSQLVisitor<Void, Void> {

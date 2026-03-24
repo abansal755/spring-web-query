@@ -13,7 +13,7 @@ import jakarta.persistence.criteria.Predicate;
  *
  * @param <T> the type of the operand that this operator handles
  */
-public interface RsqlCustomOperator<T extends Comparable<?>> {
+public interface RSQLCustomOperator<T extends Comparable<?>> {
 
     /**
      * Returns the RSQL {@link ComparisonOperator} for this custom operator.

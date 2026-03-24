@@ -2,8 +2,8 @@ package in.co.akshitbansal.springwebquery.resolver;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -45,14 +45,14 @@ public abstract class WebQuerySpecificationArgumentResolver implements HandlerMe
      * @param customOperators custom operators to register for parsing and predicate generation
      * @param annotationUtil utility for annotation resolution and validation
      */
-    protected WebQuerySpecificationArgumentResolver(Set<RsqlOperator> defaultOperators, Set<? extends RsqlCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
+    protected WebQuerySpecificationArgumentResolver(Set<RSQLDefaultOperator> defaultOperators, Set<? extends RSQLCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
         // Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
         Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
                 .stream()
-                .map(RsqlOperator::getOperator);
+                .map(RSQLDefaultOperator::getOperator);
         Stream<ComparisonOperator> customOperatorsStream = customOperators
                 .stream()
-                .map(RsqlCustomOperator::getComparisonOperator);
+                .map(RSQLCustomOperator::getComparisonOperator);
         HashSet<ComparisonOperator> allowedOperators = Stream
                 .concat(defaultOperatorsStream, customOperatorsStream)
                 .collect(Collectors.toCollection(HashSet::new));
@@ -60,7 +60,7 @@ public abstract class WebQuerySpecificationArgumentResolver implements HandlerMe
 
         // Convert custom operators to the format which rsql jpa support library accepts
         List<RSQLCustomPredicate<?>> customPredicates = new ArrayList<>();
-        for(RsqlCustomOperator<?> operator : customOperators) {
+        for(RSQLCustomOperator<?> operator : customOperators) {
             RSQLCustomPredicate<?> predicate = new RSQLCustomPredicate<>(
                     operator.getComparisonOperator(),
                     operator.getType(),

@@ -1,11 +1,11 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.RsqlCustomOperatorsConfigurer;
+import in.co.akshitbansal.springwebquery.RSQLCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwarePageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
@@ -33,19 +33,19 @@ import java.util.*;
 public class WebQueryBeanAutoConfig {
 
     @Bean
-    @ConditionalOnMissingBean(RsqlCustomOperatorsConfigurer.class)
-    public RsqlCustomOperatorsConfigurer rsqlCustomOperatorsConfigurer() {
+    @ConditionalOnMissingBean(RSQLCustomOperatorsConfigurer.class)
+    public RSQLCustomOperatorsConfigurer rsqlCustomOperatorsConfigurer() {
         return Collections::emptySet;
     }
 
     @Bean
-    public Set<RsqlOperator> defaultOperatorSet() {
+    public Set<RSQLDefaultOperator> defaultOperatorSet() {
         // Set for checking duplicates
         Set<String> symbolSet = new HashSet<>();
 
         // Default operators gathered from the RsqlOperator enum
-        Set<RsqlOperator> defaultOperators = new HashSet<>();
-        for(RsqlOperator operator: RsqlOperator.values()) {
+        Set<RSQLDefaultOperator> defaultOperators = new HashSet<>();
+        for(RSQLDefaultOperator operator: RSQLDefaultOperator.values()) {
             for(String symbol:operator.getOperator().getSymbols()) {
                 // If already an operator is present with the same symbol, throw exception
                 if(!symbolSet.add(symbol)) {
@@ -59,26 +59,26 @@ public class WebQueryBeanAutoConfig {
         }
         log.info("Registered default RSQL operators: {}", defaultOperators
                 .stream()
-                .map(RsqlOperator::getOperator)
+                .map(RSQLDefaultOperator::getOperator)
                 .toList()
         );
         return Collections.unmodifiableSet(defaultOperators);
     }
 
     @Bean
-    public Set<? extends RsqlCustomOperator<?>> customOperatorSet(
-            List<RsqlCustomOperatorsConfigurer> rsqlCustomOperatorsConfigurers,
-            Set<RsqlOperator> defaultOperatorSet
+    public Set<? extends RSQLCustomOperator<?>> customOperatorSet(
+            List<RSQLCustomOperatorsConfigurer> rsqlCustomOperatorsConfigurers,
+            Set<RSQLDefaultOperator> defaultOperatorSet
     ) {
         // Set for checking duplicates
         Set<String> symbolSet = new HashSet<>();
-        for(RsqlOperator operator: defaultOperatorSet)
+        for(RSQLDefaultOperator operator: defaultOperatorSet)
             symbolSet.addAll(Arrays.asList(operator.getOperator().getSymbols()));
 
         // Custom operators gathered from all the configurers
-        Set<RsqlCustomOperator<?>> customOperators = new HashSet<>();
-        for(RsqlCustomOperatorsConfigurer configurer : rsqlCustomOperatorsConfigurers) {
-            for(RsqlCustomOperator<?> operator : configurer.getCustomOperators()) {
+        Set<RSQLCustomOperator<?>> customOperators = new HashSet<>();
+        for(RSQLCustomOperatorsConfigurer configurer : rsqlCustomOperatorsConfigurers) {
+            for(RSQLCustomOperator<?> operator : configurer.getCustomOperators()) {
                 for(String symbol:operator.getComparisonOperator().getSymbols()) {
                     // If already an operator is present with the same symbol, throw exception
                     if(!symbolSet.add(symbol)) {
@@ -93,33 +93,33 @@ public class WebQueryBeanAutoConfig {
         }
         log.info("Registered custom RSQL operators: {}", customOperators
                 .stream()
-                .map(RsqlCustomOperator::getComparisonOperator)
+                .map(RSQLCustomOperator::getComparisonOperator)
                 .toList()
         );
         return Collections.unmodifiableSet(customOperators);
     }
 
     @Bean
-    public AnnotationUtil annotationUtil(Set<? extends RsqlCustomOperator<?>> customOperatorSet) {
+    public AnnotationUtil annotationUtil(Set<? extends RSQLCustomOperator<?>> customOperatorSet) {
         return new AnnotationUtil(customOperatorSet);
     }
 
     @Bean
     public WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecArgumentResolver(
-            Set<RsqlOperator> defaultOperatorSet,
-            Set<? extends RsqlCustomOperator<?>> customOperatorSet,
+            Set<RSQLDefaultOperator> defaultOperatorSet,
+            Set<? extends RSQLCustomOperator<?>> customOperatorSet,
             AnnotationUtil annotationUtil
     ) {
         return new WebQueryEntityAwareSpecificationArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
     }
 
     @Bean
-    public WebQueryDtoAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
-            Set<RsqlOperator> defaultOperatorSet,
-            Set<? extends RsqlCustomOperator<?>> customOperatorSet,
+    public WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
+            Set<RSQLDefaultOperator> defaultOperatorSet,
+            Set<? extends RSQLCustomOperator<?>> customOperatorSet,
             AnnotationUtil annotationUtil
     ) {
-        return new WebQueryDtoAwareSpecificationArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
+        return new WebQueryDTOAwareSpecificationArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
     }
 
     // Allows RSQL to parse ISO-8601 Timestamp fields
@@ -145,10 +145,10 @@ public class WebQueryBeanAutoConfig {
     }
 
     @Bean
-    public WebQueryDtoAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(
+    public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
             AnnotationUtil annotationUtil
     ) {
-        return new WebQueryDtoAwarePageableArgumentResolver(delegate, annotationUtil);
+        return new WebQueryDTOAwarePageableArgumentResolver(delegate, annotationUtil);
     }
 }

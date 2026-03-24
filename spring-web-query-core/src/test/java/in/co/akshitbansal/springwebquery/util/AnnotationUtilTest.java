@@ -2,13 +2,13 @@ package in.co.akshitbansal.springwebquery.util;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterableEquality;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterableEquality;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class AnnotationUtilTest {
     void validateFilterableField_acceptsDefaultOperator() throws Exception {
         AnnotationUtil util = new AnnotationUtil(Set.of());
         var field = DefaultOnlyFilterableEntity.class.getDeclaredField("name");
-        assertDoesNotThrow(() -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
+        assertDoesNotThrow(() -> util.validateFilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name"));
     }
 
     @Test
@@ -63,24 +63,24 @@ class AnnotationUtilTest {
     void validateFilterableField_rejectsDisallowedOperator() throws Exception {
         AnnotationUtil util = new AnnotationUtil(Set.of());
         var field = DefaultOnlyFilterableEntity.class.getDeclaredField("name");
-        assertThrows(QueryForbiddenOperatorException.class, () -> util.validateFilterableField(field, RsqlOperator.NOT_EQUAL.getOperator(), "name"));
+        assertThrows(QueryForbiddenOperatorException.class, () -> util.validateFilterableField(field, RSQLDefaultOperator.NOT_EQUAL.getOperator(), "name"));
     }
 
     @Test
     void validateFilterableField_rejectsNonFilterableField() throws Exception {
         AnnotationUtil util = new AnnotationUtil(Set.of());
         var field = NonFilterableEntity.class.getDeclaredField("name");
-        assertThrows(QueryFieldValidationException.class, () -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
+        assertThrows(QueryFieldValidationException.class, () -> util.validateFilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name"));
     }
 
     @Test
     void validateFilterableField_supportsComposedAnnotations() throws Exception {
         AnnotationUtil util = new AnnotationUtil(Set.of());
         var field = ComposedFilterableEntity.class.getDeclaredField("name");
-        assertDoesNotThrow(() -> util.validateFilterableField(field, RsqlOperator.EQUAL.getOperator(), "name"));
+        assertDoesNotThrow(() -> util.validateFilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name"));
     }
 
-    private static class MockCustomOperator implements RsqlCustomOperator<String> {
+    private static class MockCustomOperator implements RSQLCustomOperator<String> {
         @Override
         public ComparisonOperator getComparisonOperator() {
             return new ComparisonOperator("=mock=");
@@ -98,12 +98,12 @@ class AnnotationUtilTest {
     }
 
     private static class FilterableEntity {
-        @RsqlFilterable(value = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
+        @RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }
 
     private static class DefaultOnlyFilterableEntity {
-        @RsqlFilterable({RsqlOperator.EQUAL})
+        @RSQLFilterable({RSQLDefaultOperator.EQUAL})
         private String name;
     }
 
@@ -112,7 +112,7 @@ class AnnotationUtilTest {
     }
 
     private static class ComposedFilterableEntity {
-        @RsqlFilterableEquality
+        @RSQLFilterableEquality
         private String name;
     }
 

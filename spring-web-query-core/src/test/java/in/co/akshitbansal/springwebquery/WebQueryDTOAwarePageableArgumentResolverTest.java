@@ -5,7 +5,7 @@ import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDtoAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
@@ -23,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class WebQueryDtoAwarePageableArgumentResolverTest {
+class WebQueryDTOAwarePageableArgumentResolverTest {
 
-    private final WebQueryDtoAwarePageableArgumentResolver resolver = new WebQueryDtoAwarePageableArgumentResolver(
+    private final WebQueryDTOAwarePageableArgumentResolver resolver = new WebQueryDTOAwarePageableArgumentResolver(
             new PageableHandlerMethodArgumentResolver(),
             new AnnotationUtil(Set.of())
     );

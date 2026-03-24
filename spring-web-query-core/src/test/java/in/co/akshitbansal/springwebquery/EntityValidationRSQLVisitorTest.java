@@ -3,11 +3,11 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
-import in.co.akshitbansal.springwebquery.annotation.RsqlFilterable;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
@@ -78,7 +78,7 @@ class EntityValidationRSQLVisitorTest {
 
     @Test
     void allows_customOperatorWhenWhitelisted() {
-        Set<ComparisonOperator> ops = Set.of(RsqlOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
+        Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntityWithCustom.class,
                 new FieldMapping[]{},
@@ -90,7 +90,7 @@ class EntityValidationRSQLVisitorTest {
 
     @Test
     void rejects_unregisteredCustomOperator() {
-        Set<ComparisonOperator> ops = Set.of(RsqlOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
+        Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntityWithCustom.class,
                 new FieldMapping[]{},
@@ -100,7 +100,7 @@ class EntityValidationRSQLVisitorTest {
         assertThrows(QueryConfigurationException.class, () -> new RSQLParser(ops).parse("name=mock=value").accept(visitor));
     }
 
-    private static class MockCustomOperator implements RsqlCustomOperator<String> {
+    private static class MockCustomOperator implements RSQLCustomOperator<String> {
 
         @Override
         public ComparisonOperator getComparisonOperator() {
@@ -120,7 +120,7 @@ class EntityValidationRSQLVisitorTest {
 
     private static class TestEntity {
 
-        @RsqlFilterable({RsqlOperator.EQUAL})
+        @RSQLFilterable({RSQLDefaultOperator.EQUAL})
         private String name;
 
         private Integer age;
@@ -128,7 +128,7 @@ class EntityValidationRSQLVisitorTest {
 
     private static class TestEntityWithCustom {
 
-        @RsqlFilterable(value = {RsqlOperator.EQUAL}, customOperators = {MockCustomOperator.class})
+        @RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
         private String name;
     }
 

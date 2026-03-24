@@ -1,7 +1,7 @@
 package in.co.akshitbansal.springwebquery.annotation;
 
-import in.co.akshitbansal.springwebquery.operator.RsqlCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RsqlOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 
 import java.lang.annotation.*;
 
@@ -22,7 +22,7 @@ import java.lang.annotation.*;
  *
  * <p><b>Example usage:</b></p>
  * <pre>{@code
- * @RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.IN})
+ * @RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.IN})
  * private String status;
  * }</pre>
  *
@@ -31,21 +31,21 @@ import java.lang.annotation.*;
  *
  * <p>This annotation is retained at runtime and can be inspected via reflection.</p>
  *
- * @see RsqlOperator
- * @see RsqlFilterables
+ * @see RSQLDefaultOperator
+ * @see RSQLFilterables
  */
 @Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Repeatable(RsqlFilterables.class)
-public @interface RsqlFilterable {
+@Repeatable(RSQLFilterables.class)
+public @interface RSQLFilterable {
 
     /**
      * The set of default RSQL operators that are allowed for filtering this field.
      *
-     * @return an array of allowed {@link RsqlOperator} values
+     * @return an array of allowed {@link RSQLDefaultOperator} values
      */
-    RsqlOperator[] value();
+    RSQLDefaultOperator[] value();
 
     /**
      * The set of custom RSQL operators that are allowed for filtering this field.
@@ -53,5 +53,5 @@ public @interface RsqlFilterable {
      *
      * @return an array of custom operator classes
      */
-    Class<? extends RsqlCustomOperator<?>>[] customOperators() default {};
+    Class<? extends RSQLCustomOperator<?>>[] customOperators() default {};
 }
