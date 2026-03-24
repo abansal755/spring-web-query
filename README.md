@@ -98,6 +98,7 @@ You keep endpoint code focused on business behavior, not query parsing.
 
 - Whitelist-only filtering and sorting
 - Operator-level permissions per field
+- AST depth limits to prevent overly complex filter expressions
 - Field-level exceptions with meaningful context
 - Configuration-time guardrails for duplicate aliases/operator symbols
 
@@ -448,6 +449,7 @@ Applied on controller methods.
 - `filterParamName`: optional, default `filter`
 - `allowAndOperator`: optional, default `true`
 - `allowOrOperator`: optional, default `false`
+- `maxASTDepth`: optional, default `1`
 
 Example custom filter param name:
 
@@ -470,6 +472,52 @@ Example enabling OR:
     allowOrOperator = true
 )
 ```
+
+Example allowing deeper nested filter groups:
+
+```java
+@WebQuery(
+    entityClass = User.class,
+    dtoClass = UserQuery.class,
+    allowOrOperator = true,
+    maxASTDepth = 2
+)
+```
+
+`maxASTDepth` is measured from the root AST node, which starts at depth `0`.
+
+- `status==ACTIVE` has a single comparison node at depth `0`
+- `status==ACTIVE;role==ADMIN` has an `AND` node at depth `0` and comparison children at depth `1`
+- each nested parenthesized logical group adds another level
+
+Example tree:
+
+```text
+status==ACTIVE;(role==ADMIN,role==SUPPORT)
+
+depth 0: AND
+depth 1: status==ACTIVE
+depth 1: OR
+depth 2: role==ADMIN
+depth 2: role==SUPPORT
+```
+
+That query requires `maxASTDepth >= 2`.
+
+Depth guide:
+
+| `maxASTDepth` | What it allows | Allowed Example | Rejected Example |
+| --- | --- | --- | --- |
+| `0` | Only a single root comparison | `status==ACTIVE` | `status==ACTIVE;role==ADMIN` |
+| `1` | A top-level logical group with comparison children | `status==ACTIVE;role==ADMIN` | `status==ACTIVE;(role==ADMIN,role==SUPPORT)` |
+| `2` | One nested logical group under the top-level expression | `status==ACTIVE;(role==ADMIN,role==SUPPORT)` | `status==ACTIVE;((role==ADMIN,role==SUPPORT);country==IN)` |
+| `3` | Two nested logical levels under the top-level expression | `status==ACTIVE;((role==ADMIN,role==SUPPORT);country==IN)` | deeper nesting than the example at left |
+
+Notes:
+
+- The default is `maxASTDepth = 1`.
+- OR examples still require `allowOrOperator = true`.
+- The limit applies to the full filter tree, not to individual fields.
 
 ### `@RsqlFilterable`
 
@@ -645,6 +693,7 @@ How to read this hierarchy:
 - filtering on a field that is not annotated with `@RsqlFilterable`
 - sorting on a field that is not annotated with `@Sortable`
 - using an operator that is not allowed for the target field
+- exceeding the configured `@WebQuery(maxASTDepth = ...)` limit
 - malformed RSQL expression syntax
 
 ### Typical configuration failures
@@ -697,6 +746,7 @@ In short, it gives you power for consumers and control for maintainers.
 - Keep DTO query contracts focused and stable.
 - Only mark fields `@Sortable` if they are truly supported and safe.
 - Keep operator sets minimal per field (principle of least power).
+- Set `maxASTDepth` deliberately for each endpoint based on the query complexity you actually want to support.
 - Use aliases deliberately; avoid exposing persistence-only field names.
 - Treat `QueryConfigurationException` as a deployment/configuration defect.
 
