@@ -77,7 +77,7 @@ Typical outcomes without a shared query layer:
 
 `spring-web-query` solves this by turning querying into a contract:
 
-- `@RsqlFilterable`: which fields are filterable and which operators are allowed
+- `@RSQLFilterable`: which fields are filterable and which operators are allowed
 - `@Sortable`: which fields can be sorted
 - `@WebQuery`: endpoint-level query context (`entityClass`, optional `dtoClass`, aliases, filter param name)
 - framework-provided argument resolvers for `Specification<T>` and `Pageable`
@@ -220,21 +220,21 @@ public class Profile {
 ```java
 public class UserQuery {
 
-    @RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.IN})
+    @RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.IN})
     @Sortable
     private String status;
 
-    @RsqlFilterable({
-        RsqlOperator.GREATER_THAN,
-        RsqlOperator.GREATER_THAN_OR_EQUAL,
-        RsqlOperator.LESS_THAN,
-        RsqlOperator.LESS_THAN_OR_EQUAL
+    @RSQLFilterable({
+        RSQLDefaultOperator.GREATER_THAN,
+        RSQLDefaultOperator.GREATER_THAN_OR_EQUAL,
+        RSQLDefaultOperator.LESS_THAN,
+        RSQLDefaultOperator.LESS_THAN_OR_EQUAL
     })
     @Sortable
     @MapsTo("createdAt")
     private Instant joinedAt;
 
-    @RsqlFilterableText
+    @RSQLFilterableText
     @Sortable
     private String username;
 
@@ -242,7 +242,7 @@ public class UserQuery {
 
     public static class ProfileQuery {
 
-        @RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.NOT_EQUAL})
+        @RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.NOT_EQUAL})
         @MapsTo("city")
         private String city;
     }
@@ -319,7 +319,7 @@ public Page<User> search(
 
 In entity-aware mode:
 
-- put `@RsqlFilterable` (or composed variants) on entity fields
+- put `@RSQLFilterable` (or composed variants) on entity fields
 - put `@Sortable` on entity fields
 - optionally expose aliases via `@FieldMapping`
 
@@ -333,7 +333,7 @@ GET /users?sort=joined,desc
 
 ## RSQL guide
 
-RSQL is a compact, URL-friendly query language. In this library, RSQL powers the `filter` parameter and is validated against your `@RsqlFilterable` contract.
+RSQL is a compact, URL-friendly query language. In this library, RSQL powers the `filter` parameter and is validated against your `@RSQLFilterable` contract.
 
 ### Query shape
 
@@ -519,12 +519,12 @@ Notes:
 - OR examples still require `allowOrOperator = true`.
 - The limit applies to the full filter tree, not to individual fields.
 
-### `@RsqlFilterable`
+### `@RSQLFilterable`
 
 Marks field as filterable and declares allowed operators.
 
 ```java
-@RsqlFilterable({RsqlOperator.EQUAL, RsqlOperator.NOT_EQUAL})
+@RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.NOT_EQUAL})
 private String status;
 ```
 
@@ -567,24 +567,24 @@ When `allowOriginalFieldName = false`, only the alias is accepted in requests.
 
 ### Composed filter annotations
 
-Composed annotations are shortcuts for common filter behavior, so you do not have to repeat long `@RsqlFilterable(...)` lists on every field.
+Composed annotations are shortcuts for common filter behavior, so you do not have to repeat long `@RSQLFilterable(...)` lists on every field.
 
-- `@RsqlFilterableEquality` enables equality checks (`EQUAL`, `NOT_EQUAL`) for exact match / mismatch scenarios.
-- `@RsqlFilterableMembership` enables set checks (`IN`, `NOT_IN`) when clients pass a list of allowed or excluded values.
-- `@RsqlFilterableNull` enables nullability checks (`IS_NULL`, `NOT_NULL`) for presence/absence filters.
-- `@RsqlFilterableRange` enables range and comparison operations (`GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `BETWEEN`, `NOT_BETWEEN`) for numeric/date bounds.
-- `@RsqlFilterableText` enables text-oriented matching (`LIKE`, `NOT_LIKE`, `IGNORE_CASE`, `IGNORE_CASE_LIKE`, `IGNORE_CASE_NOT_LIKE`) for case-sensitive or case-insensitive text search patterns.
+- `@RSQLFilterableEquality` enables equality checks (`EQUAL`, `NOT_EQUAL`) for exact match / mismatch scenarios.
+- `@RSQLFilterableMembership` enables set checks (`IN`, `NOT_IN`) when clients pass a list of allowed or excluded values.
+- `@RSQLFilterableNull` enables nullability checks (`IS_NULL`, `NOT_NULL`) for presence/absence filters.
+- `@RSQLFilterableRange` enables range and comparison operations (`GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `BETWEEN`, `NOT_BETWEEN`) for numeric/date bounds.
+- `@RSQLFilterableText` enables text-oriented matching (`LIKE`, `NOT_LIKE`, `IGNORE_CASE`, `IGNORE_CASE_LIKE`, `IGNORE_CASE_NOT_LIKE`) for case-sensitive or case-insensitive text search patterns.
 
-You can combine them and/or mix with explicit `@RsqlFilterable`.
+You can combine them and/or mix with explicit `@RSQLFilterable`.
 
 ## Custom operators
 
 `spring-web-query` supports pluggable custom operators.
 
-### 1. Implement `RsqlCustomOperator`
+### 1. Implement `RSQLCustomOperator`
 
 ```java
-public class IsMondayOperator implements RsqlCustomOperator<Long> {
+public class IsMondayOperator implements RSQLCustomOperator<Long> {
 
     @Override
     public ComparisonOperator getComparisonOperator() {
@@ -611,19 +611,19 @@ public class IsMondayOperator implements RsqlCustomOperator<Long> {
 public class QueryConfig {
 
     @Bean
-    RsqlCustomOperatorsConfigurer customOperators() {
+    RSQLCustomOperatorsConfigurer customOperators() {
         return () -> Set.of(new IsMondayOperator());
     }
 }
 ```
 
-You can define multiple `RsqlCustomOperatorsConfigurer` beans; all operators are aggregated.
+You can define multiple `RSQLCustomOperatorsConfigurer` beans; all operators are aggregated.
 
 ### 3. Whitelist operator at field level
 
 ```java
-@RsqlFilterable(
-    value = {RsqlOperator.EQUAL},
+@RSQLFilterable(
+    value = {RSQLDefaultOperator.EQUAL},
     customOperators = {IsMondayOperator.class}
 )
 private LocalDateTime createdAt;
@@ -633,7 +633,7 @@ Important:
 
 - Custom operator symbols must be unique.
 - They must not overlap with default operator symbols.
-- Referencing an unregistered custom operator in `@RsqlFilterable` throws a configuration exception.
+- Referencing an unregistered custom operator in `@RSQLFilterable` throws a configuration exception.
 
 ## Pageable behavior
 
@@ -690,7 +690,7 @@ How to read this hierarchy:
 ### Typical validation failures
 
 - unknown field in `filter` or `sort`
-- filtering on a field that is not annotated with `@RsqlFilterable`
+- filtering on a field that is not annotated with `@RSQLFilterable`
 - sorting on a field that is not annotated with `@Sortable`
 - using an operator that is not allowed for the target field
 - exceeding the configured `@WebQuery(maxASTDepth = ...)` limit
@@ -701,7 +701,7 @@ How to read this hierarchy:
 - duplicate alias names in `@FieldMapping`
 - multiple aliases mapped to the same entity field
 - duplicate operator symbols across default and custom operators
-- unregistered custom operator referenced in `@RsqlFilterable(customOperators = ...)`
+- unregistered custom operator referenced in `@RSQLFilterable(customOperators = ...)`
 - invalid DTO-to-entity mapping path via `@MapsTo`
 
 ### Recommended API response strategy
