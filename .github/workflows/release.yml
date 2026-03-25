@@ -79,7 +79,7 @@ jobs:
                 mvn -B clean deploy -Prelease | tee build.log 
                 DEPLOYMENT_ID2=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
                 if [ -z "$DEPLOYMENT_ID2" ]; then
-                  echo "Failed to extract DEPLOYMENT_ID1"
+                  echo "Failed to extract DEPLOYMENT_ID2"
                   exit 1
                 fi
                 echo "DEPLOYMENT_ID2=$DEPLOYMENT_ID2" >> $GITHUB_ENV
