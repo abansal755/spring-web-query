@@ -83,6 +83,19 @@ class WebQueryEntityAwarePageableArgumentResolverTest {
         ));
     }
 
+    @Test
+    void resolveArgument_returnsUnsortedPageableWhenSortMissing() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
+        Pageable pageable = (Pageable) resolver.resolveArgument(
+                new MethodParameter(method, 0),
+                null,
+                new ServletWebRequest(new MockHttpServletRequest()),
+                null
+        );
+
+        assertTrue(pageable.getSort().isUnsorted());
+    }
+
     private NativeWebRequest requestWithSort(String sort) {
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setParameter("sort", sort);

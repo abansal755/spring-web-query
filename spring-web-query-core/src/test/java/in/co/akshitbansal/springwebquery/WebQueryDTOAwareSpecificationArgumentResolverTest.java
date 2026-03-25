@@ -93,6 +93,35 @@ class WebQueryDTOAwareSpecificationArgumentResolverTest {
         resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("q", "joinedAt==x"), null);
     }
 
+    @Test
+    void resolveArgument_returnsUnrestrictedWhenFilterBlank() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("search", Specification.class);
+        Object spec = resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("filter", " "), null);
+        assertNotNull(spec);
+    }
+
+    @Test
+    void resolveArgument_rejectsOrWhenEndpointDisallowsIt() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("searchOrDenied", Specification.class);
+        assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(
+                new MethodParameter(method, 0),
+                null,
+                requestWith("filter", "joinedAt==x,joinedAt==y"),
+                null
+        ));
+    }
+
+    @Test
+    void resolveArgument_rejectsWhenEndpointAstDepthExceeded() throws Exception {
+        Method method = TestController.class.getDeclaredMethod("searchDepthZero", Specification.class);
+        assertThrows(QueryValidationException.class, () -> resolver.resolveArgument(
+                new MethodParameter(method, 0),
+                null,
+                requestWith("filter", "joinedAt==x;joinedAt==y"),
+                null
+        ));
+    }
+
     private NativeWebRequest requestWith(String key, String value) {
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setParameter(key, value);
@@ -116,6 +145,19 @@ class WebQueryDTOAwareSpecificationArgumentResolverTest {
 
         @WebQuery(entityClass = Entity.class, dtoClass = InvalidMappingDto.class)
         void invalidMapping(Specification<Entity> spec) {
+        }
+
+        @WebQuery(
+                entityClass = Entity.class,
+                dtoClass = QueryDto.class,
+                allowOrOperator = WebQuery.OperatorPolicy.DENY,
+                allowAndOperator = WebQuery.OperatorPolicy.ALLOW
+        )
+        void searchOrDenied(Specification<Entity> spec) {
+        }
+
+        @WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class, maxASTDepth = 0)
+        void searchDepthZero(Specification<Entity> spec) {
         }
 
         void missingWebQuery(Specification<Entity> spec) {

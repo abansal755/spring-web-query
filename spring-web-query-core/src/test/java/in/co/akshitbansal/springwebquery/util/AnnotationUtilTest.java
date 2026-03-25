@@ -4,6 +4,7 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterableEquality;
+import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
@@ -80,6 +81,20 @@ class AnnotationUtilTest {
         assertDoesNotThrow(() -> util.validateFilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name"));
     }
 
+    @Test
+    void validateSortableField_acceptsSortableField() throws Exception {
+        AnnotationUtil util = new AnnotationUtil(Set.of());
+        var field = SortableEntity.class.getDeclaredField("name");
+        assertDoesNotThrow(() -> util.validateSortableField(field, "name"));
+    }
+
+    @Test
+    void validateSortableField_rejectsNonSortableField() throws Exception {
+        AnnotationUtil util = new AnnotationUtil(Set.of());
+        var field = NonFilterableEntity.class.getDeclaredField("name");
+        assertThrows(QueryFieldValidationException.class, () -> util.validateSortableField(field, "name"));
+    }
+
     private static class MockCustomOperator implements RSQLCustomOperator<String> {
         @Override
         public ComparisonOperator getComparisonOperator() {
@@ -113,6 +128,11 @@ class AnnotationUtilTest {
 
     private static class ComposedFilterableEntity {
         @RSQLFilterableEquality
+        private String name;
+    }
+
+    private static class SortableEntity {
+        @Sortable
         private String name;
     }
 

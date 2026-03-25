@@ -129,6 +129,38 @@ class EntityValidationRSQLVisitorTest {
         );
     }
 
+    @Test
+    void rejects_orOperator_whenNotAllowed() {
+        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+                TestEntity.class,
+                new FieldMapping[]{},
+                annotationUtil,
+                true,
+                false,
+                1
+        );
+
+        assertThrows(QueryValidationException.class, () ->
+                new RSQLParser().parse("name==john,name==doe").accept(visitor, NodeMetadata.of(0))
+        );
+    }
+
+    @Test
+    void rejects_whenAstDepthExceeded() {
+        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+                TestEntity.class,
+                new FieldMapping[]{},
+                annotationUtil,
+                true,
+                true,
+                0
+        );
+
+        assertThrows(QueryValidationException.class, () ->
+                new RSQLParser().parse("name==john;name==doe").accept(visitor, NodeMetadata.of(0))
+        );
+    }
+
     private static class MockCustomOperator implements RSQLCustomOperator<String> {
 
         @Override

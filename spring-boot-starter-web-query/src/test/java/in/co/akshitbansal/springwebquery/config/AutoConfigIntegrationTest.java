@@ -1,6 +1,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.RSQLCustomOperatorsConfigurer;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
@@ -26,6 +27,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {
@@ -103,6 +105,17 @@ class AutoConfigIntegrationTest {
         );
 
         assertEquals(50, pageable.getPageSize());
+    }
+
+    @Test
+    void paginationConfigRejectsNonPositiveMaxPageSize() {
+        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(0));
+        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(-1));
+    }
+
+    @Test
+    void webQueryBeanConfigRejectsNegativeMaxAstDepth() {
+        assertThrows(QueryConfigurationException.class, () -> new WebQueryBeanAutoConfig(false, true, -1));
     }
 
     private static class TestController {
