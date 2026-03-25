@@ -35,7 +35,9 @@ class ReflectionUtilTest {
     void resolveFieldPath_returnsFullPath() {
         java.util.List<Field> fields = ReflectionUtil.resolveFieldPath(ParentEntity.class, "children.name");
         assertEquals(2, fields.size());
-        assertEquals("children", fields.getFirst().getName());
+        // assertEquals("children", fields.getFirst().getName());
+        // getFirst() was added in Java 21, using get(0) for compatibility with earlier versions
+        assertEquals("children", fields.get(0).getName());
         assertEquals("name", fields.get(fields.size() - 1).getName());
     }
 
