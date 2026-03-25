@@ -43,6 +43,12 @@ public class WebQueryBeanAutoConfig {
         this.GLOBAL_ALLOW_OR_OPERATION = GLOBAL_ALLOW_OR_OPERATION;
         this.GLOBAL_ALLOW_AND_OPERATION = GLOBAL_ALLOW_AND_OPERATION;
         this.GLOBAL_MAX_AST_DEPTH = GLOBAL_MAX_AST_DEPTH;
+        if(GLOBAL_MAX_AST_DEPTH < 0) {
+            throw new QueryConfigurationException(MessageFormat.format(
+                    "Value for spring-web-query.filtering.max-ast-depth must be non-negative. Provided value: {0}",
+                    GLOBAL_MAX_AST_DEPTH
+            ));
+        }
     }
 
     @Bean
