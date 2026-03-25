@@ -18,7 +18,7 @@ You declare what clients can query, and the library enforces that contract at th
 
 ```java
 @GetMapping("/users")
-@WebQuery(entityClass = User.class, dtoClass = UserResponse.class)
+@WebQuery(entityClass = User.class, dtoClass = UserQuery.class)
 public Page<UserResponse> search(Specification<User> spec, Pageable pageable) {
     return userRepository.findAll(spec, pageable).map(this::toResponse);
 }
@@ -113,7 +113,7 @@ You keep endpoint code focused on business behavior, not query parsing.
 
 - Auto-configuration for resolvers and utility beans
 - Optional custom operator registration hook
-- configurable max page size via property
+- Configurable global filtering defaults and max page size via properties
 - built-in ISO-8601 `Timestamp` converter for RSQL values
 
 ## How it works
@@ -263,13 +263,13 @@ public Page<UserResponse> search(
 }
 ```
 
-If you need logical OR in filters, enable it explicitly:
+If you need logical OR in filters, override the endpoint policy explicitly:
 
 ```java
 @WebQuery(
     entityClass = User.class,
     dtoClass = UserQuery.class,
-    allowOrOperator = true
+    allowOrOperator = WebQuery.OperatorPolicy.ALLOW
 )
 ```
 
@@ -286,7 +286,7 @@ public interface UserRepository
 ```http
 GET /users?filter=status==ACTIVE
 GET /users?filter=joinedAt=ge=2025-01-01T00:00:00Z;joinedAt=lt=2026-01-01T00:00:00Z
-GET /users?filter=(status==ACTIVE,status==PENDING);profile.city==London  // requires allowOrOperator = true
+GET /users?filter=(status==ACTIVE,status==PENDING);profile.city==London  // requires allowOrOperator = WebQuery.OperatorPolicy.ALLOW
 GET /users?sort=joinedAt,desc&sort=username,asc&page=0&size=20
 ```
 
@@ -354,7 +354,7 @@ Examples:
 - OR: `,`
 - Parentheses for precedence: `(status==ACTIVE,status==PENDING);age=ge=18`
 
-By default, AND is allowed and OR is disabled. You can control this per endpoint via `@WebQuery(allowAndOperator = ..., allowOrOperator = ...)`.
+With the starter defaults, AND is allowed, OR is disabled, and `maxASTDepth` defaults to `1`. You can override this per endpoint via `@WebQuery(allowAndOperator = ..., allowOrOperator = ..., maxASTDepth = ...)`, or globally with Spring properties.
 
 ### Operator reference
 
@@ -447,9 +447,9 @@ Applied on controller methods.
 - `dtoClass`: optional, default `void.class`
 - `fieldMappings`: optional aliases (entity-aware mode)
 - `filterParamName`: optional, default `filter`
-- `allowAndOperator`: optional, default `true`
-- `allowOrOperator`: optional, default `false`
-- `maxASTDepth`: optional, default `1`
+- `allowAndOperator`: optional, default `WebQuery.OperatorPolicy.GLOBAL`
+- `allowOrOperator`: optional, default `WebQuery.OperatorPolicy.GLOBAL`
+- `maxASTDepth`: optional, default `-1` (delegates to the configured global default)
 
 Example custom filter param name:
 
@@ -469,7 +469,7 @@ Example enabling OR:
 @WebQuery(
     entityClass = User.class,
     dtoClass = UserQuery.class,
-    allowOrOperator = true
+    allowOrOperator = WebQuery.OperatorPolicy.ALLOW
 )
 ```
 
@@ -479,7 +479,7 @@ Example allowing deeper nested filter groups:
 @WebQuery(
     entityClass = User.class,
     dtoClass = UserQuery.class,
-    allowOrOperator = true,
+    allowOrOperator = WebQuery.OperatorPolicy.ALLOW,
     maxASTDepth = 2
 )
 ```
@@ -515,9 +515,29 @@ Depth guide:
 
 Notes:
 
-- The default is `maxASTDepth = 1`.
-- OR examples still require `allowOrOperator = true`.
+- On `@WebQuery`, the default is `maxASTDepth = -1`, which means "use the global setting".
+- With the starter, the global default is `spring-web-query.filtering.max-ast-depth=1`.
+- OR examples require either `allowOrOperator = WebQuery.OperatorPolicy.ALLOW` on the endpoint or `spring-web-query.filtering.allow-or-operation=true` globally.
 - The limit applies to the full filter tree, not to individual fields.
+
+### Global starter properties
+
+When you use `spring-boot-starter-web-query`, these global defaults are available:
+
+```properties
+spring-web-query.filtering.allow-and-operation=true
+spring-web-query.filtering.allow-or-operation=false
+spring-web-query.filtering.max-ast-depth=1
+spring-web-query.pagination.max-page-size=100
+```
+
+`@WebQuery` can override the filtering defaults per endpoint:
+
+- `allowAndOperator = WebQuery.OperatorPolicy.ALLOW`
+- `allowAndOperator = WebQuery.OperatorPolicy.DENY`
+- `allowOrOperator = WebQuery.OperatorPolicy.ALLOW`
+- `allowOrOperator = WebQuery.OperatorPolicy.DENY`
+- `maxASTDepth = 2` (or any non-negative value)
 
 ### `@RSQLFilterable`
 
@@ -653,7 +673,7 @@ Flow:
 Max page size is configured globally to `100` by default.
 
 ```properties
-api.pagination.max-page-size=500
+spring-web-query.pagination.max-page-size=500
 ```
 
 This default can be changed via the property above.
