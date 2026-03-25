@@ -36,7 +36,7 @@ class ReflectionUtilTest {
         java.util.List<Field> fields = ReflectionUtil.resolveFieldPath(ParentEntity.class, "children.name");
         assertEquals(2, fields.size());
         assertEquals("children", fields.getFirst().getName());
-        assertEquals("name", fields.getLast().getName());
+        assertEquals("name", fields.get(fields.size() - 1).getName());
     }
 
     @Test
