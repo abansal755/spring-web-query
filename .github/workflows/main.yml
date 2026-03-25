@@ -2,8 +2,6 @@ name: Java CI
 
 on:
     push:
-        branches-ignore:
-            - main
     pull_request:
 
 jobs:
@@ -13,22 +11,30 @@ jobs:
             ${{ github.event_name != 'push' || !(
               contains(github.event.head_commit.message, 'SKIP CI')
             ) }}
+        strategy:
+            matrix:
+                java-version:
+                    - 17
+                    - 21
+                spring-boot-version:
+                    - 3.5.12
+                    - 4.0.2
 
         steps:
             - name: Checkout
               uses: actions/checkout@v6
 
-            - name: Set up JDK 21
+            - name: Set up JDK ${{ matrix.java-version }}
               uses: actions/setup-java@v5
               with:
                   distribution: temurin
-                  java-version: "21"
+                  java-version: ${{ matrix.java-version }}
                   cache: maven
 
             - name: Build core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean install
+              run: mvn -B -ntp clean install -Djava.version=${{ matrix.java-version }} -Dspring-boot.version=${{ matrix.spring-boot-version }}
 
             - name: Build spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B -ntp clean package
+              run: mvn -B -ntp clean package -Djava.version=${{ matrix.java-version }} -Dspring-boot.version=${{ matrix.spring-boot-version }}
