@@ -9,13 +9,11 @@ import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationA
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
-import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -27,7 +25,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 @AutoConfiguration
-@ConditionalOnClass(RSQLJPAAutoConfiguration.class)
 @Slf4j
 public class WebQueryBeanAutoConfig {
 

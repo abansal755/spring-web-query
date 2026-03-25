@@ -2,11 +2,9 @@ package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
-import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -14,7 +12,6 @@ import java.util.List;
 
 @AutoConfiguration
 @RequiredArgsConstructor
-@ConditionalOnClass(RSQLJPAAutoConfiguration.class)
 @Slf4j
 public class WebQuerySpecificationArgumentResolverAutoConfig implements WebMvcConfigurer {
 
