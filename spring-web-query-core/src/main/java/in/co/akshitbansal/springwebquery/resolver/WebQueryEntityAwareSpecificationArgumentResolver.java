@@ -15,7 +15,6 @@ import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -91,11 +90,11 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
      * @throws Exception when resolution fails
      */
     @Override
-    public @Nullable Object resolveArgument(
+    public Object resolveArgument(
             @NonNull MethodParameter parameter,
-            @Nullable ModelAndViewContainer mavContainer,
+            ModelAndViewContainer mavContainer,
             @NonNull NativeWebRequest webRequest,
-            @Nullable WebDataBinderFactory binderFactory
+            WebDataBinderFactory binderFactory
     ) throws Exception
     {
         try {

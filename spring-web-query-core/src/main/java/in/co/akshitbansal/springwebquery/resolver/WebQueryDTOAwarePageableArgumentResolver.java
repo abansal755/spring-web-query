@@ -6,8 +6,8 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -71,11 +71,11 @@ public class WebQueryDTOAwarePageableArgumentResolver implements HandlerMethodAr
      * @throws Exception when resolution fails
      */
     @Override
-    public @Nullable Object resolveArgument(
-            MethodParameter parameter,
-            @Nullable ModelAndViewContainer mavContainer,
-            NativeWebRequest webRequest,
-            @Nullable WebDataBinderFactory binderFactory
+    public Object resolveArgument(
+            @NonNull MethodParameter parameter,
+            ModelAndViewContainer mavContainer,
+            @NonNull NativeWebRequest webRequest,
+            WebDataBinderFactory binderFactory
     ) throws Exception
     {
         try {
