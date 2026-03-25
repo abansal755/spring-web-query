@@ -1,8 +1,8 @@
 # Spring Web Query
 
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Java 21+](https://img.shields.io/badge/Java-21%2B-blue?style=flat&color=orange)](https://www.oracle.com/java/technologies/javase-jdk21-downloads.html)
-[![Spring Boot 4.0.2+](https://img.shields.io/badge/Spring_Boot-4.0.2%2B-orange?style=flat&logo=springboot)](https://spring.io/projects/spring-boot)
+[![Java 17/21](https://img.shields.io/badge/Java-17%20%7C%2021-blue?style=flat&color=orange)](https://www.oracle.com/java/technologies/downloads/)
+[![Spring Boot 3.5.12/4.0.2](https://img.shields.io/badge/Spring_Boot-3%20%7C%204-orange?style=flat&logo=springboot)](https://spring.io/projects/spring-boot)
 
 [![Maven Central (spring-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fin%2Fco%2Fakshitbansal%2Fspring-web-query-core%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Maven%20Central%20(Core)&color=brightgreen&logo=apachemaven)](https://central.sonatype.com/artifact/in.co.akshitbansal/spring-web-query-core)
 [![Maven Central (spring-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fin%2Fco%2Fakshitbansal%2Fspring-web-query-core%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Snapshot%20(Core)&color=yellow&logo=apachemaven)](https://central.sonatype.com/repository/maven-snapshots/in/co/akshitbansal/spring-web-query-core/maven-metadata.xml)
@@ -183,6 +183,8 @@ Includes:
 ```
 
 If you use core directly, register resolver beans and MVC configuration manually.
+
+The starter now aligns better with existing Spring Boot web applications by depending on `spring-boot-starter-web`.
 
 ## Quick start (DTO-aware, recommended)
 
@@ -776,8 +778,8 @@ In short, it gives you power for consumers and control for maintainers.
 
 ## Compatibility
 
-- Java `21+`
-- Spring Boot `4.0.2+`
+- Java `17` and `21`
+- Spring Boot `3` and `4`
 - Spring Web MVC
 - Spring Data JPA
 
