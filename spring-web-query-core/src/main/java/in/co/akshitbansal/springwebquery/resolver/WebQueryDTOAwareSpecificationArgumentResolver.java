@@ -40,9 +40,22 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends WebQuerySpeci
      * @param defaultOperators built-in operators accepted in RSQL expressions
      * @param customOperators custom operators supported by parser and predicates
      * @param annotationUtil utility for resolving annotations and configuration checks
+     * @param globalAllowAndOperator whether AND nodes are allowed by default when {@code @WebQuery}
+     *                               does not override that behavior
+     * @param globalAllowOrOperator whether OR nodes are allowed by default when {@code @WebQuery}
+     *                              does not override that behavior
+     * @param globalMaxASTDepth maximum AST depth allowed by default when {@code @WebQuery}
+     *                          does not override that behavior
      */
-    public WebQueryDTOAwareSpecificationArgumentResolver(Set<RSQLDefaultOperator> defaultOperators, Set<? extends RSQLCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
-        super(defaultOperators, customOperators, annotationUtil);
+    public WebQueryDTOAwareSpecificationArgumentResolver(
+            Set<RSQLDefaultOperator> defaultOperators,
+            Set<? extends RSQLCustomOperator<?>> customOperators,
+            AnnotationUtil annotationUtil,
+            boolean globalAllowAndOperator,
+            boolean globalAllowOrOperator,
+            int globalMaxASTDepth
+    ) {
+        super(defaultOperators, customOperators, annotationUtil, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
     }
 
     /**
@@ -84,11 +97,7 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends WebQuerySpeci
             // Retrieve the @WebQuery annotation from the method parameter to access configuration
             WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
             // Extract relevant configuration from the annotation
-            Class<?> entityClass = webQueryAnnotation.entityClass();
-            Class<?> dtoClass = webQueryAnnotation.dtoClass();
-            boolean andNodeAllowed = webQueryAnnotation.allowAndOperator();
-            boolean orNodeAllowed = webQueryAnnotation.allowOrOperator();
-            int maxDepth = webQueryAnnotation.maxASTDepth();
+            QueryConfiguration queryConfig = getQueryConfiguration(webQueryAnnotation);
 
             // Extract the RSQL query string from the request using the parameter name defined in @WebQuery
             String filter = webRequest.getParameter(webQueryAnnotation.filterParamName());
@@ -98,12 +107,12 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends WebQuerySpeci
             Node root = rsqlParser.parse(filter);
             // Validate the parsed AST against the target DTO and its @RSQLFilterable fields, while also building field mappings from DTO to entity
             DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(
-                    entityClass,
-                    dtoClass,
+                    queryConfig.getEntityClass(),
+                    queryConfig.getDtoClass(),
                     annotationUtil,
-                    andNodeAllowed,
-                    orNodeAllowed,
-                    maxDepth
+                    queryConfig.isAndNodeAllowed(),
+                    queryConfig.isOrNodeAllowed(),
+                    queryConfig.getMaxASTDepth()
             );
             root.accept(visitor, NodeMetadata.of(0));
 

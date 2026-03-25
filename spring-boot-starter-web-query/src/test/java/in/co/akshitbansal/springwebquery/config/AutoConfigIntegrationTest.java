@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         WebQueryBeanAutoConfig.class,
         WebQuerySpecificationArgumentResolverAutoConfig.class
 })
-@TestPropertySource(properties = "api.pagination.max-page-size=50")
+@TestPropertySource(properties = "spring-web-query.pagination.max-page-size=50")
 class AutoConfigIntegrationTest {
 
     @Autowired

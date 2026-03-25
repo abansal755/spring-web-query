@@ -10,8 +10,11 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 @Slf4j
 public class PaginationCustomizationAutoConfig {
 
-    @Value("${api.pagination.max-page-size:100}")
-    private int MAX_PAGE_SIZE;
+    private final int MAX_PAGE_SIZE;
+
+    public PaginationCustomizationAutoConfig(@Value("${spring-web-query.pagination.max-page-size:100}") int MAX_PAGE_SIZE) {
+        this.MAX_PAGE_SIZE = MAX_PAGE_SIZE;
+    }
 
     @Bean
     public PageableHandlerMethodArgumentResolverCustomizer maxPageSizeCustomizer() {

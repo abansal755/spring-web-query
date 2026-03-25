@@ -31,7 +31,10 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
     private final WebQueryEntityAwareSpecificationArgumentResolver resolver = new WebQueryEntityAwareSpecificationArgumentResolver(
             Set.of(RSQLDefaultOperator.values()),
             Set.of(new MockCustomOperator()),
-            new AnnotationUtil(Set.of(new MockCustomOperator()))
+            new AnnotationUtil(Set.of(new MockCustomOperator())),
+            true,
+            false,
+            1
     );
 
     @Test

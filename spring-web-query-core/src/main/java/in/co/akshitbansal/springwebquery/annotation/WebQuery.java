@@ -61,27 +61,39 @@ public @interface WebQuery {
     /**
      * Whether logical AND operator ({@code ;}) is allowed in RSQL filters.
      *
-     * <p>Defaults to {@code true}.</p>
+     * <p>The default is {@link OperatorPolicy#GLOBAL}, which delegates the decision
+     * to the resolver's configured global default.</p>
      *
-     * @return true if AND operator is allowed, false otherwise
+     * @return operator policy for logical AND nodes
      */
-    boolean allowAndOperator() default true;
+    OperatorPolicy allowAndOperator() default OperatorPolicy.GLOBAL;
 
     /**
      * Whether logical OR operator ({@code ,}) is allowed in RSQL filters.
      *
-     * <p>Defaults to {@code false}.</p>
+     * <p>The default is {@link OperatorPolicy#GLOBAL}, which delegates the decision
+     * to the resolver's configured global default.</p>
      *
-     * @return true if OR operator is allowed, false otherwise
+     * @return operator policy for logical OR nodes
      */
-    boolean allowOrOperator() default false;
+    OperatorPolicy allowOrOperator() default OperatorPolicy.GLOBAL;
 
     /**
      * Maximum allowed depth of the RSQL Abstract Syntax Tree.
      *
-     * <p>Depth starts at {@code 0} for the root node.</p>
+     * <p>Depth starts at {@code 0} for the root node. A negative value delegates to
+     * the resolver's configured global maximum.</p>
      *
      * @return maximum allowed AST depth
      */
-    int maxASTDepth() default 1;
+    int maxASTDepth() default -1;
+
+    /**
+     * Policy for resolving whether a logical operator is permitted.
+     */
+    enum OperatorPolicy {
+        ALLOW,
+        DENY,
+        GLOBAL
+    }
 }

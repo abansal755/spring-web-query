@@ -45,9 +45,22 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
      * @param defaultOperators built-in operators accepted in RSQL expressions
      * @param customOperators custom operators supported by parser and predicates
      * @param annotationUtil utility for resolving annotations and configuration checks
+     * @param globalAllowAndOperator whether AND nodes are allowed by default when {@code @WebQuery}
+     *                               does not override that behavior
+     * @param globalAllowOrOperator whether OR nodes are allowed by default when {@code @WebQuery}
+     *                              does not override that behavior
+     * @param globalMaxASTDepth maximum AST depth allowed by default when {@code @WebQuery}
+     *                          does not override that behavior
      */
-    public WebQueryEntityAwareSpecificationArgumentResolver(Set<RSQLDefaultOperator> defaultOperators, Set<? extends RSQLCustomOperator<?>> customOperators, AnnotationUtil annotationUtil) {
-        super(defaultOperators, customOperators, annotationUtil);
+    public WebQueryEntityAwareSpecificationArgumentResolver(
+            Set<RSQLDefaultOperator> defaultOperators,
+            Set<? extends RSQLCustomOperator<?>> customOperators,
+            AnnotationUtil annotationUtil,
+            boolean globalAllowAndOperator,
+            boolean globalAllowOrOperator,
+            int globalMaxASTDepth
+    ) {
+        super(defaultOperators, customOperators, annotationUtil, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
     }
 
     /**
@@ -93,12 +106,9 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
             String filter = webRequest.getParameter(webQueryAnnotation.filterParamName());
             if(filter == null || filter.isBlank()) return Specification.unrestricted();
 
-            // Extract entity class and field mappings from the @WebQuery annotation for validation and specification building
-            Class<?> entityClass = webQueryAnnotation.entityClass();
+            // Retrieve field mappings and query configuration from the annotation for validation
             FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
-            boolean andNodeAllowed = webQueryAnnotation.allowAndOperator();
-            boolean orNodeAllowed = webQueryAnnotation.allowOrOperator();
-            int maxDepth = webQueryAnnotation.maxASTDepth();
+            QueryConfiguration queryConfig = getQueryConfiguration(webQueryAnnotation);
 
             // Validate field mappings to ensure they are well-formed and do not contain conflicts
             annotationUtil.validateFieldMappings(fieldMappings);
@@ -107,12 +117,12 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
             Node root = rsqlParser.parse(filter);
             // Validate the parsed AST against the target entity and its @RSQLFilterable fields
             EntityValidationRSQLVisitor validationVisitor = new EntityValidationRSQLVisitor(
-                    entityClass,
+                    queryConfig.getEntityClass(),
                     fieldMappings,
                     annotationUtil,
-                    andNodeAllowed,
-                    orNodeAllowed,
-                    maxDepth
+                    queryConfig.isAndNodeAllowed(),
+                    queryConfig.isOrNodeAllowed(),
+                    queryConfig.getMaxASTDepth()
             );
             root.accept(validationVisitor, NodeMetadata.of(0));
 

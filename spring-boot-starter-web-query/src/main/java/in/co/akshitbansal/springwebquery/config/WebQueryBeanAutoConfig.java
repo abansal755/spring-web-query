@@ -12,8 +12,8 @@ import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,9 +28,22 @@ import java.util.*;
 
 @AutoConfiguration
 @ConditionalOnClass(RSQLJPAAutoConfiguration.class)
-@RequiredArgsConstructor
 @Slf4j
 public class WebQueryBeanAutoConfig {
+
+    private final boolean GLOBAL_ALLOW_OR_OPERATION;
+    private final boolean GLOBAL_ALLOW_AND_OPERATION;
+    private final int GLOBAL_MAX_AST_DEPTH;
+
+    public WebQueryBeanAutoConfig(
+            @Value("${spring-web-query.filtering.allow-or-operation:false}") boolean GLOBAL_ALLOW_OR_OPERATION,
+            @Value("${spring-web-query.filtering.allow-and-operation:true}") boolean GLOBAL_ALLOW_AND_OPERATION,
+            @Value("${spring-web-query.filtering.max-ast-depth:1}") int GLOBAL_MAX_AST_DEPTH
+    ) {
+        this.GLOBAL_ALLOW_OR_OPERATION = GLOBAL_ALLOW_OR_OPERATION;
+        this.GLOBAL_ALLOW_AND_OPERATION = GLOBAL_ALLOW_AND_OPERATION;
+        this.GLOBAL_MAX_AST_DEPTH = GLOBAL_MAX_AST_DEPTH;
+    }
 
     @Bean
     @ConditionalOnMissingBean(RSQLCustomOperatorsConfigurer.class)
@@ -110,7 +123,14 @@ public class WebQueryBeanAutoConfig {
             Set<? extends RSQLCustomOperator<?>> customOperatorSet,
             AnnotationUtil annotationUtil
     ) {
-        return new WebQueryEntityAwareSpecificationArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
+        return new WebQueryEntityAwareSpecificationArgumentResolver(
+                defaultOperatorSet,
+                customOperatorSet,
+                annotationUtil,
+                GLOBAL_ALLOW_AND_OPERATION,
+                GLOBAL_ALLOW_OR_OPERATION,
+                GLOBAL_MAX_AST_DEPTH
+        );
     }
 
     @Bean
@@ -119,7 +139,14 @@ public class WebQueryBeanAutoConfig {
             Set<? extends RSQLCustomOperator<?>> customOperatorSet,
             AnnotationUtil annotationUtil
     ) {
-        return new WebQueryDTOAwareSpecificationArgumentResolver(defaultOperatorSet, customOperatorSet, annotationUtil);
+        return new WebQueryDTOAwareSpecificationArgumentResolver(
+                defaultOperatorSet,
+                customOperatorSet,
+                annotationUtil,
+                GLOBAL_ALLOW_AND_OPERATION,
+                GLOBAL_ALLOW_OR_OPERATION,
+                GLOBAL_MAX_AST_DEPTH
+        );
     }
 
     // Allows RSQL to parse ISO-8601 Timestamp fields

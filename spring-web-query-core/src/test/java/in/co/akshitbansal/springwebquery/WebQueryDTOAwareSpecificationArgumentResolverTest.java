@@ -28,7 +28,10 @@ class WebQueryDTOAwareSpecificationArgumentResolverTest {
     private final WebQueryDTOAwareSpecificationArgumentResolver resolver = new WebQueryDTOAwareSpecificationArgumentResolver(
             Set.of(RSQLDefaultOperator.values()),
             Set.of(),
-            new AnnotationUtil(Set.of())
+            new AnnotationUtil(Set.of()),
+            true,
+            false,
+            1
     );
 
     @Test
