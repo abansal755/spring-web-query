@@ -9,6 +9,8 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
+import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
@@ -31,6 +33,8 @@ import java.util.stream.Collectors;
  */
 public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWebQuerySpecificationArgumentResolver {
 
+    private final Validator<FieldMapping[]> fieldMappingsValidator;
+
     /**
      * Creates an entity-aware RSQL specification resolver.
      *
@@ -52,6 +56,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
             int globalMaxASTDepth
     ) {
         super(defaultOperators, customOperators, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        this.fieldMappingsValidator = new FieldMappingsValidator();
     }
 
     /**
@@ -72,7 +77,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
     protected Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter) {
         try {
             // Validate field mappings to ensure they are well-formed and do not contain conflicts
-            validateFieldMappings(queryConfig.getFieldMappings());
+            fieldMappingsValidator.validate(queryConfig.getFieldMappings());
 
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);

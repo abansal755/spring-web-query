@@ -3,6 +3,7 @@ package in.co.akshitbansal.springwebquery.resolver;
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +56,7 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
                     queryConfig.getEntityClass(),
                     queryConfig.getDtoClass(),
                     dtoPath,
-                    terminalField -> validateSortableField(terminalField, dtoPath)
+                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, dtoPath))
             );
             newOrders.add(new Sort.Order(order.getDirection(), entityPath));
         }

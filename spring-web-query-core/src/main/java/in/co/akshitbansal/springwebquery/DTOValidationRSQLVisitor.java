@@ -5,6 +5,7 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -95,7 +96,7 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
                 entityClass,
                 dtoClass,
                 dtoPath,
-                terminalField -> validateFilterableField(terminalField, operator, dtoPath)
+                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.Field(terminalField, operator, dtoPath))
         );
 
         // Store the mapping from DTO path to entity path for later use during query construction

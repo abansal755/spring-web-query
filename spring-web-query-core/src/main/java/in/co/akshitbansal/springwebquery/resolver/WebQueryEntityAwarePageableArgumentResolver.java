@@ -3,6 +3,9 @@ package in.co.akshitbansal.springwebquery.resolver;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
+import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
+import in.co.akshitbansal.springwebquery.validator.Validator;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +28,8 @@ import java.util.stream.Collectors;
  */
 public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQueryPageableArgumentResolver {
 
+    private final Validator<FieldMapping[]> fieldMappingsValidator;
+
     public WebQueryEntityAwarePageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
             boolean globalAllowAndOperator,
@@ -32,6 +37,7 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
             int globalMaxASTDepth
     ) {
         super(delegate, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        this.fieldMappingsValidator = new FieldMappingsValidator();
     }
 
     /**
@@ -51,7 +57,7 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
     @Override
     protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
         // Validate field mappings to ensure they are well-formed and do not contain conflicts
-        validateFieldMappings(queryConfig.getFieldMappings());
+        fieldMappingsValidator.validate(queryConfig.getFieldMappings());
 
         // Create maps for quick lookup of field mappings by both API name and original field name
         Map<String, FieldMapping> fieldMappingMap = Arrays
@@ -72,7 +78,7 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
                     reqFieldName,
                     fieldMappingMap,
                     originalFieldNameMap,
-                    terminalField -> validateSortableField(terminalField, reqFieldName)
+                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, reqFieldName))
             );
 
             newOrders.add(new Sort.Order(order.getDirection(), fieldName));

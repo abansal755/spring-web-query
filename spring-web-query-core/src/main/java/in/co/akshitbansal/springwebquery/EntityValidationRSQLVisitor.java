@@ -10,6 +10,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -123,7 +124,7 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
                 reqFieldName,
                 fieldMappings,
                 originalFieldMappings,
-                terminalField -> validateFilterableField(terminalField, operator, reqFieldName)
+                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.Field(terminalField, operator, reqFieldName))
         );
     }
 }
