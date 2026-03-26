@@ -19,6 +19,7 @@ jobs:
                 spring-boot-version:
                     - 3.5.12
                     - 4.0.2
+        name: Build (Java ${{ matrix.java-version }}, Spring Boot ${{ matrix.spring-boot-version }} )
 
         steps:
             - name: Checkout
