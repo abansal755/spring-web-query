@@ -5,11 +5,11 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 import java.util.Arrays;
@@ -106,11 +106,9 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
         ComparisonOperator operator = node.getOperator();
 
         // Resolve the field on the entity class using the requested field name and field mappings
-        FieldResolvingUtil.resolveEntityPath(
-                entityClass,
+        FieldResolver fieldResolver = new EntityAwareFieldResolver(entityClass, fieldMappings, originalFieldMappings);
+        fieldResolver.resolvePathAndValidateTerminalField(
                 reqFieldName,
-                fieldMappings,
-                originalFieldMappings,
                 terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.Field(terminalField, operator, reqFieldName))
         );
     }

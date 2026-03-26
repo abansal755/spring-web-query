@@ -1,4 +1,4 @@
-package in.co.akshitbansal.springwebquery.resolver;
+package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;

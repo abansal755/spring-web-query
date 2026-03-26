@@ -1,8 +1,9 @@
-package in.co.akshitbansal.springwebquery.resolver;
+package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
@@ -91,11 +92,13 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
             String reqFieldName = order.getProperty();
 
             // Resolve the field on the entity class using the requested field name and field mappings
-            String fieldName = FieldResolvingUtil.resolveEntityPath(
+            FieldResolver fieldResolver = new EntityAwareFieldResolver(
                     queryConfig.getEntityClass(),
-                    reqFieldName,
                     fieldMappingMap,
-                    originalFieldNameMap,
+                    originalFieldNameMap
+            );
+            String fieldName = fieldResolver.resolvePathAndValidateTerminalField(
+                    reqFieldName,
                     terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, reqFieldName))
             );
 

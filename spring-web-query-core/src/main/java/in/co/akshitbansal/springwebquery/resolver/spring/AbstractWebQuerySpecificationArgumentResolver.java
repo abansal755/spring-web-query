@@ -1,4 +1,4 @@
-package in.co.akshitbansal.springwebquery.resolver;
+package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;

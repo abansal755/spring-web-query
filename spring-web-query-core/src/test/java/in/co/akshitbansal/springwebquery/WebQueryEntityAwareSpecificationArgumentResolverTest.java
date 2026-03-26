@@ -7,7 +7,7 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
