@@ -15,7 +15,6 @@ public class SortableFieldValidator implements Validator<SortableFieldValidator.
      * Validates that the requested field is explicitly marked as sortable.
      *
      * @param field field being targeted by sort selector
-     * @param fieldPath original selector path from the request
      * @throws QueryFieldValidationException if sorting is not allowed for the field
      */
     @Override

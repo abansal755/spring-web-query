@@ -40,8 +40,6 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
      * operator is permitted by its {@link RSQLFilterable} declaration(s).
      *
      * @param field field being targeted by the request selector
-     * @param operator comparison operator requested in the query
-     * @param fieldPath original selector path from the request
      * @throws QueryFieldValidationException if the field is not filterable
      * @throws QueryForbiddenOperatorException if the operator is not allowed for the field
      */
