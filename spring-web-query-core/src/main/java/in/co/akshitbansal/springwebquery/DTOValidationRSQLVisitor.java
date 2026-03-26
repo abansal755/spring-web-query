@@ -3,8 +3,9 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,16 +47,11 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
     private final Map<String, String> fieldMappings;
 
     /**
-     * Helper used to resolve allowed operators from annotation metadata.
-     */
-    private final AnnotationUtil annotationUtil;
-
-    /**
      * Creates a DTO-aware validation visitor.
      *
      * @param entityClass target entity type used for final path validation
      * @param dtoClass DTO type used to validate incoming selector paths
-     * @param annotationUtil helper for resolving allowed operators from annotations
+     * @param customOperators registered custom operators keyed by implementation class
      * @param andNodeAllowed whether logical AND operator is allowed
      * @param orNodeAllowed whether logical OR operator is allowed
      * @param maxDepth maximum allowed depth for the RSQL AST
@@ -63,16 +59,15 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
     public DTOValidationRSQLVisitor(
             Class<?> entityClass,
             Class<?> dtoClass,
-            AnnotationUtil annotationUtil,
+            Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,
             int maxDepth
     ) {
-        super(andNodeAllowed, orNodeAllowed, maxDepth);
+        super(customOperators, andNodeAllowed, orNodeAllowed, maxDepth);
         this.entityClass = entityClass;
         this.dtoClass = dtoClass;
         this.fieldMappings = new HashMap<>();
-        this.annotationUtil = annotationUtil;
     }
 
     /**
@@ -100,7 +95,7 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
                 entityClass,
                 dtoClass,
                 dtoPath,
-                terminalField -> annotationUtil.validateFilterableField(terminalField, operator, dtoPath)
+                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.Field(terminalField, operator, dtoPath))
         );
 
         // Store the mapping from DTO path to entity path for later use during query construction

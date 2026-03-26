@@ -6,22 +6,17 @@ import in.co.akshitbansal.springwebquery.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.NodeMetadata;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
+import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.web.bind.support.WebDataBinderFactory;
-import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -36,14 +31,18 @@ import java.util.stream.Collectors;
  * entity fields and optional {@link FieldMapping} aliases before producing a
  * JPA specification.</p>
  */
-public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySpecificationArgumentResolver {
+public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWebQuerySpecificationArgumentResolver {
+
+    /**
+     * Validator used to enforce uniqueness and consistency of declared field mappings.
+     */
+    private final Validator<FieldMapping[]> fieldMappingsValidator;
 
     /**
      * Creates an entity-aware RSQL specification resolver.
      *
      * @param defaultOperators built-in operators accepted in RSQL expressions
      * @param customOperators custom operators supported by parser and predicates
-     * @param annotationUtil utility for resolving annotations and configuration checks
      * @param globalAllowAndOperator whether AND nodes are allowed by default when {@code @WebQuery}
      *                               does not override that behavior
      * @param globalAllowOrOperator whether OR nodes are allowed by default when {@code @WebQuery}
@@ -54,12 +53,12 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
     public WebQueryEntityAwareSpecificationArgumentResolver(
             Set<RSQLDefaultOperator> defaultOperators,
             Set<? extends RSQLCustomOperator<?>> customOperators,
-            AnnotationUtil annotationUtil,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth
     ) {
-        super(defaultOperators, customOperators, annotationUtil, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        super(defaultOperators, customOperators, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        this.fieldMappingsValidator = new FieldMappingsValidator();
     }
 
     /**
@@ -70,55 +69,33 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
      *         method-level {@link WebQuery} and no DTO class is configured
      */
     @Override
-    public boolean supportsParameter(MethodParameter parameter) {
-        if(!Specification.class.isAssignableFrom(parameter.getParameterType())) return false;
-        Method controlllerMethod = parameter.getMethod();
-        if(controlllerMethod == null) return false;
-        WebQuery webQueryAnnotation = controlllerMethod.getAnnotation(WebQuery.class);
-        if(webQueryAnnotation == null) return false;
-        return webQueryAnnotation.dtoClass() == void.class;
+    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+        if(!super.supportsParameter(parameter)) return false;
+        // supportsParameter in superclass checks for method-level @WebQuery presence, so we can safely assume that here
+        return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() == void.class;
     }
 
     /**
-     * Resolves a {@link Specification} from the configured RSQL request parameter.
+     * Parses, validates, and converts an entity-oriented RSQL filter into a
+     * JPA {@link Specification}.
      *
-     * @param parameter controller method parameter being resolved
-     * @param mavContainer current MVC container
-     * @param webRequest current request
-     * @param binderFactory binder factory
-     * @return resolved specification, or {@link Specification#unrestricted()} when no filter exists
-     * @throws Exception when resolution fails
+     * @param queryConfig effective query configuration for the current request
+     * @param filter raw RSQL filter string from the request
+     * @return resolved specification for the validated filter
      */
     @Override
-    public Object resolveArgument(
-            @NonNull MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            @NonNull NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
-    ) throws Exception
-    {
+    protected Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter) {
         try {
-            // Retrieve the @WebQuery annotation from the method parameter to access configuration
-            WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
-
-            // Extract the RSQL query string from the request using the parameter name defined in @WebQuery
-            String filter = webRequest.getParameter(webQueryAnnotation.filterParamName());
-            if(filter == null || filter.isBlank()) return Specification.unrestricted();
-
-            // Retrieve field mappings and query configuration from the annotation for validation
-            FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
-            QueryConfiguration queryConfig = getQueryConfiguration(webQueryAnnotation);
-
             // Validate field mappings to ensure they are well-formed and do not contain conflicts
-            annotationUtil.validateFieldMappings(fieldMappings);
+            fieldMappingsValidator.validate(queryConfig.getFieldMappings());
 
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);
             // Validate the parsed AST against the target entity and its @RSQLFilterable fields
             EntityValidationRSQLVisitor validationVisitor = new EntityValidationRSQLVisitor(
                     queryConfig.getEntityClass(),
-                    fieldMappings,
-                    annotationUtil,
+                    queryConfig.getFieldMappings(),
+                    customOperators,
                     queryConfig.isAndNodeAllowed(),
                     queryConfig.isOrNodeAllowed(),
                     queryConfig.getMaxASTDepth()
@@ -127,7 +104,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
 
             // Convert field mappings to aliases map which rsql jpa support library accepts
             Map<String, String> fieldMappingsMap = Arrays
-                    .stream(fieldMappings)
+                    .stream(queryConfig.getFieldMappings())
                     .collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
 
             // Convert the validated RSQL query into a JPA Specification
@@ -145,12 +122,6 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends WebQuerySp
         }
         catch (RSQLParserException ex) {
             throw new QueryValidationException("Unable to parse RSQL query param", ex);
-        }
-        catch (QueryException ex) {
-            throw ex;
-        }
-        catch (Exception ex) {
-            throw new QueryConfigurationException("Failed to resolve RSQL Specification argument", ex);
         }
     }
 }

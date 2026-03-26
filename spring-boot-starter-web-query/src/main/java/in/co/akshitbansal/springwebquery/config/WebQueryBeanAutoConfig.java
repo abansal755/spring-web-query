@@ -8,7 +8,6 @@ import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgume
 import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -116,20 +115,13 @@ public class WebQueryBeanAutoConfig {
     }
 
     @Bean
-    public AnnotationUtil annotationUtil(Set<? extends RSQLCustomOperator<?>> customOperatorSet) {
-        return new AnnotationUtil(customOperatorSet);
-    }
-
-    @Bean
     public WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecArgumentResolver(
             Set<RSQLDefaultOperator> defaultOperatorSet,
-            Set<? extends RSQLCustomOperator<?>> customOperatorSet,
-            AnnotationUtil annotationUtil
+            Set<? extends RSQLCustomOperator<?>> customOperatorSet
     ) {
         return new WebQueryEntityAwareSpecificationArgumentResolver(
                 defaultOperatorSet,
                 customOperatorSet,
-                annotationUtil,
                 GLOBAL_ALLOW_AND_OPERATION,
                 GLOBAL_ALLOW_OR_OPERATION,
                 GLOBAL_MAX_AST_DEPTH
@@ -139,13 +131,11 @@ public class WebQueryBeanAutoConfig {
     @Bean
     public WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
             Set<RSQLDefaultOperator> defaultOperatorSet,
-            Set<? extends RSQLCustomOperator<?>> customOperatorSet,
-            AnnotationUtil annotationUtil
+            Set<? extends RSQLCustomOperator<?>> customOperatorSet
     ) {
         return new WebQueryDTOAwareSpecificationArgumentResolver(
                 defaultOperatorSet,
                 customOperatorSet,
-                annotationUtil,
                 GLOBAL_ALLOW_AND_OPERATION,
                 GLOBAL_ALLOW_OR_OPERATION,
                 GLOBAL_MAX_AST_DEPTH
@@ -167,18 +157,22 @@ public class WebQueryBeanAutoConfig {
     }
 
     @Bean
-    public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(
-            PageableHandlerMethodArgumentResolver delegate,
-            AnnotationUtil annotationUtil
-    ) {
-        return new WebQueryEntityAwarePageableArgumentResolver(delegate, annotationUtil);
+    public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
+        return new WebQueryEntityAwarePageableArgumentResolver(
+                delegate,
+                GLOBAL_ALLOW_AND_OPERATION,
+                GLOBAL_ALLOW_OR_OPERATION,
+                GLOBAL_MAX_AST_DEPTH
+        );
     }
 
     @Bean
-    public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(
-            PageableHandlerMethodArgumentResolver delegate,
-            AnnotationUtil annotationUtil
-    ) {
-        return new WebQueryDTOAwarePageableArgumentResolver(delegate, annotationUtil);
+    public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
+        return new WebQueryDTOAwarePageableArgumentResolver(
+                delegate,
+                GLOBAL_ALLOW_AND_OPERATION,
+                GLOBAL_ALLOW_OR_OPERATION,
+                GLOBAL_MAX_AST_DEPTH
+        );
     }
 }

@@ -2,23 +2,14 @@ package in.co.akshitbansal.springwebquery.resolver;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.web.bind.support.WebDataBinderFactory;
-import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,18 +21,24 @@ import java.util.List;
  * those selectors to entity paths (using {@link MapsTo} where provided) before
  * returning the final pageable.</p>
  */
-@RequiredArgsConstructor
-public class WebQueryDTOAwarePageableArgumentResolver implements HandlerMethodArgumentResolver {
+public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPageableArgumentResolver {
 
     /**
-     * Delegate used to parse raw pageable parameters from the request.
+     * Creates a DTO-aware pageable resolver.
+     *
+     * @param delegate Spring's pageable resolver used for page and size parsing
+     * @param globalAllowAndOperator global fallback for logical AND allowance
+     * @param globalAllowOrOperator global fallback for logical OR allowance
+     * @param globalMaxASTDepth global fallback for maximum AST depth
      */
-    private final PageableHandlerMethodArgumentResolver delegate;
-
-    /**
-     * Shared annotation utility dependency for resolver-level validation concerns.
-     */
-    private final AnnotationUtil annotationUtil;
+    public WebQueryDTOAwarePageableArgumentResolver(
+            PageableHandlerMethodArgumentResolver delegate,
+            boolean globalAllowAndOperator,
+            boolean globalAllowOrOperator,
+            int globalMaxASTDepth
+    ) {
+        super(delegate, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+    }
 
     /**
      * Determines whether this resolver should handle the given parameter.
@@ -52,64 +49,35 @@ public class WebQueryDTOAwarePageableArgumentResolver implements HandlerMethodAr
      */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        if(!Pageable.class.isAssignableFrom(parameter.getParameterType())) return false;
-        Method controlllerMethod = parameter.getMethod();
-        if(controlllerMethod == null) return false;
-        WebQuery webQueryAnnotation = controlllerMethod.getAnnotation(WebQuery.class);
-        if(webQueryAnnotation == null) return false;
-        return webQueryAnnotation.dtoClass() != void.class;
+        if(!super.supportsParameter(parameter)) return false;
+        // supportsParameter in superclass checks for method-level @WebQuery presence, so we can safely assume that here
+        return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() != void.class;
     }
 
     /**
-     * Resolves and validates a {@link Pageable} argument with DTO-based sorting rules.
+     * Validates DTO-facing sort properties and maps them to entity paths.
      *
-     * @param parameter controller method parameter being resolved
-     * @param mavContainer current MVC container
-     * @param webRequest current request
-     * @param binderFactory binder factory
-     * @return validated pageable with DTO selectors translated to entity paths
-     * @throws Exception when resolution fails
+     * @param pageable pageable parsed from the request
+     * @param queryConfig effective query configuration for the current request
+     * @return pageable with validated entity sort paths derived from DTO selectors
      */
     @Override
-    public Object resolveArgument(
-            @NonNull MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            @NonNull NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
-    ) throws Exception
-    {
-        try {
-            // Delegate parsing of page, size and sort parameters to Spring
-            Pageable pageable = delegate.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
-
-            // Resolve the @WebQuery annotation to access entity metadata for validation
-            WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
-            // Extract entity and dto class
-            Class<?> entityClass = webQueryAnnotation.entityClass();
-            Class<?> dtoClass = webQueryAnnotation.dtoClass();
-
-            List<Sort.Order> newOrders = new ArrayList<>();
-            for(Sort.Order order : pageable.getSort()) {
-                String dtoPath = order.getProperty();
-                // Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
-                String entityPath = FieldResolvingUtil.buildEntityPathFromDtoPath(
-                        entityClass,
-                        dtoClass,
-                        dtoPath,
-                        terminalField -> annotationUtil.validateSortableField(terminalField, dtoPath)
-                );
-                newOrders.add(new Sort.Order(order.getDirection(), entityPath));
-            }
-            Sort sort = Sort.by(newOrders);
-            // Reconstruct pageable with mapped sort orders
-            if(pageable.isUnpaged()) return Pageable.unpaged(sort);
-            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+    protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
+        List<Sort.Order> newOrders = new ArrayList<>();
+        for(Sort.Order order : pageable.getSort()) {
+            String dtoPath = order.getProperty();
+            // Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
+            String entityPath = FieldResolvingUtil.buildEntityPathFromDtoPath(
+                    queryConfig.getEntityClass(),
+                    queryConfig.getDtoClass(),
+                    dtoPath,
+                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, dtoPath))
+            );
+            newOrders.add(new Sort.Order(order.getDirection(), entityPath));
         }
-        catch (QueryException ex) {
-            throw ex;
-        }
-        catch (Exception ex) {
-            throw new QueryConfigurationException("Failed to resolve pageable argument", ex);
-        }
+        Sort sort = Sort.by(newOrders);
+        // Reconstruct pageable with mapped sort orders
+        if(pageable.isUnpaged()) return Pageable.unpaged(sort);
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     }
 }

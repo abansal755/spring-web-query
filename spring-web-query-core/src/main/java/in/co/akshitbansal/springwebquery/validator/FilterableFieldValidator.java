@@ -1,29 +1,34 @@
-package in.co.akshitbansal.springwebquery.util;
+package in.co.akshitbansal.springwebquery.validator;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import in.co.akshitbansal.springwebquery.annotation.*;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterables;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import lombok.NonNull;
+import lombok.*;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Utility methods for validating query-related annotation metadata.
+ * Validator that enforces {@code @RSQLFilterable} constraints for a resolved
+ * terminal field and requested comparison operator.
  *
- * <p>This utility validates {@link FieldMapping} declarations and resolves
- * filterability/operator constraints from {@link RSQLFilterable} annotations,
- * including composed annotations in this library's annotation package.</p>
+ * <p>This validator supports direct, repeatable, and composed filterability
+ * annotations and can resolve referenced custom operators from a prebuilt
+ * registry.</p>
  */
-public class AnnotationUtil {
+@RequiredArgsConstructor
+public class FilterableFieldValidator implements Validator<FilterableFieldValidator.Field> {
 
     /**
      * Registered custom operators keyed by their implementation class.
@@ -31,69 +36,21 @@ public class AnnotationUtil {
     private final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
 
     /**
-     * Creates an annotation utility backed by registered custom operator instances.
-     *
-     * @param customOperators custom operators available to annotation-driven validation
-     */
-    public AnnotationUtil(Set<? extends RSQLCustomOperator<?>> customOperators) {
-        this.customOperators = Collections.unmodifiableMap(customOperators
-                .stream()
-                .collect(Collectors.toMap(
-                        RSQLCustomOperator::getClass,
-                        operator -> operator,
-                        // Might happen in case multiple instances of an operator are registered
-                        // In that case, we can just keep one of them since they should be functionally equivalent
-                        (existing, duplicate) -> existing,
-                        HashMap::new
-                )));
-    }
-
-    /**
-     * Validates {@link FieldMapping} definitions declared in {@link WebQuery}.
-     * <p>
-     * Validation rules:
-     * <ul>
-     *     <li>Alias names must be unique ({@link FieldMapping#name()}).</li>
-     *     <li>Target entity fields must be unique ({@link FieldMapping#field()}).</li>
-     * </ul>
-     *
-     * @param fieldMappings field mappings to validate
-     * @throws QueryConfigurationException if duplicate aliases or duplicate target fields are found
-     */
-    public void validateFieldMappings(@NonNull FieldMapping[] fieldMappings) {
-        Set<String> nameSet = new HashSet<>();
-        for (FieldMapping mapping : fieldMappings) {
-            if(!nameSet.add(mapping.name())) throw new QueryConfigurationException(MessageFormat.format(
-                    "Duplicate field mapping present for alias ''{0}''. Only one mapping is allowed per alias.",
-                    mapping.name()
-            ));
-        }
-
-        Map<String, FieldMapping> fieldMap = new HashMap<>();
-        for (FieldMapping mapping : fieldMappings) {
-            fieldMap.compute(mapping.field(), (fieldName, existing) -> {
-                if(existing != null) throw new QueryConfigurationException(MessageFormat.format(
-                        "Aliases ''{0}'' and ''{1}'' are mapped to same field. Only one mapping is allowed per field.",
-                        existing.name(), mapping.name()
-                ));
-                return mapping;
-            });
-        }
-    }
-
-    /**
      * Validates that a field is marked as filterable and that the requested
      * operator is permitted by its {@link RSQLFilterable} declaration(s).
      *
      * @param field field being targeted by the request selector
-     * @param operator comparison operator requested in the query
-     * @param fieldPath original selector path from the request
      * @throws QueryFieldValidationException if the field is not filterable
      * @throws QueryForbiddenOperatorException if the operator is not allowed for the field
      */
-    public void validateFilterableField(@NonNull Field field, ComparisonOperator operator, String fieldPath) {
+    @Override
+    public void validate(@NonNull FilterableFieldValidator.Field field) {
+        java.lang.reflect.Field reflectedField = field.getField();
+        ComparisonOperator operator = field.getOperator();
+        String fieldPath = field.getFieldPath();
+
         // Retrieve the RSQLFilterable annotations on the field (if present)
-        Set<RSQLFilterable> filterables = collectFilterables(field);
+        Set<RSQLFilterable> filterables = collectFilterables(reflectedField);
         // Throw exception if the field is not annotated as filterable
         if(filterables.isEmpty()) throw new QueryFieldValidationException(MessageFormat.format(
                 "Filtering not allowed on field ''{0}''", fieldPath
@@ -108,21 +65,6 @@ public class AnnotationUtil {
                     operator,
                     allowedOperators
             );
-        }
-    }
-
-    /**
-     * Validates that the requested field is explicitly marked as sortable.
-     *
-     * @param field field being targeted by sort selector
-     * @param fieldPath original selector path from the request
-     * @throws QueryFieldValidationException if sorting is not allowed for the field
-     */
-    public void validateSortableField(@NonNull Field field, String fieldPath) {
-        if(!field.isAnnotationPresent(Sortable.class)) {
-            throw new QueryFieldValidationException(MessageFormat.format(
-                    "Sorting is not allowed on the field ''{0}''", fieldPath
-            ), fieldPath);
         }
     }
 
@@ -175,7 +117,7 @@ public class AnnotationUtil {
      * @param field field whose annotations are to be inspected
      * @return collected filterability declarations
      */
-    private Set<RSQLFilterable> collectFilterables(Field field) {
+    private Set<RSQLFilterable> collectFilterables(java.lang.reflect.Field field) {
         return collectFilterables(field.getAnnotations());
     }
 
@@ -198,5 +140,30 @@ public class AnnotationUtil {
                 filterables.addAll(collectFilterables(type.getAnnotations()));
         }
         return filterables;
+    }
+
+    @RequiredArgsConstructor
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    public static class Field {
+
+        /**
+         * Reflected terminal field being validated.
+         */
+        @NonNull
+        private final java.lang.reflect.Field field;
+
+        /**
+         * Comparison operator requested for the selector.
+         */
+        @NonNull
+        private final ComparisonOperator operator;
+
+        /**
+         * Original selector path from the incoming request.
+         */
+        @NonNull
+        private final String fieldPath;
     }
 }

@@ -2,23 +2,16 @@ package in.co.akshitbansal.springwebquery.resolver;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
+import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
+import in.co.akshitbansal.springwebquery.validator.Validator;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.web.bind.support.WebDataBinderFactory;
-import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,18 +26,30 @@ import java.util.stream.Collectors;
  * configured entity class and optional {@link FieldMapping} aliases declared
  * on {@link WebQuery}.</p>
  */
-@RequiredArgsConstructor
-public class WebQueryEntityAwarePageableArgumentResolver implements HandlerMethodArgumentResolver {
+public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQueryPageableArgumentResolver {
 
     /**
-     * Delegate used to parse raw pageable parameters from the request.
+     * Validator used to enforce uniqueness and consistency of declared field mappings.
      */
-    private final PageableHandlerMethodArgumentResolver delegate;
+    private final Validator<FieldMapping[]> fieldMappingsValidator;
 
     /**
-     * Shared annotation utility dependency for resolver-level validation concerns.
+     * Creates an entity-aware pageable resolver.
+     *
+     * @param delegate Spring's pageable resolver used for page and size parsing
+     * @param globalAllowAndOperator global fallback for logical AND allowance
+     * @param globalAllowOrOperator global fallback for logical OR allowance
+     * @param globalMaxASTDepth global fallback for maximum AST depth
      */
-    private final AnnotationUtil annotationUtil;
+    public WebQueryEntityAwarePageableArgumentResolver(
+            PageableHandlerMethodArgumentResolver delegate,
+            boolean globalAllowAndOperator,
+            boolean globalAllowOrOperator,
+            int globalMaxASTDepth
+    ) {
+        super(delegate, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        this.fieldMappingsValidator = new FieldMappingsValidator();
+    }
 
     /**
      * Determines whether this resolver should handle the given parameter.
@@ -55,80 +60,51 @@ public class WebQueryEntityAwarePageableArgumentResolver implements HandlerMetho
      */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        if(!Pageable.class.isAssignableFrom(parameter.getParameterType())) return false;
-        Method controlllerMethod = parameter.getMethod();
-        if(controlllerMethod == null) return false;
-        WebQuery webQueryAnnotation = controlllerMethod.getAnnotation(WebQuery.class);
-        if(webQueryAnnotation == null) return false;
-        return webQueryAnnotation.dtoClass() == void.class;
+        if(!super.supportsParameter(parameter)) return false;
+        // supportsParameter in superclass checks for method-level @WebQuery presence, so we can safely assume that here
+        return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() == void.class;
     }
 
     /**
-     * Resolves and validates a {@link Pageable} argument with restricted sorting.
+     * Validates and remaps entity-facing sort properties on the supplied pageable.
      *
-     * @param parameter controller method parameter being resolved
-     * @param mavContainer current MVC container
-     * @param webRequest current request
-     * @param binderFactory binder factory
-     * @return validated pageable with alias-mapped sort properties
-     * @throws Exception when resolution fails
+     * @param pageable pageable parsed from the request
+     * @param queryConfig effective query configuration for the current request
+     * @return pageable with validated entity sort paths
      */
     @Override
-    public Object resolveArgument(
-            @NonNull MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            @NonNull NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
-    ) throws Exception
-    {
-        try {
-            // Delegate parsing of page, size and sort parameters to Spring
-            Pageable pageable = delegate.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
+    protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
+        // Validate field mappings to ensure they are well-formed and do not contain conflicts
+        fieldMappingsValidator.validate(queryConfig.getFieldMappings());
 
-            // Resolve the @WebQuery annotation to access entity metadata for validation
-            WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
-            // Extract entity class and field mappings from the @WebQuery annotation for validation and pageable building
-            Class<?> entityClass = webQueryAnnotation.entityClass();
-            FieldMapping[] fieldMappings = webQueryAnnotation.fieldMappings();
+        // Create maps for quick lookup of field mappings by both API name and original field name
+        Map<String, FieldMapping> fieldMappingMap = Arrays
+                .stream(queryConfig.getFieldMappings())
+                .collect(Collectors.toMap(FieldMapping::name, mapping -> mapping));
+        Map<String, FieldMapping> originalFieldNameMap = Arrays
+                .stream(queryConfig.getFieldMappings())
+                .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
 
-            // Validate field mappings to ensure they are well-formed and do not contain conflicts
-            annotationUtil.validateFieldMappings(fieldMappings);
+        List<Sort.Order> newOrders = new ArrayList<>();
+        // Validate each requested sort order against entity metadata
+        for(Sort.Order order : pageable.getSort()) {
+            String reqFieldName = order.getProperty();
 
-            // Create maps for quick lookup of field mappings by both API name and original field name
-            Map<String, FieldMapping> fieldMappingMap = Arrays
-                    .stream(fieldMappings)
-                    .collect(Collectors.toMap(FieldMapping::name, mapping -> mapping));
-            Map<String, FieldMapping> originalFieldNameMap = Arrays
-                    .stream(fieldMappings)
-                    .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
+            // Resolve the field on the entity class using the requested field name and field mappings
+            String fieldName = FieldResolvingUtil.resolveEntityPath(
+                    queryConfig.getEntityClass(),
+                    reqFieldName,
+                    fieldMappingMap,
+                    originalFieldNameMap,
+                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, reqFieldName))
+            );
 
-            List<Sort.Order> newOrders = new ArrayList<>();
-            // Validate each requested sort order against entity metadata
-            for(Sort.Order order : pageable.getSort()) {
-                String reqFieldName = order.getProperty();
-
-                // Resolve the field on the entity class using the requested field name and field mappings
-                String fieldName = FieldResolvingUtil.resolveEntityPath(
-                        entityClass,
-                        reqFieldName,
-                        fieldMappingMap,
-                        originalFieldNameMap,
-                        terminalField -> annotationUtil.validateSortableField(terminalField, reqFieldName)
-                );
-
-                newOrders.add(new Sort.Order(order.getDirection(), fieldName));
-            }
-
-            Sort sort = Sort.by(newOrders);
-            // Reconstruct pageable with mapped sort orders
-            if(pageable.isUnpaged()) return Pageable.unpaged(sort);
-            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+            newOrders.add(new Sort.Order(order.getDirection(), fieldName));
         }
-        catch (QueryException ex) {
-            throw ex;
-        }
-        catch (Exception ex) {
-            throw new QueryConfigurationException("Failed to resolve pageable argument", ex);
-        }
+
+        Sort sort = Sort.by(newOrders);
+        // Reconstruct pageable with mapped sort orders
+        if(pageable.isUnpaged()) return Pageable.unpaged(sort);
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     }
 }

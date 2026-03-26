@@ -5,7 +5,6 @@ import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;
@@ -15,8 +14,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import java.lang.reflect.Method;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,7 +23,9 @@ class WebQueryEntityAwarePageableArgumentResolverTest {
 
     private final WebQueryEntityAwarePageableArgumentResolver resolver = new WebQueryEntityAwarePageableArgumentResolver(
             new PageableHandlerMethodArgumentResolver(),
-            new AnnotationUtil(Set.of())
+            true,
+            false,
+            1
     );
 
     @Test
