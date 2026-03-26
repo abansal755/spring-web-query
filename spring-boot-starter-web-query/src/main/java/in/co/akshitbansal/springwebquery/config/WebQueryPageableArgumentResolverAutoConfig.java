@@ -1,7 +1,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

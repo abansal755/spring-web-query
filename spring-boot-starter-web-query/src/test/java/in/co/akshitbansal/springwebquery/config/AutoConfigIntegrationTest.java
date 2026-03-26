@@ -2,10 +2,10 @@ package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.RSQLCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,7 +1,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
