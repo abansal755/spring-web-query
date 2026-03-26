@@ -36,8 +36,6 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      */
     protected final RSQLParser rsqlParser;
 
-    protected final Set<? extends RSQLCustomOperator<?>> customOperators;
-
     /**
      * Custom predicates adapted for {@code rsql-jpa} specification conversion.
      */
@@ -72,8 +70,6 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
                 .concat(defaultOperatorsStream, customOperatorsStream)
                 .collect(Collectors.toCollection(HashSet::new));
         rsqlParser = new RSQLParser(Collections.unmodifiableSet(allowedOperators));
-
-        this.customOperators = Collections.unmodifiableSet(customOperators);
 
         // Convert custom operators to the format which rsql jpa support library accepts
         List<RSQLCustomPredicate<?>> customPredicates = new ArrayList<>();

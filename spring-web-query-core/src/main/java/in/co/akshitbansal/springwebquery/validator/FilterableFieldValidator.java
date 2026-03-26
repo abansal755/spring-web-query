@@ -12,10 +12,7 @@ import lombok.*;
 
 import java.lang.annotation.Annotation;
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,12 +24,16 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
     private final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
 
     public FilterableFieldValidator(Set<? extends RSQLCustomOperator<?>> customOperators) {
-        this.customOperators = customOperators
+        this.customOperators = Collections.unmodifiableMap(customOperators
                 .stream()
                 .collect(Collectors.toMap(
-                        operator -> operator.getClass(),
-                        operator -> operator
-                ));
+                        RSQLCustomOperator::getClass,
+                        operator -> operator,
+                        // Might happen in case multiple instances of an operator are registered
+                        // In that case, we can just keep one of them since they should be functionally equivalent
+                        (existing, duplicate) -> existing,
+                        HashMap::new
+                )));
     }
 
     /**
