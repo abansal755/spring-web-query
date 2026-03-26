@@ -37,6 +37,9 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
      */
     private final Map<String, String> fieldMappings;
 
+    /**
+     * Resolver used to translate DTO-facing selectors into entity paths.
+     */
     private final FieldResolver fieldResolver;
 
     /**

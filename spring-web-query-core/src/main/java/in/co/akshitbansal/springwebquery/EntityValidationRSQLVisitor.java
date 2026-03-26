@@ -45,6 +45,9 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
      */
     private final Map<String, FieldMapping> originalFieldMappings;
 
+    /**
+     * Resolver used to apply field mappings and resolve entity-facing selectors.
+     */
     private final FieldResolver fieldResolver;
 
     /**
