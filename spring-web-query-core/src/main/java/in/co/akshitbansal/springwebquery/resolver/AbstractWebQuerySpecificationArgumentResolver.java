@@ -41,6 +41,10 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      */
     protected final List<RSQLCustomPredicate<?>> customPredicates;
 
+    /**
+     * Registered custom operators keyed by implementation class for downstream
+     * validation visitors.
+     */
     protected final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
 
     /**
@@ -48,7 +52,6 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      *
      * @param defaultOperators built-in operators accepted by the parser
      * @param customOperators custom operators to register for parsing and predicate generation
-     * @param annotationUtil utility for annotation resolution and validation
      * @param globalAllowAndOperator fallback AND-node policy used when {@code @WebQuery} defers to global settings
      * @param globalAllowOrOperator fallback OR-node policy used when {@code @WebQuery} defers to global settings
      * @param globalMaxASTDepth fallback maximum AST depth used when {@code @WebQuery} defers to global settings
@@ -132,5 +135,13 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
         }
     }
 
+    /**
+     * Resolves a validated specification for the supplied raw filter value and
+     * effective query configuration.
+     *
+     * @param queryConfig effective query configuration derived from {@link WebQuery}
+     * @param filter raw RSQL filter expression from the request
+     * @return resolved specification
+     */
     protected abstract Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter);
 }

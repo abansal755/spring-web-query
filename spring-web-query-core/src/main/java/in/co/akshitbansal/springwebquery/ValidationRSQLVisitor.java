@@ -8,20 +8,28 @@ import in.co.akshitbansal.springwebquery.validator.Validator;
 
 import java.text.MessageFormat;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * Base RSQL AST visitor that enforces logical operator and depth constraints.
+ * Base RSQL AST visitor that enforces structural validation rules while
+ * delegating selector-specific checks to subclasses.
  *
- * <p>Subclasses are responsible for validating {@link ComparisonNode} details,
- * while this base class handles:</p>
+ * <p>This base class is responsible for:</p>
  * <ul>
- *     <li>Disallowing AND/OR nodes based on configuration.</li>
+ *     <li>Disallowing logical AND/OR nodes based on configuration.</li>
  *     <li>Ensuring the AST does not exceed the configured maximum depth.</li>
+ *     <li>Providing access to a reusable validator for filterable terminal fields.</li>
  * </ul>
+ *
+ * <p>Concrete subclasses validate individual {@link ComparisonNode} selectors
+ * against either entity fields or DTO fields and invoke the shared
+ * {@link #filterableFieldValidator} as needed.</p>
  */
 public abstract class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 
+    /**
+     * Validator used by subclasses to enforce {@code @RSQLFilterable}
+     * constraints on resolved terminal fields.
+     */
     protected final Validator<FilterableFieldValidator.Field> filterableFieldValidator;
 
     /**
@@ -39,6 +47,15 @@ public abstract class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMet
      */
     private final int maxDepth;
 
+    /**
+     * Creates a validation visitor with the supplied structural limits and
+     * custom operator registry.
+     *
+     * @param customOperators registered custom operators keyed by implementation class
+     * @param andNodeAllowed whether logical AND nodes are allowed
+     * @param orNodeAllowed whether logical OR nodes are allowed
+     * @param maxDepth maximum allowed AST depth
+     */
     public ValidationRSQLVisitor(
             Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,

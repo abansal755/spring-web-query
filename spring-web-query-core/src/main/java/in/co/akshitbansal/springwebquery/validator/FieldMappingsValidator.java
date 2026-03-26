@@ -11,6 +11,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Validator for {@link FieldMapping} declarations supplied via {@link WebQuery}.
+ *
+ * <p>This validator ensures that aliases are unique and that no two aliases map
+ * to the same underlying entity field.</p>
+ */
 public class FieldMappingsValidator implements Validator<FieldMapping[]> {
 
     /**

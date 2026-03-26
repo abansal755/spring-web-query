@@ -8,6 +8,14 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import java.lang.reflect.Method;
 
+/**
+ * Common base for {@link org.springframework.web.method.support.HandlerMethodArgumentResolver}
+ * implementations that participate in {@link WebQuery}-driven request parsing.
+ *
+ * <p>This class centralizes support detection for controller methods annotated
+ * with {@link WebQuery} and computes the effective query configuration by
+ * combining method-level annotation values with global defaults.</p>
+ */
 @RequiredArgsConstructor
 public abstract class AbstractWebQueryResolver implements HandlerMethodArgumentResolver {
 
@@ -89,9 +97,14 @@ public abstract class AbstractWebQueryResolver implements HandlerMethodArgumentR
          */
         private final Class<?> dtoClass;
 
-        //TODO: Enforce immutability
+        /**
+         * Field mappings declared on {@link WebQuery} for alias-based selector resolution.
+         */
         private final FieldMapping[] fieldMappings;
 
+        /**
+         * Request parameter name used to read the raw RSQL filter expression.
+         */
         private final String filterParamName;
 
         /**

@@ -13,6 +13,14 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+/**
+ * Base resolver for {@link Pageable} parameters participating in
+ * {@link WebQuery}-aware sorting.
+ *
+ * <p>This class delegates standard page/size parsing to Spring's
+ * {@link PageableHandlerMethodArgumentResolver} and lets subclasses validate
+ * and remap sort properties against either entity or DTO metadata.</p>
+ */
 public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 
     /**
@@ -20,8 +28,19 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
      */
     protected final PageableHandlerMethodArgumentResolver delegate;
 
+    /**
+     * Validator used to enforce {@code @Sortable} constraints on resolved sort fields.
+     */
     protected final Validator<SortableFieldValidator.Field> sortableFieldValidator;
 
+    /**
+     * Creates a pageable resolver base with shared global defaults.
+     *
+     * @param delegate Spring's pageable resolver used for base pagination parsing
+     * @param globalAllowAndOperator global fallback for logical AND allowance
+     * @param globalAllowOrOperator global fallback for logical OR allowance
+     * @param globalMaxASTDepth global fallback for maximum AST depth
+     */
     public AbstractWebQueryPageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
             boolean globalAllowAndOperator,
@@ -65,5 +84,12 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
         }
     }
 
+    /**
+     * Validates and remaps pageable sorting according to the effective query configuration.
+     *
+     * @param pageable pageable parsed from the request
+     * @param queryConfig effective query configuration derived from {@link WebQuery}
+     * @return pageable with validated and possibly remapped sort orders
+     */
     protected abstract Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig);
 }

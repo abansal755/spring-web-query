@@ -31,7 +31,6 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
      *
      * @param defaultOperators built-in operators accepted in RSQL expressions
      * @param customOperators custom operators supported by parser and predicates
-     * @param annotationUtil utility for resolving annotations and configuration checks
      * @param globalAllowAndOperator whether AND nodes are allowed by default when {@code @WebQuery}
      *                               does not override that behavior
      * @param globalAllowOrOperator whether OR nodes are allowed by default when {@code @WebQuery}
@@ -63,6 +62,14 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
         return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() != void.class;
     }
 
+    /**
+     * Parses, validates, and converts a DTO-oriented RSQL filter into a JPA
+     * {@link Specification}.
+     *
+     * @param queryConfig effective query configuration for the current request
+     * @param filter raw RSQL filter string from the request
+     * @return resolved specification for the validated filter
+     */
     @Override
     protected Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter) {
         try {

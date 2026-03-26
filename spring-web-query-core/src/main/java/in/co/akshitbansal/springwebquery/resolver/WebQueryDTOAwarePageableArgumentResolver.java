@@ -23,6 +23,14 @@ import java.util.List;
  */
 public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPageableArgumentResolver {
 
+    /**
+     * Creates a DTO-aware pageable resolver.
+     *
+     * @param delegate Spring's pageable resolver used for page and size parsing
+     * @param globalAllowAndOperator global fallback for logical AND allowance
+     * @param globalAllowOrOperator global fallback for logical OR allowance
+     * @param globalMaxASTDepth global fallback for maximum AST depth
+     */
     public WebQueryDTOAwarePageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
             boolean globalAllowAndOperator,
@@ -46,6 +54,13 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
         return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() != void.class;
     }
 
+    /**
+     * Validates DTO-facing sort properties and maps them to entity paths.
+     *
+     * @param pageable pageable parsed from the request
+     * @param queryConfig effective query configuration for the current request
+     * @return pageable with validated entity sort paths derived from DTO selectors
+     */
     @Override
     protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
         List<Sort.Order> newOrders = new ArrayList<>();

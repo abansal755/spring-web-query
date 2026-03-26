@@ -19,6 +19,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Validator that enforces {@code @RSQLFilterable} constraints for a resolved
+ * terminal field and requested comparison operator.
+ *
+ * <p>This validator supports direct, repeatable, and composed filterability
+ * annotations and can resolve referenced custom operators from a prebuilt
+ * registry.</p>
+ */
 @RequiredArgsConstructor
 public class FilterableFieldValidator implements Validator<FilterableFieldValidator.Field> {
 
@@ -142,12 +150,21 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
     @ToString
     public static class Field {
 
+        /**
+         * Reflected terminal field being validated.
+         */
         @NonNull
         private final java.lang.reflect.Field field;
 
+        /**
+         * Comparison operator requested for the selector.
+         */
         @NonNull
         private final ComparisonOperator operator;
 
+        /**
+         * Original selector path from the incoming request.
+         */
         @NonNull
         private final String fieldPath;
     }

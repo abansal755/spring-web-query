@@ -19,31 +19,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * RSQL AST visitor that validates RSQL queries against a given entity class.
- * <p>
- * This visitor traverses the Abstract Syntax Tree (AST) produced by the RSQL parser
- * and ensures that:
- * <ul>
- *     <li>All fields referenced in the query exist on the entity class</li>
- *     <li>Only fields annotated with {@link RSQLFilterable} are filterable</li>
- *     <li>Only allowed RSQL operators (as defined in the {@link RSQLFilterable} annotation) are used</li>
- * </ul>
- * <p>
- * If any violation is detected, a {@link QueryException} is thrown describing the
- * invalid field or operator.
- * </p>
+ * RSQL AST visitor that validates selectors directly against an entity model.
  *
- * <p><b>Usage example:</b></p>
- * <pre>{@code
- * Node root = new RSQLParser().parse("status==ACTIVE;age>30");
- * EntityValidationRSQLVisitor visitor =
- *         new EntityValidationRSQLVisitor(User.class, new FieldMapping[0], annotationUtil, true, false, 1);
- * root.accept(visitor, NodeMetadata.of(0));
- * }</pre>
+ * <p>This visitor resolves request selectors to entity fields, applies any
+ * configured {@link FieldMapping} aliases, and ensures that the resolved
+ * terminal field is filterable for the requested operator.</p>
  *
- * <p>This visitor is typically used in combination with
- * {@link io.github.perplexhub.rsql.RSQLJPASupport} to ensure that only valid queries are converted into
- * Spring Data JPA {@link org.springframework.data.jpa.domain.Specification}s.</p>
+ * <p>It is typically used by entity-aware specification resolvers before
+ * converting a parsed RSQL tree into a Spring Data JPA
+ * {@link org.springframework.data.jpa.domain.Specification}.</p>
  *
  * @see RSQLFilterable
  * @see RSQLDefaultOperator
@@ -71,7 +55,7 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
      *
      * @param entityClass    the entity class to validate against
      * @param fieldMappings  array of field mappings (aliases) to consider
-     * @param annotationUtil helper for annotation resolution and operator checks
+     * @param customOperators registered custom operators keyed by implementation class
      * @param andNodeAllowed whether logical AND operator is allowed
      * @param orNodeAllowed whether logical OR operator is allowed
      * @param maxDepth maximum allowed depth for the RSQL AST
@@ -92,7 +76,7 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
                 .collect(Collectors.toMap(
                         FieldMapping::name,
                         mapping -> mapping,
-                        // Should not happen due to validation in AnnotationUtil
+                        // Should not happen because mappings are validated before visitor construction
                         (existing, duplicate) -> existing,
                         HashMap::new
                 )));
@@ -102,7 +86,7 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
                 .collect(Collectors.toMap(
                         FieldMapping::field,
                         mapping -> mapping,
-                        // Should not happen due to validation in AnnotationUtil
+                        // Should not happen because mappings are validated before visitor construction
                         (existing, duplicate) -> existing,
                         HashMap::new
                 )));

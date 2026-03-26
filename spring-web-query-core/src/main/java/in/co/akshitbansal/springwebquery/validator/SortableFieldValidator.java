@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.text.MessageFormat;
 
+/**
+ * Validator that ensures a resolved terminal field is explicitly marked as sortable.
+ */
 public class SortableFieldValidator implements Validator<SortableFieldValidator.Field> {
 
     /**
@@ -32,9 +35,15 @@ public class SortableFieldValidator implements Validator<SortableFieldValidator.
     @ToString
     public static class Field {
 
+        /**
+         * Reflected terminal field being validated.
+         */
         @NonNull
         private final java.lang.reflect.Field field;
 
+        /**
+         * Original selector path from the incoming request.
+         */
         @NonNull
         private final String fieldPath;
     }

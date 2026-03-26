@@ -51,7 +51,7 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
      *
      * @param entityClass target entity type used for final path validation
      * @param dtoClass DTO type used to validate incoming selector paths
-     * @param annotationUtil helper for resolving allowed operators from annotations
+     * @param customOperators registered custom operators keyed by implementation class
      * @param andNodeAllowed whether logical AND operator is allowed
      * @param orNodeAllowed whether logical OR operator is allowed
      * @param maxDepth maximum allowed depth for the RSQL AST
