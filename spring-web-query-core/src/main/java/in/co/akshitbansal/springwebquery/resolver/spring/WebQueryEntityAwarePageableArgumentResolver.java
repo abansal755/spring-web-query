@@ -86,17 +86,18 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
                 .stream(queryConfig.getFieldMappings())
                 .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
 
+        FieldResolver fieldResolver = new EntityAwareFieldResolver(
+                queryConfig.getEntityClass(),
+                fieldMappingMap,
+                originalFieldNameMap
+        );
+
         List<Sort.Order> newOrders = new ArrayList<>();
         // Validate each requested sort order against entity metadata
         for(Sort.Order order : pageable.getSort()) {
             String reqFieldName = order.getProperty();
 
             // Resolve the field on the entity class using the requested field name and field mappings
-            FieldResolver fieldResolver = new EntityAwareFieldResolver(
-                    queryConfig.getEntityClass(),
-                    fieldMappingMap,
-                    originalFieldNameMap
-            );
             String fieldName = fieldResolver.resolvePathAndValidateTerminalField(
                     reqFieldName,
                     terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, reqFieldName))

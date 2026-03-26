@@ -64,14 +64,15 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
      */
     @Override
     protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
+        FieldResolver fieldResolver = new DTOAwareFieldResolver(
+                queryConfig.getEntityClass(),
+                queryConfig.getDtoClass()
+        );
+
         List<Sort.Order> newOrders = new ArrayList<>();
         for(Sort.Order order : pageable.getSort()) {
             String dtoPath = order.getProperty();
             // Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
-            FieldResolver fieldResolver = new DTOAwareFieldResolver(
-                    queryConfig.getEntityClass(),
-                    queryConfig.getDtoClass()
-            );
             String entityPath = fieldResolver.resolvePathAndValidateTerminalField(dtoPath,
                     terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, dtoPath))
             );
