@@ -6,7 +6,6 @@ import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwarePageableArgume
 import in.co.akshitbansal.springwebquery.resolver.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,7 +54,6 @@ class AutoConfigIntegrationTest {
     void beansAreRegistered() {
         assertNotNull(context.getBean(PageableHandlerMethodArgumentResolverCustomizer.class));
         assertNotNull(context.getBean(RSQLCustomOperatorsConfigurer.class));
-        assertNotNull(context.getBean(AnnotationUtil.class));
         assertNotNull(context.getBean(WebQueryEntityAwarePageableArgumentResolver.class));
         assertNotNull(context.getBean(WebQueryDTOAwarePageableArgumentResolver.class));
         assertNotNull(context.getBean(WebQueryEntityAwareSpecificationArgumentResolver.class));
