@@ -5,8 +5,6 @@ import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.DTOValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.NodeMetadata;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
@@ -16,11 +14,7 @@ import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.web.bind.support.WebDataBinderFactory;
-import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.lang.reflect.Method;
 import java.util.Set;
 
 /**
@@ -31,7 +25,7 @@ import java.util.Set;
  * Incoming RSQL selectors are validated against DTO fields and then translated
  * to entity paths before the specification is produced.</p>
  */
-public class WebQueryDTOAwareSpecificationArgumentResolver extends WebQuerySpecificationArgumentResolver {
+public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQuerySpecificationArgumentResolver {
 
     /**
      * Creates a DTO-aware RSQL specification resolver.
@@ -65,43 +59,15 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends WebQuerySpeci
      *         method-level {@link WebQuery} and a configured DTO class
      */
     @Override
-    public boolean supportsParameter(MethodParameter parameter) {
-        if(!Specification.class.isAssignableFrom(parameter.getParameterType())) return false;
-        Method controlllerMethod = parameter.getMethod();
-        if(controlllerMethod == null) return false;
-        WebQuery webQueryAnnotation = controlllerMethod.getAnnotation(WebQuery.class);
-        if(webQueryAnnotation == null) return false;
-        return webQueryAnnotation.dtoClass() != void.class;
+    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+        if(!super.supportsParameter(parameter)) return false;
+        // supportsParameter in superclass checks for method-level @WebQuery presence, so we can safely assume that here
+        return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() != void.class;
     }
 
-    /**
-     * Resolves a {@link Specification} from the configured RSQL request parameter.
-     *
-     * @param parameter controller method parameter being resolved
-     * @param mavContainer current MVC container
-     * @param webRequest current request
-     * @param binderFactory binder factory
-     * @return resolved specification, or {@link Specification#unrestricted()} when no filter exists
-     * @throws Exception when resolution fails
-     */
     @Override
-    public Object resolveArgument(
-            @NonNull MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            @NonNull NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
-    ) throws Exception
-    {
+    protected Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter) {
         try {
-            // Retrieve the @WebQuery annotation from the method parameter to access configuration
-            WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
-            // Extract relevant configuration from the annotation
-            QueryConfiguration queryConfig = getQueryConfiguration(webQueryAnnotation);
-
-            // Extract the RSQL query string from the request using the parameter name defined in @WebQuery
-            String filter = webRequest.getParameter(webQueryAnnotation.filterParamName());
-            if(filter == null || filter.isBlank()) return Specification.unrestricted();
-
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);
             // Validate the parsed AST against the target DTO and its @RSQLFilterable fields, while also building field mappings from DTO to entity
@@ -130,12 +96,6 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends WebQuerySpeci
         }
         catch (RSQLParserException ex) {
             throw new QueryValidationException("Unable to parse RSQL query param", ex);
-        }
-        catch (QueryException ex) {
-            throw ex;
-        }
-        catch (Exception ex) {
-            throw new QueryConfigurationException("Failed to resolve RSQL Specification argument", ex);
         }
     }
 }

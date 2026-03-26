@@ -3,12 +3,19 @@ package in.co.akshitbansal.springwebquery.resolver;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
-import lombok.*;
+import lombok.NonNull;
+import org.springframework.core.MethodParameter;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,7 +30,7 @@ import java.util.stream.Stream;
  * {@link RSQLCustomPredicate} instances accepted by the underlying
  * {@code rsql-jpa} integration.</p>
  */
-public abstract class WebQuerySpecificationArgumentResolver implements HandlerMethodArgumentResolver {
+public abstract class AbstractWebQuerySpecificationArgumentResolver extends AbstractWebQueryResolver {
 
     /**
      * Parser configured with the allowed default and custom comparison operators.
@@ -41,23 +48,6 @@ public abstract class WebQuerySpecificationArgumentResolver implements HandlerMe
     protected final AnnotationUtil annotationUtil;
 
     /**
-     * Global default applied when {@link WebQuery#allowAndOperator()} is set to
-     * {@link in.co.akshitbansal.springwebquery.annotation.WebQuery.OperatorPolicy#GLOBAL}.
-     */
-    protected final boolean globalAllowAndOperator;
-
-    /**
-     * Global default applied when {@link WebQuery#allowOrOperator()} is set to
-     * {@link in.co.akshitbansal.springwebquery.annotation.WebQuery.OperatorPolicy#GLOBAL}.
-     */
-    protected final boolean globalAllowOrOperator;
-
-    /**
-     * Global default applied when {@link WebQuery#maxASTDepth()} is left at its sentinel value.
-     */
-    protected final int globalMaxASTDepth;
-
-    /**
      * Creates the resolver base with parser and predicate configuration.
      *
      * @param defaultOperators built-in operators accepted by the parser
@@ -67,7 +57,7 @@ public abstract class WebQuerySpecificationArgumentResolver implements HandlerMe
      * @param globalAllowOrOperator fallback OR-node policy used when {@code @WebQuery} defers to global settings
      * @param globalMaxASTDepth fallback maximum AST depth used when {@code @WebQuery} defers to global settings
      */
-    protected WebQuerySpecificationArgumentResolver(
+    protected AbstractWebQuerySpecificationArgumentResolver(
             Set<RSQLDefaultOperator> defaultOperators,
             Set<? extends RSQLCustomOperator<?>> customOperators,
             AnnotationUtil annotationUtil,
@@ -75,6 +65,7 @@ public abstract class WebQuerySpecificationArgumentResolver implements HandlerMe
             boolean globalAllowOrOperator,
             int globalMaxASTDepth
     ) {
+        super(globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
         // Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
         Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
                 .stream()
@@ -99,68 +90,42 @@ public abstract class WebQuerySpecificationArgumentResolver implements HandlerMe
         }
         this.customPredicates = Collections.unmodifiableList(customPredicates);
         this.annotationUtil = annotationUtil;
-
-        this.globalAllowAndOperator = globalAllowAndOperator;
-        this.globalAllowOrOperator = globalAllowOrOperator;
-        this.globalMaxASTDepth = globalMaxASTDepth;
     }
 
-    /**
-     * Resolves the effective query configuration by combining method-level {@link WebQuery}
-     * settings with the configured global fallbacks.
-     *
-     * @param webQueryAnnotation controller method annotation supplying query settings
-     * @return effective configuration used by specification resolvers for validation and parsing
-     */
-    protected QueryConfiguration getQueryConfiguration(@NonNull WebQuery webQueryAnnotation) {
-        Class<?> entityClass = webQueryAnnotation.entityClass();
-        Class<?> dtoClass = webQueryAnnotation.dtoClass();
-        // Determine allowed logical operators based on annotation and global configuration
-        // And Operator
-        WebQuery.OperatorPolicy andNodePolicy = webQueryAnnotation.allowAndOperator();
-        boolean andNodeAllowed;
-        if(andNodePolicy == WebQuery.OperatorPolicy.GLOBAL) andNodeAllowed = globalAllowAndOperator;
-        else andNodeAllowed = andNodePolicy == WebQuery.OperatorPolicy.ALLOW;
-        // Or Operator
-        WebQuery.OperatorPolicy orNodePolicy = webQueryAnnotation.allowOrOperator();
-        boolean orNodeAllowed;
-        if(orNodePolicy == WebQuery.OperatorPolicy.GLOBAL) orNodeAllowed = globalAllowOrOperator;
-        else orNodeAllowed = orNodePolicy == WebQuery.OperatorPolicy.ALLOW;
-        // Maximum AST Depth
-        int maxDepth = webQueryAnnotation.maxASTDepth();
-        if(maxDepth < 0) maxDepth = globalMaxASTDepth;
-        return new QueryConfiguration(entityClass, dtoClass, andNodeAllowed, orNodeAllowed, maxDepth);
+    @Override
+    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+        if(!super.supportsParameter(parameter)) return false;
+        // Only support parameters of type Specification or its subtypes
+        return Specification.class.isAssignableFrom(parameter.getParameterType());
     }
 
-    @Getter
-    @RequiredArgsConstructor
-    @EqualsAndHashCode
-    @ToString
-    protected static class QueryConfiguration {
+    @Override
+    public Specification<?> resolveArgument(
+            @NonNull MethodParameter parameter,
+            ModelAndViewContainer mavContainer,
+            @NonNull NativeWebRequest webRequest,
+            WebDataBinderFactory binderFactory
+    ) {
+        try {
+            // Retrieve the @WebQuery annotation from the method parameter to access configuration
+            WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
+            // Extract relevant configuration from the annotation
+            QueryConfiguration queryConfig = getQueryConfiguration(webQueryAnnotation);
 
-        /**
-         * Target entity used for field validation and specification generation.
-         */
-        private final Class<?> entityClass;
+            // Extract the RSQL query string from the request using the parameter name defined in @WebQuery
+            String filter = webRequest.getParameter(queryConfig.getFilterParamName());
+            if(filter == null || filter.isBlank()) return Specification.unrestricted();
 
-        /**
-         * Optional DTO contract used for API-facing field validation and mapping.
-         */
-        private final Class<?> dtoClass;
-
-        /**
-         * Whether AND nodes are allowed in the effective query configuration.
-         */
-        private final boolean andNodeAllowed;
-
-        /**
-         * Whether OR nodes are allowed in the effective query configuration.
-         */
-        private final boolean orNodeAllowed;
-
-        /**
-         * Maximum AST depth allowed in the effective query configuration.
-         */
-        private final int maxASTDepth;
+            // Delegate to subclass implementation for actual specification resolution, passing the query configuration and raw filter string
+            return resolveSpecification(queryConfig, filter);
+        }
+        catch (QueryException ex) {
+            throw ex;
+        }
+        catch (Exception ex) {
+            throw new QueryConfigurationException("Failed to resolve RSQL Specification argument", ex);
+        }
     }
+
+    protected abstract Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter);
 }
