@@ -3,7 +3,7 @@ package in.co.akshitbansal.springwebquery.validator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import org.jspecify.annotations.NonNull;
+import lombok.NonNull;
 
 import java.text.MessageFormat;
 import java.util.HashMap;
