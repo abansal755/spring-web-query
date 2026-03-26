@@ -8,25 +8,25 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EntityValidationRSQLVisitorTest {
 
-    private final AnnotationUtil annotationUtil = new AnnotationUtil(Set.of(new MockCustomOperator()));
+    private final Map<Class<?>, RSQLCustomOperator<?>> customOperators = Map.of(MockCustomOperator.class, new MockCustomOperator());
 
     @Test
     void allows_filterableFieldWithAllowedOperator() {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{},
-                annotationUtil,
+                customOperators,
                 true,
                 false,
                 1
@@ -40,7 +40,7 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{},
-                annotationUtil,
+                customOperators,
                 true,
                 false,
                 1
@@ -56,7 +56,7 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{},
-                annotationUtil,
+                customOperators,
                 true,
                 false,
                 1
@@ -72,7 +72,7 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{mapping("displayName", "name", false)},
-                annotationUtil,
+                customOperators,
                 true,
                 false,
                 1
@@ -86,7 +86,7 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{mapping("displayName", "name", false)},
-                annotationUtil,
+                customOperators,
                 true,
                 false,
                 1
@@ -103,7 +103,7 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntityWithCustom.class,
                 new FieldMapping[]{},
-                annotationUtil,
+                customOperators,
                 true,
                 false,
                 1
@@ -118,7 +118,7 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntityWithCustom.class,
                 new FieldMapping[]{},
-                new AnnotationUtil(Set.of()),
+                Map.of(),
                 true,
                 false,
                 1
@@ -134,7 +134,7 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{},
-                annotationUtil,
+                customOperators,
                 true,
                 false,
                 1
@@ -150,7 +150,7 @@ class EntityValidationRSQLVisitorTest {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
                 new FieldMapping[]{},
-                annotationUtil,
+                customOperators,
                 true,
                 true,
                 0

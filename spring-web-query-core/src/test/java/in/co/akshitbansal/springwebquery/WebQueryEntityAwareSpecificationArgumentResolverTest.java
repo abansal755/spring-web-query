@@ -8,7 +8,6 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.WebQueryEntityAwareSpecificationArgumentResolver;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
@@ -31,7 +30,6 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
     private final WebQueryEntityAwareSpecificationArgumentResolver resolver = new WebQueryEntityAwareSpecificationArgumentResolver(
             Set.of(RSQLDefaultOperator.values()),
             Set.of(new MockCustomOperator()),
-            new AnnotationUtil(Set.of(new MockCustomOperator())),
             true,
             false,
             1
