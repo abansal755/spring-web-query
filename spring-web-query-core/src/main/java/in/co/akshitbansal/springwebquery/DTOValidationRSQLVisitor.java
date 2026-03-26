@@ -33,19 +33,11 @@ import java.util.Map;
 public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
 
     /**
-     * Target entity type used for mapped-path validation.
-     */
-    private final Class<?> entityClass;
-
-    /**
-     * DTO type used as the external query contract.
-     */
-    private final Class<?> dtoClass;
-
-    /**
      * Mutable selector map accumulated during traversal.
      */
     private final Map<String, String> fieldMappings;
+
+    private final FieldResolver fieldResolver;
 
     /**
      * Creates a DTO-aware validation visitor.
@@ -66,9 +58,8 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
             int maxDepth
     ) {
         super(customOperators, andNodeAllowed, orNodeAllowed, maxDepth);
-        this.entityClass = entityClass;
-        this.dtoClass = dtoClass;
         this.fieldMappings = new HashMap<>();
+        this.fieldResolver = new DTOAwareFieldResolver(entityClass, dtoClass);
     }
 
     /**
@@ -92,7 +83,6 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
         ComparisonOperator operator = node.getOperator();
 
         // Build the corresponding entity field path from the DTO path and validate the terminal field for filterability
-        FieldResolver fieldResolver = new DTOAwareFieldResolver(entityClass, dtoClass);
         String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
                 dtoPath,
                 terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.Field(terminalField, operator, dtoPath))
