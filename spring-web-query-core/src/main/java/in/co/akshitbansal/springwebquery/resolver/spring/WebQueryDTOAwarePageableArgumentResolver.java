@@ -1,8 +1,9 @@
-package in.co.akshitbansal.springwebquery.resolver;
+package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.resolver.DTOAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
@@ -67,10 +68,11 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
         for(Sort.Order order : pageable.getSort()) {
             String dtoPath = order.getProperty();
             // Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
-            String entityPath = FieldResolvingUtil.buildEntityPathFromDtoPath(
+            FieldResolver fieldResolver = new DTOAwareFieldResolver(
                     queryConfig.getEntityClass(),
-                    queryConfig.getDtoClass(),
-                    dtoPath,
+                    queryConfig.getDtoClass()
+            );
+            String entityPath = fieldResolver.resolvePathAndValidateTerminalField(dtoPath,
                     terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, dtoPath))
             );
             newOrders.add(new Sort.Order(order.getDirection(), entityPath));

@@ -1,0 +1,89 @@
+package in.co.akshitbansal.springwebquery.resolver;
+
+import in.co.akshitbansal.springwebquery.annotation.MapsTo;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
+import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import lombok.RequiredArgsConstructor;
+
+import java.lang.reflect.Field;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * {@link FieldResolver} implementation that treats a DTO type as the public
+ * query contract and maps DTO selector paths to entity selector paths.
+ *
+ * <p>Resolution proceeds in three steps:</p>
+ * <ul>
+ *     <li>Resolve the incoming path against the DTO class structure.</li>
+ *     <li>Validate the terminal DTO field via the supplied callback.</li>
+ *     <li>Translate the DTO path to an entity path using {@link MapsTo}, then
+ *     verify that the resulting entity path exists.</li>
+ * </ul>
+ */
+@RequiredArgsConstructor
+public class DTOAwareFieldResolver implements FieldResolver {
+
+    /**
+     * Entity type used to validate the translated path.
+     */
+    private final Class<?> entityClass;
+
+    /**
+     * DTO type used as the external selector contract.
+     */
+    private final Class<?> dtoClass;
+
+    /**
+     * Resolves a DTO selector path, validates its terminal DTO field, and maps
+     * the selector to the corresponding entity path.
+     *
+     * @param dtoPath selector path from the incoming request
+     * @param terminalFieldValidator callback used to validate the terminal DTO field
+     * @return resolved entity path corresponding to the DTO selector
+     */
+    @Override
+    public String resolvePathAndValidateTerminalField(String dtoPath, Consumer<Field> terminalFieldValidator) {
+        // Resolve the field path in the DTO class
+        List<Field> dtoFields;
+        try {
+            dtoFields = ReflectionUtil.resolveFieldPath(dtoClass, dtoPath);
+        }
+        catch (Exception ex) {
+            throw new QueryFieldValidationException(MessageFormat.format(
+                    "Unknown field ''{0}''", dtoPath
+            ), dtoPath, ex);
+        }
+
+        // Validate the last field in the path using the provided terminal field validator
+        // terminalFieldValidator.accept(dtoFields.getLast());
+        // getLast() was added in Java 21, using get(size-1) for compatibility with earlier versions
+        terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
+
+        // Construct the corresponding entity field path using the @MapsTo annotation if present
+        List<String> entityPathSegments = new ArrayList<>();
+        for(Field dtoField : dtoFields) {
+            MapsTo mapsToAnnotation = dtoField.getAnnotation(MapsTo.class);
+            if(mapsToAnnotation == null) entityPathSegments.add(dtoField.getName());
+            else {
+                if(mapsToAnnotation.absolute()) entityPathSegments.clear();
+                entityPathSegments.add(mapsToAnnotation.value());
+            }
+        }
+        String entityPath = String.join(".", entityPathSegments);
+        // Validate that the constructed entity field path is resolvable in the entity class
+        try {
+            ReflectionUtil.resolveField(entityClass, entityPath);
+        }
+        catch (Exception ex) {
+            throw new QueryConfigurationException(MessageFormat.format(
+                    "Unable to resolve entity field path ''{0}'' mapped from DTO path ''{1}''", entityPath, dtoPath
+            ), ex);
+        }
+
+        return entityPath;
+    }
+}

@@ -1,15 +1,15 @@
-package in.co.akshitbansal.springwebquery;
+package in.co.akshitbansal.springwebquery.ast;
 
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
+import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 import java.util.Arrays;
@@ -36,11 +36,6 @@ import java.util.stream.Collectors;
 public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
 
     /**
-     * The entity class against which RSQL queries are validated.
-     */
-    private final Class<?> entityClass;
-
-    /**
      * Map from alias field names to their corresponding {@link FieldMapping}.
      */
     private final Map<String, FieldMapping> fieldMappings;
@@ -49,6 +44,11 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
      * Map from original entity field names to their corresponding {@link FieldMapping}.
      */
     private final Map<String, FieldMapping> originalFieldMappings;
+
+    /**
+     * Resolver used to apply field mappings and resolve entity-facing selectors.
+     */
+    private final FieldResolver fieldResolver;
 
     /**
      * Creates a new entity validation visitor with the specified configuration.
@@ -69,7 +69,6 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
             int maxDepth
     ) {
         super(customOperators, andNodeAllowed, orNodeAllowed, maxDepth);
-        this.entityClass = entityClass;
         // Map from name to FieldMapping
         this.fieldMappings = Collections.unmodifiableMap(Arrays
                 .stream(fieldMappings)
@@ -90,6 +89,7 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
                         (existing, duplicate) -> existing,
                         HashMap::new
                 )));
+        this.fieldResolver = new EntityAwareFieldResolver(entityClass, this.fieldMappings, this.originalFieldMappings);
     }
 
     /**
@@ -106,11 +106,8 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
         ComparisonOperator operator = node.getOperator();
 
         // Resolve the field on the entity class using the requested field name and field mappings
-        FieldResolvingUtil.resolveEntityPath(
-                entityClass,
+        fieldResolver.resolvePathAndValidateTerminalField(
                 reqFieldName,
-                fieldMappings,
-                originalFieldMappings,
                 terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.Field(terminalField, operator, reqFieldName))
         );
     }
