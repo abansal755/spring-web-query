@@ -2,7 +2,6 @@ package in.co.akshitbansal.springwebquery.resolver;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
@@ -28,12 +27,11 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
 
     public WebQueryEntityAwarePageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
-            AnnotationUtil annotationUtil,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth
     ) {
-        super(delegate, annotationUtil, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        super(delegate, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
     }
 
     /**
@@ -53,7 +51,7 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
     @Override
     protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
         // Validate field mappings to ensure they are well-formed and do not contain conflicts
-        annotationUtil.validateFieldMappings(queryConfig.getFieldMappings());
+        validateFieldMappings(queryConfig.getFieldMappings());
 
         // Create maps for quick lookup of field mappings by both API name and original field name
         Map<String, FieldMapping> fieldMappingMap = Arrays
@@ -74,7 +72,7 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
                     reqFieldName,
                     fieldMappingMap,
                     originalFieldNameMap,
-                    terminalField -> annotationUtil.validateSortableField(terminalField, reqFieldName)
+                    terminalField -> validateSortableField(terminalField, reqFieldName)
             );
 
             newOrders.add(new Sort.Order(order.getDirection(), fieldName));

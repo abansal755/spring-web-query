@@ -2,7 +2,6 @@ package in.co.akshitbansal.springwebquery.resolver;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
@@ -25,12 +24,11 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
 
     public WebQueryDTOAwarePageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
-            AnnotationUtil annotationUtil,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth
     ) {
-        super(delegate, annotationUtil, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        super(delegate, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
     }
 
     /**
@@ -57,7 +55,7 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
                     queryConfig.getEntityClass(),
                     queryConfig.getDtoClass(),
                     dtoPath,
-                    terminalField -> annotationUtil.validateSortableField(terminalField, dtoPath)
+                    terminalField -> validateSortableField(terminalField, dtoPath)
             );
             newOrders.add(new Sort.Order(order.getDirection(), entityPath));
         }

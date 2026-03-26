@@ -9,7 +9,6 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
@@ -48,12 +47,11 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
     public WebQueryEntityAwareSpecificationArgumentResolver(
             Set<RSQLDefaultOperator> defaultOperators,
             Set<? extends RSQLCustomOperator<?>> customOperators,
-            AnnotationUtil annotationUtil,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth
     ) {
-        super(defaultOperators, customOperators, annotationUtil, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        super(defaultOperators, customOperators, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
     }
 
     /**
@@ -73,13 +71,16 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
     @Override
     protected Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter) {
         try {
+            // Validate field mappings to ensure they are well-formed and do not contain conflicts
+            validateFieldMappings(queryConfig.getFieldMappings());
+
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);
             // Validate the parsed AST against the target entity and its @RSQLFilterable fields
             EntityValidationRSQLVisitor validationVisitor = new EntityValidationRSQLVisitor(
                     queryConfig.getEntityClass(),
                     queryConfig.getFieldMappings(),
-                    annotationUtil,
+                    customOperators,
                     queryConfig.isAndNodeAllowed(),
                     queryConfig.isOrNodeAllowed(),
                     queryConfig.getMaxASTDepth()

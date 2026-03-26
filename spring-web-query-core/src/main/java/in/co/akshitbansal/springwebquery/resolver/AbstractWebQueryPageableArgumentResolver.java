@@ -1,9 +1,10 @@
 package in.co.akshitbansal.springwebquery.resolver;
 
+import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
+import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import java.lang.reflect.Field;
+import java.text.MessageFormat;
+
 public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 
     /**
@@ -19,21 +23,14 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
      */
     protected final PageableHandlerMethodArgumentResolver delegate;
 
-    /**
-     * Shared annotation utility dependency for resolver-level validation concerns.
-     */
-    protected final AnnotationUtil annotationUtil;
-
     public AbstractWebQueryPageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
-            AnnotationUtil annotationUtil,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth
     ) {
         super(globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
         this.delegate = delegate;
-        this.annotationUtil = annotationUtil;
     }
 
     @Override
@@ -69,4 +66,19 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
     }
 
     protected abstract Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig);
+
+    /**
+     * Validates that the requested field is explicitly marked as sortable.
+     *
+     * @param field field being targeted by sort selector
+     * @param fieldPath original selector path from the request
+     * @throws QueryFieldValidationException if sorting is not allowed for the field
+     */
+    protected void validateSortableField(@NonNull Field field, String fieldPath) {
+        if(!field.isAnnotationPresent(Sortable.class)) {
+            throw new QueryFieldValidationException(MessageFormat.format(
+                    "Sorting is not allowed on the field ''{0}''", fieldPath
+            ), fieldPath);
+        }
+    }
 }

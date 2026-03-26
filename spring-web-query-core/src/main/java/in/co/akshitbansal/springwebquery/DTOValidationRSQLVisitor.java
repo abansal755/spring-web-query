@@ -3,12 +3,13 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * RSQL AST visitor that validates filters against a DTO contract and maps DTO
@@ -46,11 +47,6 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
     private final Map<String, String> fieldMappings;
 
     /**
-     * Helper used to resolve allowed operators from annotation metadata.
-     */
-    private final AnnotationUtil annotationUtil;
-
-    /**
      * Creates a DTO-aware validation visitor.
      *
      * @param entityClass target entity type used for final path validation
@@ -63,16 +59,15 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
     public DTOValidationRSQLVisitor(
             Class<?> entityClass,
             Class<?> dtoClass,
-            AnnotationUtil annotationUtil,
+            Set<? extends RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,
             int maxDepth
     ) {
-        super(andNodeAllowed, orNodeAllowed, maxDepth);
+        super(customOperators, andNodeAllowed, orNodeAllowed, maxDepth);
         this.entityClass = entityClass;
         this.dtoClass = dtoClass;
         this.fieldMappings = new HashMap<>();
-        this.annotationUtil = annotationUtil;
     }
 
     /**
@@ -100,7 +95,7 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
                 entityClass,
                 dtoClass,
                 dtoPath,
-                terminalField -> annotationUtil.validateFilterableField(terminalField, operator, dtoPath)
+                terminalField -> validateFilterableField(terminalField, operator, dtoPath)
         );
 
         // Store the mapping from DTO path to entity path for later use during query construction

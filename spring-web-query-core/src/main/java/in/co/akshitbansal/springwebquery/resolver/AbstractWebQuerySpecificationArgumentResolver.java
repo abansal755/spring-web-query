@@ -7,7 +7,6 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.NonNull;
 import org.springframework.core.MethodParameter;
@@ -37,15 +36,12 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      */
     protected final RSQLParser rsqlParser;
 
+    protected final Set<? extends RSQLCustomOperator<?>> customOperators;
+
     /**
      * Custom predicates adapted for {@code rsql-jpa} specification conversion.
      */
     protected final List<RSQLCustomPredicate<?>> customPredicates;
-
-    /**
-     * Utility for annotation resolution and validation support in subclasses.
-     */
-    protected final AnnotationUtil annotationUtil;
 
     /**
      * Creates the resolver base with parser and predicate configuration.
@@ -60,7 +56,6 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
     protected AbstractWebQuerySpecificationArgumentResolver(
             Set<RSQLDefaultOperator> defaultOperators,
             Set<? extends RSQLCustomOperator<?>> customOperators,
-            AnnotationUtil annotationUtil,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth
@@ -78,6 +73,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
                 .collect(Collectors.toCollection(HashSet::new));
         rsqlParser = new RSQLParser(Collections.unmodifiableSet(allowedOperators));
 
+        this.customOperators = Collections.unmodifiableSet(customOperators);
+
         // Convert custom operators to the format which rsql jpa support library accepts
         List<RSQLCustomPredicate<?>> customPredicates = new ArrayList<>();
         for(RSQLCustomOperator<?> operator : customOperators) {
@@ -89,7 +86,6 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
             customPredicates.add(predicate);
         }
         this.customPredicates = Collections.unmodifiableList(customPredicates);
-        this.annotationUtil = annotationUtil;
     }
 
     @Override

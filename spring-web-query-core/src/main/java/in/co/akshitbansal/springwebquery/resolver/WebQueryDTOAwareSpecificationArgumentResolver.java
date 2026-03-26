@@ -8,7 +8,6 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.util.AnnotationUtil;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import lombok.NonNull;
@@ -43,12 +42,11 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
     public WebQueryDTOAwareSpecificationArgumentResolver(
             Set<RSQLDefaultOperator> defaultOperators,
             Set<? extends RSQLCustomOperator<?>> customOperators,
-            AnnotationUtil annotationUtil,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth
     ) {
-        super(defaultOperators, customOperators, annotationUtil, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+        super(defaultOperators, customOperators, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
     }
 
     /**
@@ -74,7 +72,7 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
             DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(
                     queryConfig.getEntityClass(),
                     queryConfig.getDtoClass(),
-                    annotationUtil,
+                    customOperators,
                     queryConfig.isAndNodeAllowed(),
                     queryConfig.isOrNodeAllowed(),
                     queryConfig.getMaxASTDepth()
