@@ -7,6 +7,7 @@ import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 
 import java.text.MessageFormat;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -39,7 +40,7 @@ public abstract class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMet
     private final int maxDepth;
 
     public ValidationRSQLVisitor(
-            Set<? extends RSQLCustomOperator<?>> customOperators,
+            Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,
             int maxDepth

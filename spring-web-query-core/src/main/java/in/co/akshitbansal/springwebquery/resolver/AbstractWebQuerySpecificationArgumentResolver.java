@@ -41,6 +41,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      */
     protected final List<RSQLCustomPredicate<?>> customPredicates;
 
+    protected final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
+
     /**
      * Creates the resolver base with parser and predicate configuration.
      *
@@ -82,6 +84,17 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
             customPredicates.add(predicate);
         }
         this.customPredicates = Collections.unmodifiableList(customPredicates);
+
+        this.customOperators = Collections.unmodifiableMap(customOperators
+                .stream()
+                .collect(Collectors.toMap(
+                        RSQLCustomOperator::getClass,
+                        operator -> operator,
+                        // Might happen in case multiple instances of an operator are registered
+                        // In that case, we can just keep one of them since they should be functionally equivalent
+                        (existing, duplicate) -> existing,
+                        HashMap::new
+                )));
     }
 
     @Override

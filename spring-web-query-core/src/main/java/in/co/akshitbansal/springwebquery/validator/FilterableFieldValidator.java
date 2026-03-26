@@ -12,29 +12,20 @@ import lombok.*;
 
 import java.lang.annotation.Annotation;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@RequiredArgsConstructor
 public class FilterableFieldValidator implements Validator<FilterableFieldValidator.Field> {
 
     /**
      * Registered custom operators keyed by their implementation class.
      */
     private final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
-
-    public FilterableFieldValidator(Set<? extends RSQLCustomOperator<?>> customOperators) {
-        this.customOperators = Collections.unmodifiableMap(customOperators
-                .stream()
-                .collect(Collectors.toMap(
-                        RSQLCustomOperator::getClass,
-                        operator -> operator,
-                        // Might happen in case multiple instances of an operator are registered
-                        // In that case, we can just keep one of them since they should be functionally equivalent
-                        (existing, duplicate) -> existing,
-                        HashMap::new
-                )));
-    }
 
     /**
      * Validates that a field is marked as filterable and that the requested

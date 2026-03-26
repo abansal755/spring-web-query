@@ -10,7 +10,6 @@ import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * RSQL AST visitor that validates filters against a DTO contract and maps DTO
@@ -60,7 +59,7 @@ public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
     public DTOValidationRSQLVisitor(
             Class<?> entityClass,
             Class<?> dtoClass,
-            Set<? extends RSQLCustomOperator<?>> customOperators,
+            Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,
             int maxDepth

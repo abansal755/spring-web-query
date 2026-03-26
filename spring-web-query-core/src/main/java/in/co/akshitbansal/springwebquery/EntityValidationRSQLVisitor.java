@@ -12,7 +12,10 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.util.FieldResolvingUtil;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -76,7 +79,7 @@ public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
     public EntityValidationRSQLVisitor(
             Class<?> entityClass,
             FieldMapping[] fieldMappings,
-            Set<? extends RSQLCustomOperator<?>> customOperators,
+            Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,
             int maxDepth
