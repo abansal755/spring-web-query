@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 public class DTOAwareFieldResolver implements FieldResolver {
@@ -18,7 +19,7 @@ public class DTOAwareFieldResolver implements FieldResolver {
     private final Class<?> dtoClass;
 
     @Override
-    public FieldResolverResult resolvePathAndGetTerminalField(String dtoPath) {
+    public String resolvePathAndValidateTerminalField(String dtoPath, Consumer<Field> terminalFieldValidator) {
         // Resolve the field path in the DTO class
         List<Field> dtoFields;
         try {
@@ -29,6 +30,12 @@ public class DTOAwareFieldResolver implements FieldResolver {
                     "Unknown field ''{0}''", dtoPath
             ), dtoPath, ex);
         }
+
+        // Validate the last field in the path using the provided terminal field validator
+        // terminalFieldValidator.accept(dtoFields.getLast());
+        // getLast() was added in Java 21, using get(size-1) for compatibility with earlier versions
+        terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
+
 
         // Construct the corresponding entity field path using the @MapsTo annotation if present
         List<String> entityPathSegments = new ArrayList<>();
@@ -51,6 +58,6 @@ public class DTOAwareFieldResolver implements FieldResolver {
             ), ex);
         }
 
-        return new FieldResolverResult(entityPath, dtoFields.get(dtoFields.size() - 1));
+        return entityPath;
     }
 }

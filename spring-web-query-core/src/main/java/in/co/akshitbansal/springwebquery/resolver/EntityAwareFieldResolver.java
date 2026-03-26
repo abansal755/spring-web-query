@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 public class EntityAwareFieldResolver implements FieldResolver {
@@ -17,7 +18,7 @@ public class EntityAwareFieldResolver implements FieldResolver {
     private final Map<String, FieldMapping> originalFieldNameMap;
 
     @Override
-    public FieldResolverResult resolvePathAndGetTerminalField(String reqFieldPath) {
+    public String resolvePathAndValidateTerminalField(String reqFieldPath, Consumer<Field> terminalFieldValidator) {
         String fieldPath = reqFieldPath; // Actual entity path to validate against, may be rewritten if field mapping exists
 
         // If the field name corresponds to an API alias that does not allow using the original field name, reject it
@@ -43,6 +44,8 @@ public class EntityAwareFieldResolver implements FieldResolver {
             ), reqFieldPath, ex);
         }
 
-        return new FieldResolverResult(fieldPath, field);
+        terminalFieldValidator.accept(field);
+
+        return fieldPath;
     }
 }
