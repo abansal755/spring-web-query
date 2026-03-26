@@ -1,4 +1,4 @@
-package in.co.akshitbansal.springwebquery;
+package in.co.akshitbansal.springwebquery.ast;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

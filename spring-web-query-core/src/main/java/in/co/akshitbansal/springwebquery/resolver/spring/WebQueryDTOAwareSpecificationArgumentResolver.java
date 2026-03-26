@@ -2,8 +2,8 @@ package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
-import in.co.akshitbansal.springwebquery.DTOValidationRSQLVisitor;
-import in.co.akshitbansal.springwebquery.NodeMetadata;
+import in.co.akshitbansal.springwebquery.ast.DTOValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;

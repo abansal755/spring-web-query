@@ -2,8 +2,8 @@ package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
-import in.co.akshitbansal.springwebquery.EntityValidationRSQLVisitor;
-import in.co.akshitbansal.springwebquery.NodeMetadata;
+import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;

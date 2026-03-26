@@ -1,7 +1,7 @@
 package in.co.akshitbansal.springwebquery.operator;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import in.co.akshitbansal.springwebquery.EntityValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import io.github.perplexhub.rsql.RSQLOperators;
 import lombok.Getter;
