@@ -3,12 +3,15 @@ package in.co.akshitbansal.springwebquery.resolver;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
-import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * {@link FieldResolver} implementation that resolves selectors directly
@@ -18,7 +21,6 @@ import java.util.function.Consumer;
  * reject access to original field names when a mapping forbids them, and
  * validate the resolved terminal entity field via the supplied callback.</p>
  */
-@RequiredArgsConstructor
 public class EntityAwareFieldResolver implements FieldResolver {
 
     /**
@@ -37,12 +39,49 @@ public class EntityAwareFieldResolver implements FieldResolver {
     private final Map<String, FieldMapping> originalFieldNameMap;
 
     /**
+     * Creates an entity-aware resolver from raw field-mapping declarations.
+     *
+     * <p>The supplied mappings are normalized into immutable lookup maps keyed
+     * by alias name and original entity field path so callers do not need to
+     * precompute resolver-specific structures.</p>
+     *
+     * @param entityClass entity type used for path resolution
+     * @param fieldMappings declared alias mappings from the public API contract
+     */
+    public EntityAwareFieldResolver(Class<?> entityClass, FieldMapping[] fieldMappings) {
+        this.entityClass = entityClass;
+        // Map from name to FieldMapping
+        this.fieldMappingMap = Collections.unmodifiableMap(Arrays
+                .stream(fieldMappings)
+                .collect(Collectors.toMap(
+                        FieldMapping::name,
+                        mapping -> mapping,
+                        // Should not happen because mappings are validated before visitor construction
+                        (existing, duplicate) -> existing,
+                        HashMap::new
+                )));
+        // Map from original field name to FieldMapping
+        this.originalFieldNameMap = Collections.unmodifiableMap(Arrays
+                .stream(fieldMappings)
+                .collect(Collectors.toMap(
+                        FieldMapping::field,
+                        mapping -> mapping,
+                        // Should not happen because mappings are validated before visitor construction
+                        (existing, duplicate) -> existing,
+                        HashMap::new
+                )));
+    }
+
+    /**
      * Resolves an entity-facing selector path, validates the resolved terminal
      * field, and returns the final entity path.
      *
      * @param reqFieldPath selector path from the incoming request
      * @param terminalFieldValidator callback used to validate the resolved terminal field
      * @return resolved entity path after alias translation
+     * @throws QueryFieldValidationException if the request path is blocked by
+     *                                       mapping rules or cannot be
+     *                                       resolved against the entity type
      */
     @Override
     public String resolvePathAndValidateTerminalField(String reqFieldPath, Consumer<Field> terminalFieldValidator) {

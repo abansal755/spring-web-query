@@ -9,14 +9,9 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * RSQL AST visitor that validates selectors directly against an entity model.
@@ -36,21 +31,6 @@ import java.util.stream.Collectors;
 public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 
     /**
-     * Map from alias field names to their corresponding {@link FieldMapping}.
-     */
-    private final Map<String, FieldMapping> fieldMappings;
-
-    /**
-     * Map from original entity field names to their corresponding {@link FieldMapping}.
-     */
-    private final Map<String, FieldMapping> originalFieldMappings;
-
-    /**
-     * Resolver used to apply field mappings and resolve entity-facing selectors.
-     */
-    private final FieldResolver fieldResolver;
-
-    /**
      * Creates a new entity validation visitor with the specified configuration.
      *
      * @param entityClass    the entity class to validate against
@@ -68,35 +48,22 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
             boolean orNodeAllowed,
             int maxDepth
     ) {
-        super(customOperators, andNodeAllowed, orNodeAllowed, maxDepth);
-        // Map from name to FieldMapping
-        this.fieldMappings = Collections.unmodifiableMap(Arrays
-                .stream(fieldMappings)
-                .collect(Collectors.toMap(
-                        FieldMapping::name,
-                        mapping -> mapping,
-                        // Should not happen because mappings are validated before visitor construction
-                        (existing, duplicate) -> existing,
-                        HashMap::new
-                )));
-        // Map from original field name to FieldMapping
-        this.originalFieldMappings = Collections.unmodifiableMap(Arrays
-                .stream(fieldMappings)
-                .collect(Collectors.toMap(
-                        FieldMapping::field,
-                        mapping -> mapping,
-                        // Should not happen because mappings are validated before visitor construction
-                        (existing, duplicate) -> existing,
-                        HashMap::new
-                )));
-        this.fieldResolver = new EntityAwareFieldResolver(entityClass, this.fieldMappings, this.originalFieldMappings);
+        super(
+                new EntityAwareFieldResolver(entityClass, fieldMappings),
+                customOperators,
+                andNodeAllowed,
+                orNodeAllowed,
+                maxDepth
+        );
     }
 
     /**
      * Validates a comparison node against the entity class.
      *
      * @param node the comparison node to validate
-     * @throws QueryValidationException if the field is not allowed or operator is invalid
+     * @throws QueryValidationException if the field is unknown, not allowed,
+     *                                  or the operator is invalid for the
+     *                                  resolved terminal field
      * @throws QueryConfigurationException if the field mapping is misconfigured
      */
     @Override

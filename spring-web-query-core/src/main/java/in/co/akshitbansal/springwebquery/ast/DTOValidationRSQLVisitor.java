@@ -5,7 +5,6 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.resolver.DTOAwareFieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 import java.util.Collections;
@@ -14,7 +13,8 @@ import java.util.Map;
 
 /**
  * RSQL AST visitor that validates filters against a DTO contract and maps DTO
- * property paths to entity property paths.
+ * property paths to entity property paths via a shared
+ * {@link in.co.akshitbansal.springwebquery.resolver.FieldResolver} contract.
  *
  * <p>This visitor is used when {@link in.co.akshitbansal.springwebquery.annotation.WebQuery#dtoClass()}
  * is configured. It enforces that:</p>
@@ -38,11 +38,6 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
     private final Map<String, String> fieldMappings;
 
     /**
-     * Resolver used to translate DTO-facing selectors into entity paths.
-     */
-    private final FieldResolver fieldResolver;
-
-    /**
      * Creates a DTO-aware validation visitor.
      *
      * @param entityClass target entity type used for final path validation
@@ -60,15 +55,20 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
             boolean orNodeAllowed,
             int maxDepth
     ) {
-        super(customOperators, andNodeAllowed, orNodeAllowed, maxDepth);
+        super(
+                new DTOAwareFieldResolver(entityClass, dtoClass),
+                customOperators,
+                andNodeAllowed,
+                orNodeAllowed,
+                maxDepth
+        );
         this.fieldMappings = new HashMap<>();
-        this.fieldResolver = new DTOAwareFieldResolver(entityClass, dtoClass);
     }
 
     /**
      * Returns immutable selector mappings generated while visiting nodes.
      *
-     * @return map from request DTO path to resolved entity path
+     * @return map from request DTO path to resolved entity path collected so far
      */
     public Map<String, String> getFieldMappings() {
         return Collections.unmodifiableMap(fieldMappings);

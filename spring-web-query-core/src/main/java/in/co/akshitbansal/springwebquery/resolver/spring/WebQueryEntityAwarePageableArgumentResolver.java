@@ -15,10 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Entity-based resolver for {@link Pageable} parameters handled via
@@ -26,7 +23,8 @@ import java.util.stream.Collectors;
  *
  * <p>This resolver validates requested sort properties directly against the
  * configured entity class and optional {@link FieldMapping} aliases declared
- * on {@link WebQuery}.</p>
+ * on {@link WebQuery}, delegating alias and original-name handling to
+ * {@link EntityAwareFieldResolver}.</p>
  */
 public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQueryPageableArgumentResolver {
 
@@ -80,18 +78,9 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
         // Validate field mappings to ensure they are well-formed and do not contain conflicts
         fieldMappingsValidator.validate(queryConfig.getFieldMappings());
 
-        // Create maps for quick lookup of field mappings by both API name and original field name
-        Map<String, FieldMapping> fieldMappingMap = Arrays
-                .stream(queryConfig.getFieldMappings())
-                .collect(Collectors.toMap(FieldMapping::name, mapping -> mapping));
-        Map<String, FieldMapping> originalFieldNameMap = Arrays
-                .stream(queryConfig.getFieldMappings())
-                .collect(Collectors.toMap(FieldMapping::field, mapping -> mapping));
-
         FieldResolver fieldResolver = new EntityAwareFieldResolver(
                 queryConfig.getEntityClass(),
-                fieldMappingMap,
-                originalFieldNameMap
+                queryConfig.getFieldMappings()
         );
 
         List<Sort.Order> newOrders = new ArrayList<>();

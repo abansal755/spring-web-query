@@ -3,6 +3,7 @@ package in.co.akshitbansal.springwebquery.ast;
 import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 
@@ -17,6 +18,7 @@ import java.util.Map;
  * <ul>
  *     <li>Disallowing logical AND/OR nodes based on configuration.</li>
  *     <li>Ensuring the AST does not exceed the configured maximum depth.</li>
+ *     <li>Providing access to a resolver for selector-to-entity path translation.</li>
  *     <li>Providing access to a reusable validator for filterable terminal fields.</li>
  * </ul>
  *
@@ -25,6 +27,12 @@ import java.util.Map;
  * {@link #filterableFieldValidator} as needed.</p>
  */
 public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
+
+    /**
+     * Resolver used by subclasses to translate selectors into entity-backed
+     * paths and expose the terminal field for validation.
+     */
+    protected final FieldResolver fieldResolver;
 
     /**
      * Validator used by subclasses to enforce {@code @RSQLFilterable}
@@ -51,17 +59,20 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
      * Creates a validation visitor with the supplied structural limits and
      * custom operator registry.
      *
+     * @param fieldResolver resolver used for selector-path resolution in concrete visitors
      * @param customOperators registered custom operators keyed by implementation class
      * @param andNodeAllowed whether logical AND nodes are allowed
      * @param orNodeAllowed whether logical OR nodes are allowed
      * @param maxDepth maximum allowed AST depth
      */
     protected AbstractValidationRSQLVisitor(
+            FieldResolver fieldResolver,
             Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,
             int maxDepth
     ) {
+        this.fieldResolver = fieldResolver;
         this.filterableFieldValidator = new FilterableFieldValidator(customOperators);
         this.andNodeAllowed = andNodeAllowed;
         this.orNodeAllowed = orNodeAllowed;
