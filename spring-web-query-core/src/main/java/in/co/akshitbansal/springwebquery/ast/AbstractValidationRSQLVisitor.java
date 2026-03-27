@@ -24,7 +24,7 @@ import java.util.Map;
  * against either entity fields or DTO fields and invoke the shared
  * {@link #filterableFieldValidator} as needed.</p>
  */
-public abstract class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
+public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 
     /**
      * Validator used by subclasses to enforce {@code @RSQLFilterable}
@@ -56,7 +56,7 @@ public abstract class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMet
      * @param orNodeAllowed whether logical OR nodes are allowed
      * @param maxDepth maximum allowed AST depth
      */
-    protected ValidationRSQLVisitor(
+    protected AbstractValidationRSQLVisitor(
             Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,

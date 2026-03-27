@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * @see RSQLDefaultOperator
  * @see cz.jirutka.rsql.parser.ast.Node
  */
-public class EntityValidationRSQLVisitor extends ValidationRSQLVisitor {
+public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 
     /**
      * Map from alias field names to their corresponding {@link FieldMapping}.

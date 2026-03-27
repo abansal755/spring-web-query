@@ -30,7 +30,7 @@ import java.util.Map;
  * {@link #getFieldMappings()} so downstream query construction can apply
  * DTO-to-entity path translation.</p>
  */
-public class DTOValidationRSQLVisitor extends ValidationRSQLVisitor {
+public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 
     /**
      * Mutable selector map accumulated during traversal.
