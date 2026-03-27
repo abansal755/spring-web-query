@@ -5,7 +5,7 @@ on:
             version:
                 required: true
                 description: "Release version (example: 0.0.3)"
-            nextMainVersion:
+            next-main-version:
                 required: true
                 description: "Next main version (example: 0.0.4-SNAPSHOT)"
 
@@ -15,123 +15,165 @@ permissions:
 
 jobs:
     release:
+        name: Deploy Packages
         runs-on: ubuntu-latest
-        env:
-            AWS_REGION: ${{ vars.AWS_REGION }}
-        
+        outputs:
+            deployment_id1: ${{ steps.release-core.outputs.deployment_id }}
+            deployment_id2: ${{ steps.release-starter.outputs.deployment_id }}
+
         steps:
             - name: Checkout
               uses: actions/checkout@v6
-            
+              with:
+                  ref: main
+
             - name: Set up JDK 17
               uses: actions/setup-java@v5
               with:
-                distribution: temurin
-                java-version: "17"
-                cache: maven
-                server-id: central
-                server-username: MAVEN_CENTRAL_USERNAME
-                server-password: MAVEN_CENTRAL_PASSWORD
-                gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-                gpg-passphrase: GPG_PASSPHRASE
+                  distribution: temurin
+                  java-version: "17"
+                  cache: maven
+                  server-id: central
+                  server-username: MAVEN_CENTRAL_USERNAME
+                  server-password: MAVEN_CENTRAL_PASSWORD
+                  gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+                  gpg-passphrase: GPG_PASSPHRASE
 
             - name: Configure git identity
               run: |
-                git config user.name "github-actions[bot]"
-                git config user.email "github-actions[bot]@users.noreply.github.com"
-                
-            - name: Create release branch
-              run: |
-                git checkout -b release/${{ inputs.version }}
-            
-            - name: Set versions of packages
-              run: |
-                cd ${{ github.workspace }}/spring-web-query-core
-                mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
 
-                cd ${{ github.workspace }}/spring-boot-starter-web-query
-                mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
-                mvn -ntp versions:use-dep-version -Dincludes=in.co.akshitbansal:spring-web-query-core -DdepVersion=${{ inputs.version }} -DforceVersion=true -DgenerateBackupPoms=false
+            - name: Create release branch
+              run: git checkout -b release/${{ inputs.version }}
+
+            - name: Set core package version
+              working-directory: ${{ github.workspace }}/spring-web-query-core
+              run: mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
+            
+            - name: Set starter package version
+              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
+              run: |
+                  mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
+
+                  mvn -ntp versions:use-dep-version \
+                  -Dincludes=in.co.akshitbansal:spring-web-query-core \
+                  -DdepVersion=${{ inputs.version }} \
+                  -DforceVersion=true -DgenerateBackupPoms=false
 
             - name: Commit changes
               run: |
-                git add spring-web-query-core/pom.xml spring-boot-starter-web-query/pom.xml
-                git commit -m "Changed versions to ${{ inputs.version }}"
+                  git add spring-web-query-core/pom.xml spring-boot-starter-web-query/pom.xml
+                  git commit -m "Changed versions to ${{ inputs.version }}"
 
             - name: Release core package
+              id: release-core
               working-directory: ${{ github.workspace }}/spring-web-query-core
               run: |
-                mvn -B clean deploy -Prelease | tee build.log
-                DEPLOYMENT_ID1=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
-                if [ -z "$DEPLOYMENT_ID1" ]; then
-                  echo "Failed to extract DEPLOYMENT_ID1"
-                  exit 1
-                fi
-                echo "DEPLOYMENT_ID1=$DEPLOYMENT_ID1" >> $GITHUB_ENV
+                  mvn -B clean deploy -Prelease | tee build.log
+                  DEPLOYMENT_ID=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
+                  if [ -z "$DEPLOYMENT_ID" ]; then
+                    echo "Failed to extract DEPLOYMENT_ID"
+                    exit 1
+                  fi
+                  echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
               env:
-                GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-                MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-                MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-                
+                  GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+                  MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+                  MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+
             - name: Release spring-boot-starter
+              id: release-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: |
-                mvn -B clean deploy -Prelease | tee build.log 
-                DEPLOYMENT_ID2=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
-                if [ -z "$DEPLOYMENT_ID2" ]; then
-                  echo "Failed to extract DEPLOYMENT_ID2"
-                  exit 1
-                fi
-                echo "DEPLOYMENT_ID2=$DEPLOYMENT_ID2" >> $GITHUB_ENV
+                  mvn -B clean deploy -Prelease | tee build.log 
+                  DEPLOYMENT_ID=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
+                  if [ -z "$DEPLOYMENT_ID" ]; then
+                    echo "Failed to extract DEPLOYMENT_ID"
+                    exit 1
+                  fi
+                  echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
               env:
-                GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-                MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-                MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+                  GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+                  MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+                  MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
 
             - name: Push commit and tag
               run: |
-                git push origin release/${{ inputs.version }}
-                git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
-                git push origin ${{ inputs.version }}
+                  git push origin release/${{ inputs.version }}
+                  git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
+                  git push origin ${{ inputs.version }}
 
-            - name: Change versions in main branch
+    version-bump:
+        name: Version Bump PR
+        needs: release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+              with:
+                  ref: main
+
+            - name: Set up JDK 17
+              uses: actions/setup-java@v5
+              with:
+                  distribution: temurin
+                  java-version: "17"
+                  cache: maven
+
+            - name: Set core package version
+              working-directory: ${{ github.workspace }}/spring-web-query-core
+              run: mvn -ntp versions:set -DnewVersion=${{ inputs.next-main-version }} -DgenerateBackupPoms=false
+
+            - name: Set starter package version
+              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: |
-                git checkout main
-                
-                cd ${{ github.workspace }}/spring-web-query-core
-                mvn -ntp versions:set -DnewVersion=${{ inputs.nextMainVersion }} -DgenerateBackupPoms=false
+                  mvn -ntp versions:set -DnewVersion=${{ inputs.next-main-version }} -DgenerateBackupPoms=false
 
-                cd ${{ github.workspace }}/spring-boot-starter-web-query
-                mvn -ntp versions:set -DnewVersion=${{ inputs.nextMainVersion }} -DgenerateBackupPoms=false
-                mvn -ntp versions:use-dep-version -Dincludes=in.co.akshitbansal:spring-web-query-core -DdepVersion=${{ inputs.nextMainVersion }} -DforceVersion=true -DgenerateBackupPoms=false
+                  mvn -ntp versions:use-dep-version \
+                  -Dincludes=in.co.akshitbansal:spring-web-query-core \
+                  -DdepVersion=${{ inputs.next-main-version }} \
+                  -DforceVersion=true -DgenerateBackupPoms=false
+
+            - name: Configure git identity
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
 
             - name: Create PR
               uses: peter-evans/create-pull-request@v8
               with:
-                commit-message: Changed versions to ${{ inputs.nextMainVersion }}
-                branch: version-bump-${{ inputs.nextMainVersion }}
-                title: Changed versions to ${{ inputs.nextMainVersion }}
-                body: Automated version changes to ${{ inputs.nextMainVersion }} post [${{ inputs.version }} release](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ inputs.version }})
-                labels: automated,post-release
-                author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
-                committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
-                add-paths: |
-                  spring-web-query-core/pom.xml
-                  spring-boot-starter-web-query/pom.xml
+                  commit-message: Changed versions to ${{ inputs.next-main-version }}
+                  branch: version-bump-${{ inputs.next-main-version }}
+                  title: Changed versions to ${{ inputs.next-main-version }}
+                  body: Automated version changes to ${{ inputs.next-main-version }} post [${{ inputs.version }} release](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ inputs.version }})
+                  labels: automated,post-release
+                  author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+                  committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+                  add-paths: |
+                      spring-web-query-core/pom.xml
+                      spring-boot-starter-web-query/pom.xml
 
+    javadoc-deploy:
+        name: Javadoc Deploy
+        needs: release
+        runs-on: ubuntu-latest
+        env:
+            AWS_REGION: ${{ vars.AWS_REGION }}
+        steps:
             - name: Setup AWS Credentials
               run: |
-                aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-                aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                aws configure set region $AWS_REGION
+                  aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws configure set region $AWS_REGION
 
             - name: Trigger Lambda Function
               run: |
-                aws lambda invoke \
-                --function-name cloudflare_javadoc_deploy \
-                --log-type Tail \
-                --payload "{\"deploymentIds\": [\"$DEPLOYMENT_ID1\", \"$DEPLOYMENT_ID2\"]}" \
-                out \
-                --cli-binary-format raw-in-base64-out \
-                --query 'LogResult' --output text \
-                | base64 --decode
+                  aws lambda invoke \
+                  --function-name cloudflare_javadoc_deploy \
+                  --log-type Tail \
+                  --payload "{\"deploymentIds\": [\"${{ needs.release.outputs.deployment_id1 }}\", \"${{ needs.release.outputs.deployment_id2 }}\"]}" \
+                  out \
+                  --cli-binary-format raw-in-base64-out \
+                  --query 'LogResult' --output text \
+                  | base64 --decode
