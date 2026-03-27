@@ -59,8 +59,6 @@ public class DTOAwareFieldResolver implements FieldResolver {
         }
 
         // Validate the last field in the path using the provided terminal field validator
-        // terminalFieldValidator.accept(dtoFields.getLast());
-        // getLast() was added in Java 21, using get(size-1) for compatibility with earlier versions
         terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
 
         // Construct the corresponding entity field path using the @MapsTo annotation if present

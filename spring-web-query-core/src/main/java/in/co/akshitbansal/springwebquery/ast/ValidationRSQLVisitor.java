@@ -56,7 +56,7 @@ public abstract class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMet
      * @param orNodeAllowed whether logical OR nodes are allowed
      * @param maxDepth maximum allowed AST depth
      */
-    public ValidationRSQLVisitor(
+    protected ValidationRSQLVisitor(
             Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,
@@ -113,9 +113,13 @@ public abstract class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMet
     /**
      * Validates a comparison node for field/operator correctness.
      *
+     * <p>Concrete subclasses implement this hook to resolve selectors against
+     * their active contract type and then invoke {@link #filterableFieldValidator}
+     * on the resolved terminal field.</p>
+     *
      * @param node comparison node to validate
      */
-    abstract protected void validateComparisonNode(ComparisonNode node);
+    protected abstract void validateComparisonNode(ComparisonNode node);
 
     /**
      * Validates logical operator usage and depth constraints for the given node.

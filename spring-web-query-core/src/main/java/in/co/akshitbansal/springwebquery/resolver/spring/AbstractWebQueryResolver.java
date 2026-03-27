@@ -36,22 +36,44 @@ public abstract class AbstractWebQueryResolver implements HandlerMethodArgumentR
      */
     protected final int globalMaxASTDepth;
 
+    /**
+     * Determines whether the supplied method parameter belongs to a controller
+     * method annotated with {@link WebQuery}.
+     *
+     * <p>This base implementation uses {@link #getWebQueryAnnotation(MethodParameter)}
+     * as the single source of truth for annotation lookup. Missing methods or
+     * missing annotations are treated as "not supported" rather than exceptional
+     * conditions so Spring MVC can continue evaluating other resolvers.</p>
+     *
+     * @param parameter method parameter under inspection
+     * @return {@code true} when the declaring method has {@link WebQuery},
+     *         otherwise {@code false}
+     */
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
-        Method controlllerMethod = parameter.getMethod();
-        if(controlllerMethod == null) return false;
-        WebQuery webQueryAnnotation = controlllerMethod.getAnnotation(WebQuery.class);
-        return webQueryAnnotation != null;
+        try {
+            getWebQueryAnnotation(parameter);
+            return true;
+        }
+        catch (RuntimeException e) {
+            // Exceptions are expected when the annotation is missing or the parameter is malformed
+            // so we catch and return false rather than propagating
+            return false;
+        }
     }
 
     /**
      * Resolves the effective query configuration by combining method-level {@link WebQuery}
      * settings with the configured global fallbacks.
      *
-     * @param webQueryAnnotation controller method annotation supplying query settings
+     * @param parameter supported method parameter whose declaring method carries
+     *                  {@link WebQuery}
      * @return effective configuration used by specification resolvers for validation and parsing
      */
-    protected QueryConfiguration getQueryConfiguration(@NonNull WebQuery webQueryAnnotation) {
+    protected QueryConfiguration getQueryConfiguration(@NonNull MethodParameter parameter) {
+        // Only runs successfully if supportsParameter has already returned true
+        // so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
+        WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
         // Determine allowed logical operators based on annotation and global configuration
         // And Operator
         WebQuery.OperatorPolicy andNodePolicy = webQueryAnnotation.allowAndOperator();
@@ -79,6 +101,30 @@ public abstract class AbstractWebQueryResolver implements HandlerMethodArgumentR
                 .orNodeAllowed(orNodeAllowed)
                 .maxASTDepth(maxDepth)
                 .build();
+    }
+
+    /**
+     * Returns the {@link WebQuery} annotation declared on the supplied method parameter's
+     * controller method.
+     *
+     * <p>This helper centralizes annotation lookup for both support detection and
+     * downstream configuration resolution. Callers that need boolean support checks
+     * should use {@link #supportsParameter(MethodParameter)}; this method is for
+     * subclasses that expect a supported parameter and therefore treat missing
+     * method metadata as a programming error.</p>
+     *
+     * @param parameter method parameter whose declaring method is expected to carry
+     *                  {@link WebQuery}
+     * @return resolved {@link WebQuery} annotation
+     * @throws IllegalStateException if the parameter has no declaring method or the
+     *                               declaring method is not annotated with {@link WebQuery}
+     */
+    protected WebQuery getWebQueryAnnotation(@NonNull MethodParameter parameter) {
+        Method method = parameter.getMethod();
+        if(method == null) throw new IllegalStateException("MethodParameter does not have an associated method");
+        WebQuery webQueryAnnotation = method.getAnnotation(WebQuery.class);
+        if(webQueryAnnotation == null) throw new IllegalStateException("Method is not annotated with @WebQuery");
+        return webQueryAnnotation;
     }
 
     @Getter

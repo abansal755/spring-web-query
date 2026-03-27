@@ -2,9 +2,9 @@ package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
+import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.DTOValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
-import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
@@ -58,8 +58,9 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
         if(!super.supportsParameter(parameter)) return false;
-        // supportsParameter in superclass checks for method-level @WebQuery presence, so we can safely assume that here
-        return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() != void.class;
+        // supportsParameter in superclass checks for method-level @WebQuery presence
+        // so no exception handling is needed
+        return getWebQueryAnnotation(parameter).dtoClass() != void.class;
     }
 
     /**

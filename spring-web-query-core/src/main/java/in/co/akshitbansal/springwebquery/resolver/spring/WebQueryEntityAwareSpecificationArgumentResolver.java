@@ -2,10 +2,10 @@ package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
-import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
-import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
@@ -71,8 +71,9 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
         if(!super.supportsParameter(parameter)) return false;
-        // supportsParameter in superclass checks for method-level @WebQuery presence, so we can safely assume that here
-        return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() == void.class;
+        // The base resolver already verified that the parameter belongs to a
+        // method annotated with @WebQuery, so annotation lookup is safe here.
+        return getWebQueryAnnotation(parameter).dtoClass() == void.class;
     }
 
     /**

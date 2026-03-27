@@ -115,10 +115,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
             WebDataBinderFactory binderFactory
     ) {
         try {
-            // Retrieve the @WebQuery annotation from the method parameter to access configuration
-            WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
-            // Extract relevant configuration from the annotation
-            QueryConfiguration queryConfig = getQueryConfiguration(webQueryAnnotation);
+            // Resolve effective endpoint settings from the current method parameter
+            QueryConfiguration queryConfig = getQueryConfiguration(parameter);
 
             // Extract the RSQL query string from the request using the parameter name defined in @WebQuery
             String filter = webRequest.getParameter(queryConfig.getFilterParamName());

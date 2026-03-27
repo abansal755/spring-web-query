@@ -7,6 +7,7 @@ import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
+import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -60,10 +61,11 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
      *         method-level {@link WebQuery} and no DTO mapping is configured
      */
     @Override
-    public boolean supportsParameter(MethodParameter parameter) {
+    public boolean supportsParameter(@NonNull MethodParameter parameter) {
         if(!super.supportsParameter(parameter)) return false;
-        // supportsParameter in superclass checks for method-level @WebQuery presence, so we can safely assume that here
-        return parameter.getMethod().getAnnotation(WebQuery.class).dtoClass() == void.class;
+        // supportsParameter in superclass checks for method-level @WebQuery presence
+        // so no exception handling is needed
+        return getWebQueryAnnotation(parameter).dtoClass() == void.class;
     }
 
     /**

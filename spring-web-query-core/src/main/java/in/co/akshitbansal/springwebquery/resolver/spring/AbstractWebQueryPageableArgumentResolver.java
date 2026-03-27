@@ -41,7 +41,7 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
      * @param globalAllowOrOperator global fallback for logical OR allowance
      * @param globalMaxASTDepth global fallback for maximum AST depth
      */
-    public AbstractWebQueryPageableArgumentResolver(
+    protected AbstractWebQueryPageableArgumentResolver(
             PageableHandlerMethodArgumentResolver delegate,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
@@ -69,10 +69,8 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
         try {
             // Delegate parsing of page, size and sort parameters to Spring
             Pageable pageable = delegate.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
-            // Retrieve the @WebQuery annotation from the method parameter to access configuration
-            WebQuery webQueryAnnotation = parameter.getMethod().getAnnotation(WebQuery.class);
-            // Extract relevant configuration from the annotation
-            QueryConfiguration queryConfig = getQueryConfiguration(webQueryAnnotation);
+            // Resolve effective endpoint settings from the current method parameter
+            QueryConfiguration queryConfig = getQueryConfiguration(parameter);
             // Perform pageable resolution and validation based on the extracted configuration
             return resolvePageable(pageable, queryConfig);
         }
