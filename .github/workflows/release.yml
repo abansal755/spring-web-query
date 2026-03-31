@@ -50,7 +50,7 @@ jobs:
             - name: Set core package version
               working-directory: ${{ github.workspace }}/spring-web-query-core
               run: mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
-            
+
             - name: Set starter package version
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: |
@@ -170,7 +170,7 @@ jobs:
             - name: Trigger Lambda Function
               run: |
                   aws lambda invoke \
-                  --function-name cloudflare_javadoc_deploy \
+                  --function-name cloudflare_javadoc_deploy_zip \
                   --log-type Tail \
                   --payload "{\"deploymentIds\": [\"${{ needs.release.outputs.deployment_id1 }}\", \"${{ needs.release.outputs.deployment_id2 }}\"]}" \
                   out \

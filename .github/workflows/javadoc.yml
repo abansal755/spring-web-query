@@ -17,7 +17,7 @@ jobs:
             - name: Trigger Lambda Function
               run: |
                 aws lambda invoke \
-                --function-name cloudflare_javadoc_deploy \
+                --function-name cloudflare_javadoc_deploy_zip \
                 --log-type Tail \
                 --payload '{"deploymentIds": []}' \
                 out \
