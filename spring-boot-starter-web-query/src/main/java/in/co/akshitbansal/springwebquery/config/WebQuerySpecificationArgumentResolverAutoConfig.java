@@ -22,7 +22,7 @@ public class WebQuerySpecificationArgumentResolverAutoConfig implements WebMvcCo
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(entityAwareSpecResolver);
         resolvers.add(dtoAwareSpecResolver);
-        log.info("Registered {} for handling @RsqlSpec parameters", WebQueryEntityAwareSpecificationArgumentResolver.class.getSimpleName());
-        log.info("Registered {} for handling @RsqlSpec parameters", WebQueryDTOAwareSpecificationArgumentResolver.class.getSimpleName());
+        log.info("Registered {} for handling @WebQuery Specification parameters", WebQueryEntityAwareSpecificationArgumentResolver.class.getSimpleName());
+        log.info("Registered {} for handling @WebQuery Specification parameters", WebQueryDTOAwareSpecificationArgumentResolver.class.getSimpleName());
     }
 }
