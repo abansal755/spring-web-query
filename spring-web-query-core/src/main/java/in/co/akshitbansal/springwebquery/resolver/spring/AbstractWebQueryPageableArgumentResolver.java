@@ -54,9 +54,8 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
-        if(!super.supportsParameter(parameter)) return false;
-        // Supported if parameter is of type Pageable
-        return Pageable.class.isAssignableFrom(parameter.getParameterType());
+        return Pageable.class.isAssignableFrom(parameter.getParameterType())
+                && super.supportsParameter(parameter);
     }
 
     @Override

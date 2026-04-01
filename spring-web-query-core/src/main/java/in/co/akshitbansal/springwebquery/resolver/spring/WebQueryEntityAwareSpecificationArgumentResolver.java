@@ -70,10 +70,8 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
      */
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
-        if(!super.supportsParameter(parameter)) return false;
-        // The base resolver already verified that the parameter belongs to a
-        // method annotated with @WebQuery, so annotation lookup is safe here.
-        return getWebQueryAnnotation(parameter).dtoClass() == void.class;
+        return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
+                && getWebQueryAnnotation(parameter).dtoClass() == void.class; // so no exception handling is needed
     }
 
     /**

@@ -102,9 +102,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
-        if(!super.supportsParameter(parameter)) return false;
-        // Only support parameters of type Specification or its subtypes
-        return Specification.class.isAssignableFrom(parameter.getParameterType());
+        return Specification.class.isAssignableFrom(parameter.getParameterType())
+                && super.supportsParameter(parameter);
     }
 
     @Override

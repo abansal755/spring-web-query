@@ -60,10 +60,8 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
      */
     @Override
     public boolean supportsParameter(@NonNull MethodParameter parameter) {
-        if(!super.supportsParameter(parameter)) return false;
-        // supportsParameter in superclass checks for method-level @WebQuery presence
-        // so no exception handling is needed
-        return getWebQueryAnnotation(parameter).dtoClass() == void.class;
+        return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
+                    && getWebQueryAnnotation(parameter).dtoClass() == void.class; // so no exception handling is needed
     }
 
     /**
