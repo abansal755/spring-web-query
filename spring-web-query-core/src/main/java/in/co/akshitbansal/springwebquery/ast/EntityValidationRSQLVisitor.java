@@ -75,7 +75,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
         // Resolve the field on the entity class using the requested field name and field mappings
         fieldResolver.resolvePathAndValidateTerminalField(
                 reqFieldName,
-                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.Field(terminalField, operator, reqFieldName))
+                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.FilterableField(terminalField, operator, reqFieldName))
         );
     }
 }

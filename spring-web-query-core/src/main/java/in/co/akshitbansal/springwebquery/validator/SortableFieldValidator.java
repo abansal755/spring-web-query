@@ -4,24 +4,25 @@ import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import lombok.*;
 
+import java.lang.reflect.Field;
 import java.text.MessageFormat;
 
 /**
  * Validator that ensures a resolved terminal field is explicitly marked as sortable.
  */
-public class SortableFieldValidator implements Validator<SortableFieldValidator.Field> {
+public class SortableFieldValidator implements Validator<SortableFieldValidator.SortableField> {
 
     /**
      * Validates that the requested field is explicitly marked as sortable.
      *
-     * @param field field being targeted by sort selector
+     * @param sortableField field being targeted by sort selector
      * @throws QueryFieldValidationException if sorting is not allowed for the field
      */
     @Override
-    public void validate(@NonNull SortableFieldValidator.Field field) {
-        java.lang.reflect.Field reflectedField = field.getField();
-        String fieldPath = field.getFieldPath();
-        if(!reflectedField.isAnnotationPresent(Sortable.class)) {
+    public void validate(@NonNull SortableField sortableField) {
+        Field field = sortableField.getField();
+        String fieldPath = sortableField.getFieldPath();
+        if(!field.isAnnotationPresent(Sortable.class)) {
             throw new QueryFieldValidationException(MessageFormat.format(
                     "Sorting is not allowed on the field ''{0}''", fieldPath
             ), fieldPath);
@@ -32,13 +33,13 @@ public class SortableFieldValidator implements Validator<SortableFieldValidator.
     @Getter
     @EqualsAndHashCode
     @ToString
-    public static class Field {
+    public static class SortableField {
 
         /**
          * Reflected terminal field being validated.
          */
         @NonNull
-        private final java.lang.reflect.Field field;
+        private final Field field;
 
         /**
          * Original selector path from the incoming request.

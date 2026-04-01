@@ -74,7 +74,7 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
             String dtoPath = order.getProperty();
             // Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
             String entityPath = fieldResolver.resolvePathAndValidateTerminalField(dtoPath,
-                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, dtoPath))
+                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.SortableField(terminalField, dtoPath))
             );
             newOrders.add(new Sort.Order(order.getDirection(), entityPath));
         }

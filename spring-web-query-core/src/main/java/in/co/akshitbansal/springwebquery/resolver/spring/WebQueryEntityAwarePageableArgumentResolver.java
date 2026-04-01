@@ -89,7 +89,7 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
             // Resolve the field on the entity class using the requested field name and field mappings
             String fieldName = fieldResolver.resolvePathAndValidateTerminalField(
                     reqFieldName,
-                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.Field(terminalField, reqFieldName))
+                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.SortableField(terminalField, reqFieldName))
             );
 
             newOrders.add(new Sort.Order(order.getDirection(), fieldName));

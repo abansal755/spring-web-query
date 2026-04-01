@@ -88,7 +88,7 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
         // Build the corresponding entity field path from the DTO path and validate the terminal field for filterability
         String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
                 dtoPath,
-                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.Field(terminalField, operator, dtoPath))
+                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.FilterableField(terminalField, operator, dtoPath))
         );
 
         // Store the mapping from DTO path to entity path for later use during query construction

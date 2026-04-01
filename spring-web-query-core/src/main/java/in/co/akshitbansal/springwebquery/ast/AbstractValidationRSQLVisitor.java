@@ -38,7 +38,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
      * Validator used by subclasses to enforce {@code @RSQLFilterable}
      * constraints on resolved terminal fields.
      */
-    protected final Validator<FilterableFieldValidator.Field> filterableFieldValidator;
+    protected final Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator;
 
     /**
      * Whether logical AND operator is allowed in the query.

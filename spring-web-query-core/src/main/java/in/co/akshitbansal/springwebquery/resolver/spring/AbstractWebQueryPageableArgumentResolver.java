@@ -31,7 +31,7 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
     /**
      * Validator used to enforce {@code @Sortable} constraints on resolved sort fields.
      */
-    protected final Validator<SortableFieldValidator.Field> sortableFieldValidator;
+    protected final Validator<SortableFieldValidator.SortableField> sortableFieldValidator;
 
     /**
      * Creates a pageable resolver base with shared global defaults.

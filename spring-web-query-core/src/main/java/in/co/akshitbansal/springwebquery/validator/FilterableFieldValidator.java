@@ -11,6 +11,7 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import lombok.*;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -28,7 +29,7 @@ import java.util.stream.Stream;
  * registry.</p>
  */
 @RequiredArgsConstructor
-public class FilterableFieldValidator implements Validator<FilterableFieldValidator.Field> {
+public class FilterableFieldValidator implements Validator<FilterableFieldValidator.FilterableField> {
 
     /**
      * Registered custom operators keyed by their implementation class.
@@ -39,18 +40,18 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
      * Validates that a field is marked as filterable and that the requested
      * operator is permitted by its {@link RSQLFilterable} declaration(s).
      *
-     * @param field field being targeted by the request selector
+     * @param filterableField field being targeted by the request selector
      * @throws QueryFieldValidationException if the field is not filterable
      * @throws QueryForbiddenOperatorException if the operator is not allowed for the field
      */
     @Override
-    public void validate(@NonNull FilterableFieldValidator.Field field) {
-        java.lang.reflect.Field reflectedField = field.getField();
-        ComparisonOperator operator = field.getOperator();
-        String fieldPath = field.getFieldPath();
+    public void validate(@NonNull FilterableField filterableField) {
+        Field field = filterableField.getField();
+        ComparisonOperator operator = filterableField.getOperator();
+        String fieldPath = filterableField.getFieldPath();
 
         // Retrieve the RSQLFilterable annotations on the field (if present)
-        Set<RSQLFilterable> filterables = collectFilterables(reflectedField);
+        Set<RSQLFilterable> filterables = collectFilterables(field);
         // Throw exception if the field is not annotated as filterable
         if(filterables.isEmpty()) throw new QueryFieldValidationException(MessageFormat.format(
                 "Filtering not allowed on field ''{0}''", fieldPath
@@ -146,13 +147,13 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
     @Getter
     @EqualsAndHashCode
     @ToString
-    public static class Field {
+    public static class FilterableField {
 
         /**
          * Reflected terminal field being validated.
          */
         @NonNull
-        private final java.lang.reflect.Field field;
+        private final Field field;
 
         /**
          * Comparison operator requested for the selector.
