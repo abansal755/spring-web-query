@@ -28,11 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
     private final WebQueryEntityAwareSpecificationArgumentResolver resolver = new WebQueryEntityAwareSpecificationArgumentResolver(
-            Set.of(RSQLDefaultOperator.values()),
-            Set.of(new MockCustomOperator()),
             true,
             false,
-            1
+            1,
+            Set.of(RSQLDefaultOperator.values()),
+            Set.of(new MockCustomOperator())
     );
 
     @Test

@@ -22,10 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WebQueryEntityAwarePageableArgumentResolverTest {
 
     private final WebQueryEntityAwarePageableArgumentResolver resolver = new WebQueryEntityAwarePageableArgumentResolver(
-            new PageableHandlerMethodArgumentResolver(),
-            true,
-            false,
-            1
+            new PageableHandlerMethodArgumentResolver()
     );
 
     @Test

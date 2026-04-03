@@ -1,11 +1,12 @@
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
-import lombok.NonNull;
+import lombok.*;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -37,17 +38,8 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
      * Creates a pageable resolver base with shared global defaults.
      *
      * @param delegate Spring's pageable resolver used for base pagination parsing
-     * @param globalAllowAndOperator global fallback for logical AND allowance
-     * @param globalAllowOrOperator global fallback for logical OR allowance
-     * @param globalMaxASTDepth global fallback for maximum AST depth
      */
-    protected AbstractWebQueryPageableArgumentResolver(
-            PageableHandlerMethodArgumentResolver delegate,
-            boolean globalAllowAndOperator,
-            boolean globalAllowOrOperator,
-            int globalMaxASTDepth
-    ) {
-        super(globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+    protected AbstractWebQueryPageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
         this.delegate = delegate;
         this.sortableFieldValidator = new SortableFieldValidator();
     }
@@ -89,4 +81,56 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
      * @return pageable with validated and possibly remapped sort orders
      */
     protected abstract Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig);
+
+    /**
+     * Extracts pageable-specific query metadata directly from the
+     * {@link WebQuery} annotation declared on the supplied controller method.
+     *
+     * <p>Unlike specification resolution, pageable handling does not consume
+     * operator policies or AST settings, so this configuration contains only
+     * the entity type, optional DTO type, and the declared field mappings
+     * retained for entity-aware sort validation and remapping.</p>
+     *
+     * @param parameter supported method parameter whose declaring method carries
+     *                  {@link WebQuery}
+     * @return effective configuration used by pageable resolvers for sort validation
+     */
+    protected QueryConfiguration getQueryConfiguration(@NonNull MethodParameter parameter) {
+        // Only runs successfully if supportsParameter has already returned true
+        // so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
+        WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
+        return QueryConfiguration
+                .builder()
+                .entityClass(webQueryAnnotation.entityClass())
+                .dtoClass(webQueryAnnotation.dtoClass())
+                .fieldMappings(webQueryAnnotation.fieldMappings())
+                .build();
+    }
+
+    /**
+     * Effective pageable-specific query metadata extracted from a supported
+     * {@link WebQuery}-annotated controller method.
+     */
+    @Getter
+    @Builder
+    @EqualsAndHashCode
+    @ToString
+    protected static class QueryConfiguration {
+
+        /**
+         * Entity type that ultimately receives validated sort paths.
+         */
+        private final Class<?> entityClass;
+
+        /**
+         * Optional DTO type used to validate API-facing sort selectors.
+         */
+        private final Class<?> dtoClass;
+
+        /**
+         * Explicit field aliases declared on {@link WebQuery}, used only by
+         * entity-aware pageable resolution.
+         */
+        private final FieldMapping[] fieldMappings;
+    }
 }

@@ -29,17 +29,9 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
      * Creates a DTO-aware pageable resolver.
      *
      * @param delegate Spring's pageable resolver used for page and size parsing
-     * @param globalAllowAndOperator global fallback for logical AND allowance
-     * @param globalAllowOrOperator global fallback for logical OR allowance
-     * @param globalMaxASTDepth global fallback for maximum AST depth
      */
-    public WebQueryDTOAwarePageableArgumentResolver(
-            PageableHandlerMethodArgumentResolver delegate,
-            boolean globalAllowAndOperator,
-            boolean globalAllowOrOperator,
-            int globalMaxASTDepth
-    ) {
-        super(delegate, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth);
+    public WebQueryDTOAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
+        super(delegate);
     }
 
     /**

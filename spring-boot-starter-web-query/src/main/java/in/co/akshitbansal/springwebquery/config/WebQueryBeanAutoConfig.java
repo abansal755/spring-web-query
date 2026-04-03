@@ -120,11 +120,11 @@ public class WebQueryBeanAutoConfig {
             Set<? extends RSQLCustomOperator<?>> customOperatorSet
     ) {
         return new WebQueryEntityAwareSpecificationArgumentResolver(
-                defaultOperatorSet,
-                customOperatorSet,
                 GLOBAL_ALLOW_AND_OPERATION,
                 GLOBAL_ALLOW_OR_OPERATION,
-                GLOBAL_MAX_AST_DEPTH
+                GLOBAL_MAX_AST_DEPTH,
+                defaultOperatorSet,
+                customOperatorSet
         );
     }
 
@@ -134,11 +134,11 @@ public class WebQueryBeanAutoConfig {
             Set<? extends RSQLCustomOperator<?>> customOperatorSet
     ) {
         return new WebQueryDTOAwareSpecificationArgumentResolver(
-                defaultOperatorSet,
-                customOperatorSet,
                 GLOBAL_ALLOW_AND_OPERATION,
                 GLOBAL_ALLOW_OR_OPERATION,
-                GLOBAL_MAX_AST_DEPTH
+                GLOBAL_MAX_AST_DEPTH,
+                defaultOperatorSet,
+                customOperatorSet
         );
     }
 
@@ -158,21 +158,11 @@ public class WebQueryBeanAutoConfig {
 
     @Bean
     public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-        return new WebQueryEntityAwarePageableArgumentResolver(
-                delegate,
-                GLOBAL_ALLOW_AND_OPERATION,
-                GLOBAL_ALLOW_OR_OPERATION,
-                GLOBAL_MAX_AST_DEPTH
-        );
+        return new WebQueryEntityAwarePageableArgumentResolver(delegate);
     }
 
     @Bean
     public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-        return new WebQueryDTOAwarePageableArgumentResolver(
-                delegate,
-                GLOBAL_ALLOW_AND_OPERATION,
-                GLOBAL_ALLOW_OR_OPERATION,
-                GLOBAL_MAX_AST_DEPTH
-        );
+        return new WebQueryDTOAwarePageableArgumentResolver(delegate);
     }
 }

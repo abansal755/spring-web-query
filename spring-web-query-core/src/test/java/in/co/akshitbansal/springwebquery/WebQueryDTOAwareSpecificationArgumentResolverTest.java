@@ -25,11 +25,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WebQueryDTOAwareSpecificationArgumentResolverTest {
 
     private final WebQueryDTOAwareSpecificationArgumentResolver resolver = new WebQueryDTOAwareSpecificationArgumentResolver(
-            Set.of(RSQLDefaultOperator.values()),
-            Set.of(),
             true,
             false,
-            1
+            1,
+            Set.of(RSQLDefaultOperator.values()),
+            Set.of()
     );
 
     @Test
