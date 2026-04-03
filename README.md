@@ -79,7 +79,7 @@ Typical outcomes without a shared query layer:
 
 - `@RSQLFilterable`: which fields are filterable and which operators are allowed
 - `@Sortable`: which fields can be sorted
-- `@WebQuery`: endpoint-level query context (`entityClass`, optional `dtoClass`, aliases, filter param name)
+- `@WebQuery`: endpoint-level query context (`entityClass`, optional `dtoClass`, aliases, optional filter param override)
 - framework-provided argument resolvers for `Specification<T>` and `Pageable`
 
 You keep endpoint code focused on business behavior, not query parsing.
@@ -121,7 +121,7 @@ You keep endpoint code focused on business behavior, not query parsing.
 At request time, `spring-web-query` follows this flow:
 
 1. Read `@WebQuery` metadata from your controller method.
-2. Parse filter expression from request query param (default: `filter`).
+2. Parse filter expression from the configured request query param (starter default: `filter`).
 3. Validate all selectors and operators against your annotations.
 4. Translate request paths to entity paths (DTO-aware or alias-aware).
 5. Build a JPA `Specification<T>`.
@@ -448,7 +448,7 @@ Applied on controller methods.
 - `entityClass`: required
 - `dtoClass`: optional, default `void.class`
 - `fieldMappings`: optional aliases (entity-aware mode)
-- `filterParamName`: optional, default `filter`
+- `filterParamName`: optional, default `""` (uses the configured global filter param name)
 - `allowAndOperator`: optional, default `WebQuery.OperatorPolicy.GLOBAL`
 - `allowOrOperator`: optional, default `WebQuery.OperatorPolicy.GLOBAL`
 - `maxASTDepth`: optional, default `-1` (delegates to the configured global default)
@@ -464,6 +464,8 @@ Request:
 ```http
 GET /users?q=status==ACTIVE
 ```
+
+If `filterParamName` is left blank, the resolver uses the configured global default filter parameter name instead.
 
 Example enabling OR:
 
@@ -527,6 +529,7 @@ Notes:
 When you use `spring-boot-starter-web-query`, these global defaults are available:
 
 ```properties
+spring-web-query.filtering.filter-param-name=filter
 spring-web-query.filtering.allow-and-operation=true
 spring-web-query.filtering.allow-or-operation=false
 spring-web-query.filtering.max-ast-depth=1
@@ -535,6 +538,7 @@ spring-web-query.pagination.max-page-size=100
 
 `@WebQuery` can override the filtering defaults per endpoint:
 
+- `filterParamName = "q"`
 - `allowAndOperator = WebQuery.OperatorPolicy.ALLOW`
 - `allowAndOperator = WebQuery.OperatorPolicy.DENY`
 - `allowOrOperator = WebQuery.OperatorPolicy.ALLOW`
