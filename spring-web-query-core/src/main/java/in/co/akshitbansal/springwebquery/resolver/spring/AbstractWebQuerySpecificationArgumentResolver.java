@@ -34,6 +34,12 @@ import java.util.stream.Stream;
 public abstract class AbstractWebQuerySpecificationArgumentResolver extends AbstractWebQueryResolver {
 
     /**
+     * Global default request parameter name used when {@link WebQuery#filterParamName()}
+     * is blank.
+     */
+    private final String filterParamName;
+
+    /**
      * Global default applied when {@link WebQuery#allowAndOperator()} is set to
      * {@link in.co.akshitbansal.springwebquery.annotation.WebQuery.OperatorPolicy#GLOBAL}.
      */
@@ -70,6 +76,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      * Creates the resolver base with global validation defaults, parser
      * configuration, and custom predicate adaptation.
      *
+     * @param filterParamName global default request parameter name used when
+     *                        {@link WebQuery#filterParamName()} is blank
      * @param globalAllowAndOperator fallback AND-node policy used when {@code @WebQuery} defers to global settings
      * @param globalAllowOrOperator fallback OR-node policy used when {@code @WebQuery} defers to global settings
      * @param globalMaxASTDepth fallback maximum AST depth used when {@code @WebQuery} defers to global settings
@@ -77,6 +85,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      * @param customOperators custom operators to register for parsing and predicate generation
      */
     protected AbstractWebQuerySpecificationArgumentResolver(
+            String filterParamName,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth,
@@ -84,6 +93,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
             Set<? extends RSQLCustomOperator<?>> customOperators
     ) {
         // Global configuration
+        this.filterParamName = filterParamName;
         this.globalAllowAndOperator = globalAllowAndOperator;
         this.globalAllowOrOperator = globalAllowOrOperator;
         this.globalMaxASTDepth = globalMaxASTDepth;
@@ -171,6 +181,9 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      * Resolves the effective query configuration by combining method-level {@link WebQuery}
      * settings with the configured global fallbacks.
      *
+     * <p>A blank {@link WebQuery#filterParamName()} delegates to the resolver's
+     * configured global default filter parameter name.</p>
+     *
      * @param parameter supported method parameter whose declaring method carries
      *                  {@link WebQuery}
      * @return effective configuration used by specification resolvers for validation and parsing
@@ -179,6 +192,11 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
         // Only runs successfully if supportsParameter has already returned true
         // so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
         WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
+
+        // Filter Parameter Name
+        String filterParamName = webQueryAnnotation.filterParamName();
+        if(filterParamName.isBlank()) filterParamName = this.filterParamName;
+
         // Determine allowed logical operators based on annotation and global configuration
         // And Operator
         WebQuery.OperatorPolicy andNodePolicy = webQueryAnnotation.allowAndOperator();
@@ -201,7 +219,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
                 .entityClass(webQueryAnnotation.entityClass())
                 .dtoClass(webQueryAnnotation.dtoClass())
                 .fieldMappings(webQueryAnnotation.fieldMappings())
-                .filterParamName(webQueryAnnotation.filterParamName())
+                .filterParamName(filterParamName)
                 .andNodeAllowed(andNodeAllowed)
                 .orNodeAllowed(orNodeAllowed)
                 .maxASTDepth(maxDepth)
@@ -236,7 +254,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
         private final FieldMapping[] fieldMappings;
 
         /**
-         * Request parameter name used to read the raw RSQL filter expression.
+         * Request parameter name used to read the raw RSQL filter expression
+         * after applying the global default when the annotation value is blank.
          */
         private final String filterParamName;
 

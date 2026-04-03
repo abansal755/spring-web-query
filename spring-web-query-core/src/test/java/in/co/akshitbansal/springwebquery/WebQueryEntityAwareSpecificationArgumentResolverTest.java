@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
     private final WebQueryEntityAwareSpecificationArgumentResolver resolver = new WebQueryEntityAwareSpecificationArgumentResolver(
+            "filter",
             true,
             false,
             1,

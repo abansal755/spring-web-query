@@ -27,15 +27,18 @@ import java.util.*;
 @Slf4j
 public class WebQueryBeanAutoConfig {
 
+    private final String GLOBAL_FILTER_PARAM_NAME;
     private final boolean GLOBAL_ALLOW_OR_OPERATION;
     private final boolean GLOBAL_ALLOW_AND_OPERATION;
     private final int GLOBAL_MAX_AST_DEPTH;
 
     public WebQueryBeanAutoConfig(
+            @Value("${spring-web-query.filtering.filter-param-name:filter}") String GLOBAL_FILTER_PARAM_NAME,
             @Value("${spring-web-query.filtering.allow-or-operation:false}") boolean GLOBAL_ALLOW_OR_OPERATION,
             @Value("${spring-web-query.filtering.allow-and-operation:true}") boolean GLOBAL_ALLOW_AND_OPERATION,
             @Value("${spring-web-query.filtering.max-ast-depth:1}") int GLOBAL_MAX_AST_DEPTH
     ) {
+        this.GLOBAL_FILTER_PARAM_NAME = GLOBAL_FILTER_PARAM_NAME;
         this.GLOBAL_ALLOW_OR_OPERATION = GLOBAL_ALLOW_OR_OPERATION;
         this.GLOBAL_ALLOW_AND_OPERATION = GLOBAL_ALLOW_AND_OPERATION;
         this.GLOBAL_MAX_AST_DEPTH = GLOBAL_MAX_AST_DEPTH;
@@ -120,6 +123,7 @@ public class WebQueryBeanAutoConfig {
             Set<? extends RSQLCustomOperator<?>> customOperatorSet
     ) {
         return new WebQueryEntityAwareSpecificationArgumentResolver(
+                GLOBAL_FILTER_PARAM_NAME,
                 GLOBAL_ALLOW_AND_OPERATION,
                 GLOBAL_ALLOW_OR_OPERATION,
                 GLOBAL_MAX_AST_DEPTH,
@@ -134,6 +138,7 @@ public class WebQueryBeanAutoConfig {
             Set<? extends RSQLCustomOperator<?>> customOperatorSet
     ) {
         return new WebQueryDTOAwareSpecificationArgumentResolver(
+                GLOBAL_FILTER_PARAM_NAME,
                 GLOBAL_ALLOW_AND_OPERATION,
                 GLOBAL_ALLOW_OR_OPERATION,
                 GLOBAL_MAX_AST_DEPTH,

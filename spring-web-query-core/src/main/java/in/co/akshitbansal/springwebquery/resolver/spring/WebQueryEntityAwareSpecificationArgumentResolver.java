@@ -41,6 +41,8 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
     /**
      * Creates an entity-aware RSQL specification resolver.
      *
+     * @param filterParamName global default request parameter name used when
+     *                        {@link WebQuery#filterParamName()} is blank
      * @param globalAllowAndOperator whether AND nodes are allowed by default when {@code @WebQuery}
      *                               does not override that behavior
      * @param globalAllowOrOperator whether OR nodes are allowed by default when {@code @WebQuery}
@@ -51,13 +53,14 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
      * @param customOperators custom operators supported by parser and predicates
      */
     public WebQueryEntityAwareSpecificationArgumentResolver(
+            String filterParamName,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth,
             Set<RSQLDefaultOperator> defaultOperators,
             Set<? extends RSQLCustomOperator<?>> customOperators
     ) {
-        super(globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth, defaultOperators, customOperators);
+        super(filterParamName, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth, defaultOperators, customOperators);
         this.fieldMappingsValidator = new FieldMappingsValidator();
     }
 

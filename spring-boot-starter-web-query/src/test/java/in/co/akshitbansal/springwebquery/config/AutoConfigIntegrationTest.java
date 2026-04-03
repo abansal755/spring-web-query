@@ -113,7 +113,7 @@ class AutoConfigIntegrationTest {
 
     @Test
     void webQueryBeanConfigRejectsNegativeMaxAstDepth() {
-        assertThrows(QueryConfigurationException.class, () -> new WebQueryBeanAutoConfig(false, true, -1));
+        assertThrows(QueryConfigurationException.class, () -> new WebQueryBeanAutoConfig("filter", false, true, -1));
     }
 
     private static class TestController {

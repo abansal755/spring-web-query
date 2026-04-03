@@ -29,6 +29,8 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
     /**
      * Creates a DTO-aware RSQL specification resolver.
      *
+     * @param filterParamName global default request parameter name used when
+     *                        {@link WebQuery#filterParamName()} is blank
      * @param globalAllowAndOperator whether AND nodes are allowed by default when {@code @WebQuery}
      *                               does not override that behavior
      * @param globalAllowOrOperator whether OR nodes are allowed by default when {@code @WebQuery}
@@ -39,13 +41,14 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
      * @param customOperators custom operators supported by parser and predicates
      */
     public WebQueryDTOAwareSpecificationArgumentResolver(
+            String filterParamName,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth,
             Set<RSQLDefaultOperator> defaultOperators,
             Set<? extends RSQLCustomOperator<?>> customOperators
     ) {
-        super(globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth, defaultOperators, customOperators);
+        super(filterParamName, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth, defaultOperators, customOperators);
     }
 
     /**

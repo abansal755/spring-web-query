@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WebQueryDTOAwareSpecificationArgumentResolverTest {
 
     private final WebQueryDTOAwareSpecificationArgumentResolver resolver = new WebQueryDTOAwareSpecificationArgumentResolver(
+            "filter",
             true,
             false,
             1,

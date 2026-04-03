@@ -52,11 +52,13 @@ public @interface WebQuery {
      * Request parameter name from which RSQL filter expressions are read.
      *
      * <p>This setting applies to specification resolution in both entity-aware
-     * and DTO-aware modes.</p>
+     * and DTO-aware modes. When left blank, the resolver falls back to its
+     * configured global default filter parameter name.</p>
      *
-     * @return HTTP query parameter name containing the RSQL filter expression
+     * @return HTTP query parameter name containing the RSQL filter expression,
+     *         or a blank string to use the global default
      */
-    String filterParamName() default "filter";
+    String filterParamName() default "";
 
     /**
      * Whether logical AND operator ({@code ;}) is allowed in RSQL filters.
