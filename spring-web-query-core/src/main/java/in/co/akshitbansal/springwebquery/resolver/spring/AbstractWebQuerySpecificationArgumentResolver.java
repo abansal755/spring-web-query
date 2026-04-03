@@ -8,6 +8,8 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
+import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.*;
 import org.springframework.core.MethodParameter;
@@ -37,7 +39,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      * Global default request parameter name used when {@link WebQuery#filterParamName()}
      * is blank.
      */
-    private final String filterParamName;
+    private final String globalFilterParamName;
 
     /**
      * Global default applied when {@link WebQuery#allowAndOperator()} is set to
@@ -73,10 +75,16 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
     protected final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
 
     /**
+     * Validator used to enforce the supported query-parameter naming contract
+     * for resolved filter parameter names.
+     */
+    private final Validator<String> queryParamNameValidator;
+
+    /**
      * Creates the resolver base with global validation defaults, parser
      * configuration, and custom predicate adaptation.
      *
-     * @param filterParamName global default request parameter name used when
+     * @param globalFilterParamName global default request parameter name used when
      *                        {@link WebQuery#filterParamName()} is blank
      * @param globalAllowAndOperator fallback AND-node policy used when {@code @WebQuery} defers to global settings
      * @param globalAllowOrOperator fallback OR-node policy used when {@code @WebQuery} defers to global settings
@@ -85,7 +93,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      * @param customOperators custom operators to register for parsing and predicate generation
      */
     protected AbstractWebQuerySpecificationArgumentResolver(
-            String filterParamName,
+            String globalFilterParamName,
             boolean globalAllowAndOperator,
             boolean globalAllowOrOperator,
             int globalMaxASTDepth,
@@ -93,7 +101,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
             Set<? extends RSQLCustomOperator<?>> customOperators
     ) {
         // Global configuration
-        this.filterParamName = filterParamName;
+        this.globalFilterParamName = globalFilterParamName;
         this.globalAllowAndOperator = globalAllowAndOperator;
         this.globalAllowOrOperator = globalAllowOrOperator;
         this.globalMaxASTDepth = globalMaxASTDepth;
@@ -133,6 +141,9 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
                         (existing, duplicate) -> existing,
                         HashMap::new
                 )));
+
+        // For query parameter name validation
+        this.queryParamNameValidator = new QueryParamNameValidator();
     }
 
     @Override
@@ -182,7 +193,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      * settings with the configured global fallbacks.
      *
      * <p>A blank {@link WebQuery#filterParamName()} delegates to the resolver's
-     * configured global default filter parameter name.</p>
+     * configured global default filter parameter name. Non-blank annotation
+     * overrides are validated before they are used for request lookup.</p>
      *
      * @param parameter supported method parameter whose declaring method carries
      *                  {@link WebQuery}
@@ -195,7 +207,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 
         // Filter Parameter Name
         String filterParamName = webQueryAnnotation.filterParamName();
-        if(filterParamName.isBlank()) filterParamName = this.filterParamName;
+        if(filterParamName.isBlank()) filterParamName = this.globalFilterParamName;
+        else queryParamNameValidator.validate(filterParamName);
 
         // Determine allowed logical operators based on annotation and global configuration
         // And Operator

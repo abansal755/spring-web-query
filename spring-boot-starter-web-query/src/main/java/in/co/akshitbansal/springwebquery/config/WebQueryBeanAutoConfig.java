@@ -8,6 +8,8 @@ import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageabl
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
+import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,9 @@ public class WebQueryBeanAutoConfig {
             @Value("${spring-web-query.filtering.max-ast-depth:1}") int GLOBAL_MAX_AST_DEPTH
     ) {
         this.GLOBAL_FILTER_PARAM_NAME = GLOBAL_FILTER_PARAM_NAME;
+        Validator<String> queryParamNameValidator = new QueryParamNameValidator();
+        queryParamNameValidator.validate(GLOBAL_FILTER_PARAM_NAME);
+
         this.GLOBAL_ALLOW_OR_OPERATION = GLOBAL_ALLOW_OR_OPERATION;
         this.GLOBAL_ALLOW_AND_OPERATION = GLOBAL_ALLOW_AND_OPERATION;
         this.GLOBAL_MAX_AST_DEPTH = GLOBAL_MAX_AST_DEPTH;
