@@ -11,7 +11,11 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
-import lombok.*;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -147,17 +151,17 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
     }
 
     @Override
-    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+    public boolean supportsParameter(MethodParameter parameter) {
         return Specification.class.isAssignableFrom(parameter.getParameterType())
                 && super.supportsParameter(parameter);
     }
 
     @Override
     public Specification<?> resolveArgument(
-            @NonNull MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            @NonNull NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
+            MethodParameter parameter,
+            @Nullable ModelAndViewContainer mavContainer,
+            NativeWebRequest webRequest,
+            @Nullable WebDataBinderFactory binderFactory
     ) {
         try {
             // Resolve effective endpoint settings from the current method parameter
@@ -186,7 +190,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      * @param filter raw RSQL filter expression from the request
      * @return resolved specification
      */
-    protected abstract Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter);
+    protected abstract Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter);
 
     /**
      * Resolves the effective query configuration by combining method-level {@link WebQuery}
@@ -200,7 +204,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
      *                  {@link WebQuery}
      * @return effective configuration used by specification resolvers for validation and parsing
      */
-    protected QueryConfiguration getQueryConfiguration(@NonNull MethodParameter parameter) {
+    protected QueryConfiguration getQueryConfiguration(MethodParameter parameter) {
         // Only runs successfully if supportsParameter has already returned true
         // so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
         WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);

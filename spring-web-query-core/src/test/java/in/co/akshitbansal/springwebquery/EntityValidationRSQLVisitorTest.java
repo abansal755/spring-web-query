@@ -14,6 +14,7 @@ import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Set;
 
@@ -177,8 +178,21 @@ class EntityValidationRSQLVisitorTest {
 
         @Override
         public Predicate toPredicate(RSQLCustomPredicateInput input) {
-            return null;
+            return dummyPredicate();
         }
+    }
+
+    private static Predicate dummyPredicate() {
+        return (Predicate) Proxy.newProxyInstance(
+                Predicate.class.getClassLoader(),
+                new Class[]{Predicate.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "toString" -> "dummyPredicate";
+                    case "hashCode" -> System.identityHashCode(proxy);
+                    case "equals" -> proxy == args[0];
+                    default -> throw new UnsupportedOperationException("Predicate should not be evaluated in this test");
+                }
+        );
     }
 
     private static class TestEntity {

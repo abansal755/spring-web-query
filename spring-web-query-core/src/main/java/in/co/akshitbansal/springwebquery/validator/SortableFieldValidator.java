@@ -2,7 +2,10 @@ package in.co.akshitbansal.springwebquery.validator;
 
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -19,7 +22,7 @@ public class SortableFieldValidator implements Validator<SortableFieldValidator.
      * @throws QueryFieldValidationException if sorting is not allowed for the field
      */
     @Override
-    public void validate(@NonNull SortableField sortableField) {
+    public void validate(SortableField sortableField) {
         Field field = sortableField.getField();
         String fieldPath = sortableField.getFieldPath();
         if(!field.isAnnotationPresent(Sortable.class)) {
@@ -38,13 +41,11 @@ public class SortableFieldValidator implements Validator<SortableFieldValidator.
         /**
          * Reflected terminal field being validated.
          */
-        @NonNull
         private final Field field;
 
         /**
          * Original selector path from the incoming request.
          */
-        @NonNull
         private final String fieldPath;
     }
 }

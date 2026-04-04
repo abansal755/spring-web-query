@@ -10,7 +10,6 @@ import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
-import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -59,7 +58,7 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
      *         method-level {@link WebQuery} and a configured DTO class
      */
     @Override
-    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+    public boolean supportsParameter(MethodParameter parameter) {
         return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
                 && getWebQueryAnnotation(parameter).dtoClass() != void.class; // so no exception handling is needed
     }
@@ -73,7 +72,7 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
      * @return resolved specification for the validated filter
      */
     @Override
-    protected Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter) {
+    protected Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter) {
         try {
             // Parse the RSQL query into an Abstract Syntax Tree (AST)
             Node root = rsqlParser.parse(filter);

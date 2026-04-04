@@ -5,6 +5,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -42,11 +43,13 @@ public class DTOAwareFieldResolver implements FieldResolver {
      * the selector to the corresponding entity path.
      *
      * @param dtoPath selector path from the incoming request
-     * @param terminalFieldValidator callback used to validate the terminal DTO field
+     * @param terminalFieldValidator callback used to validate the terminal DTO
+     *                               field; when {@code null}, terminal-field
+     *                               validation is skipped
      * @return resolved entity path corresponding to the DTO selector
      */
     @Override
-    public String resolvePathAndValidateTerminalField(String dtoPath, Consumer<Field> terminalFieldValidator) {
+    public String resolvePathAndValidateTerminalField(String dtoPath, @Nullable Consumer<Field> terminalFieldValidator) {
         // Resolve the field path in the DTO class
         List<Field> dtoFields;
         try {
@@ -59,7 +62,8 @@ public class DTOAwareFieldResolver implements FieldResolver {
         }
 
         // Validate the last field in the path using the provided terminal field validator
-        terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
+        if(terminalFieldValidator != null)
+            terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
 
         // Construct the corresponding entity field path using the @MapsTo annotation if present
         List<String> entityPathSegments = new ArrayList<>();

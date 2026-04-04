@@ -3,6 +3,7 @@ package in.co.akshitbansal.springwebquery.resolver;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -77,14 +78,16 @@ public class EntityAwareFieldResolver implements FieldResolver {
      * field, and returns the final entity path.
      *
      * @param reqFieldPath selector path from the incoming request
-     * @param terminalFieldValidator callback used to validate the resolved terminal field
+     * @param terminalFieldValidator callback used to validate the resolved
+     *                               terminal field; when {@code null},
+     *                               terminal-field validation is skipped
      * @return resolved entity path after alias translation
      * @throws QueryFieldValidationException if the request path is blocked by
      *                                       mapping rules or cannot be
      *                                       resolved against the entity type
      */
     @Override
-    public String resolvePathAndValidateTerminalField(String reqFieldPath, Consumer<Field> terminalFieldValidator) {
+    public String resolvePathAndValidateTerminalField(String reqFieldPath, @Nullable Consumer<Field> terminalFieldValidator) {
         String fieldPath = reqFieldPath; // Actual entity path to validate against, may be rewritten if field mapping exists
 
         // If the field name corresponds to an API alias that does not allow using the original field name, reject it
@@ -110,7 +113,7 @@ public class EntityAwareFieldResolver implements FieldResolver {
             ), reqFieldPath, ex);
         }
 
-        terminalFieldValidator.accept(field);
+        if(terminalFieldValidator != null) terminalFieldValidator.accept(field);
 
         return fieldPath;
     }

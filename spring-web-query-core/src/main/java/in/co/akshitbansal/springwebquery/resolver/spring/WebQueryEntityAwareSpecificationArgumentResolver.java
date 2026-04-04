@@ -13,7 +13,6 @@ import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLJPASupport;
-import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -72,7 +71,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
      *         method-level {@link WebQuery} and no DTO class is configured
      */
     @Override
-    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+    public boolean supportsParameter(MethodParameter parameter) {
         return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
                 && getWebQueryAnnotation(parameter).dtoClass() == void.class; // so no exception handling is needed
     }
@@ -86,7 +85,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
      * @return resolved specification for the validated filter
      */
     @Override
-    protected Specification<?> resolveSpecification(@NonNull QueryConfiguration queryConfig, @NonNull String filter) {
+    protected Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter) {
         try {
             // Validate field mappings to ensure they are well-formed and do not contain conflicts
             fieldMappingsValidator.validate(queryConfig.getFieldMappings());

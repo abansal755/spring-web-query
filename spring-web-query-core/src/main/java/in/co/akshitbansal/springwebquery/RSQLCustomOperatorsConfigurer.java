@@ -1,6 +1,7 @@
 package in.co.akshitbansal.springwebquery;
 
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Set;
 
@@ -24,5 +25,6 @@ public interface RSQLCustomOperatorsConfigurer {
      *
      * @return a set of custom operators, or an empty set if none
      */
+    @NonNull
     Set<? extends RSQLCustomOperator<?>> getCustomOperators();
 }

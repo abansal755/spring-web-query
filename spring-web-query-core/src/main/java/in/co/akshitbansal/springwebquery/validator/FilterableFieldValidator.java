@@ -8,7 +8,10 @@ import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -45,7 +48,7 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
      * @throws QueryForbiddenOperatorException if the operator is not allowed for the field
      */
     @Override
-    public void validate(@NonNull FilterableField filterableField) {
+    public void validate(FilterableField filterableField) {
         Field field = filterableField.getField();
         ComparisonOperator operator = filterableField.getOperator();
         String fieldPath = filterableField.getFieldPath();
@@ -77,7 +80,7 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
      * @return deduplicated set of allowed comparison operators
      * @throws QueryConfigurationException if a referenced custom operator is not registered
      */
-    private Set<ComparisonOperator> getAllowedOperators(@NonNull Set<RSQLFilterable> filterables) {
+    private Set<ComparisonOperator> getAllowedOperators(Set<RSQLFilterable> filterables) {
         // Collect the set of allowed operators for this field from the annotations
         // Stream of default operators defined in the annotation
         Stream<ComparisonOperator> defaultOperators = filterables
@@ -103,7 +106,7 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
      * @return the registered custom operator instance
      * @throws QueryConfigurationException if the custom operator class is not registered
      */
-    private RSQLCustomOperator<?> getCustomOperator(@NonNull Class<?> clazz) {
+    private RSQLCustomOperator<?> getCustomOperator(Class<?> clazz) {
         RSQLCustomOperator<?> operator = customOperators.get(clazz);
         if(operator == null) throw new QueryConfigurationException(MessageFormat.format(
                 "Custom operator ''{0}'' referenced in @RSQLFilterable is not registered", clazz.getSimpleName()
@@ -118,7 +121,7 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
      * @param field field whose annotations are to be inspected
      * @return collected filterability declarations
      */
-    private Set<RSQLFilterable> collectFilterables(java.lang.reflect.Field field) {
+    private Set<RSQLFilterable> collectFilterables(Field field) {
         return collectFilterables(field.getAnnotations());
     }
 
@@ -152,19 +155,16 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
         /**
          * Reflected terminal field being validated.
          */
-        @NonNull
         private final Field field;
 
         /**
          * Comparison operator requested for the selector.
          */
-        @NonNull
         private final ComparisonOperator operator;
 
         /**
          * Original selector path from the incoming request.
          */
-        @NonNull
         private final String fieldPath;
     }
 }

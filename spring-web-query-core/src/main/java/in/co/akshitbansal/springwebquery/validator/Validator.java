@@ -1,7 +1,5 @@
 package in.co.akshitbansal.springwebquery.validator;
 
-import lombok.NonNull;
-
 /**
  * Generic contract for validators that enforce library-specific constraints on
  * an input object.
@@ -15,5 +13,5 @@ public interface Validator<T> {
      *
      * @param object object to validate
      */
-    void validate(@NonNull T object);
+    void validate(T object);
 }

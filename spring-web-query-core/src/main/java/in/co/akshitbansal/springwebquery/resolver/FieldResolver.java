@@ -1,5 +1,7 @@
 package in.co.akshitbansal.springwebquery.resolver;
 
+import org.jspecify.annotations.Nullable;
+
 import java.lang.reflect.Field;
 import java.util.function.Consumer;
 
@@ -19,10 +21,12 @@ public interface FieldResolver {
      * and returns the corresponding path understood by downstream query builders.
      *
      * @param path selector path from the incoming request
-     * @param terminalFieldValidator callback used to validate the resolved terminal field
+     * @param terminalFieldValidator callback used to validate the resolved
+     *                               terminal field; when {@code null}, terminal
+     *                               field validation is skipped
      * @return resolved path suitable for entity-backed query execution
      */
-    String resolvePathAndValidateTerminalField(String path, Consumer<Field> terminalFieldValidator);
+    String resolvePathAndValidateTerminalField(String path, @Nullable Consumer<Field> terminalFieldValidator);
 
     /**
      * Resolves the supplied selector path without performing terminal-field validation.
@@ -31,6 +35,6 @@ public interface FieldResolver {
      * @return resolved path suitable for entity-backed query execution
      */
     default String resolvePath(String path) {
-        return resolvePathAndValidateTerminalField(path, field -> {}); // No-op validator
+        return resolvePathAndValidateTerminalField(path, null);
     }
 }

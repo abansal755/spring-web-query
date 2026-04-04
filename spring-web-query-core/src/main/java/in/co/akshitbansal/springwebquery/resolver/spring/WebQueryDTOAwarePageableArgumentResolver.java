@@ -5,7 +5,6 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.resolver.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
-import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,7 +41,7 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
      *         method-level {@link WebQuery} and a configured DTO class
      */
     @Override
-    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+    public boolean supportsParameter(MethodParameter parameter) {
         return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
                 && getWebQueryAnnotation(parameter).dtoClass() != void.class; // so no exception handling is needed
     }

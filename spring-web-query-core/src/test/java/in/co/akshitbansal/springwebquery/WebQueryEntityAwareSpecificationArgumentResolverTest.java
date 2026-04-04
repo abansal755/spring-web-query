@@ -18,6 +18,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -149,8 +150,21 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
         @Override
         public Predicate toPredicate(RSQLCustomPredicateInput input) {
-            return null;
+            return dummyPredicate();
         }
+    }
+
+    private static Predicate dummyPredicate() {
+        return (Predicate) Proxy.newProxyInstance(
+                Predicate.class.getClassLoader(),
+                new Class[]{Predicate.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "toString" -> "dummyPredicate";
+                    case "hashCode" -> System.identityHashCode(proxy);
+                    case "equals" -> proxy == args[0];
+                    default -> throw new UnsupportedOperationException("Predicate should not be evaluated in this test");
+                }
+        );
     }
 
     @SuppressWarnings("unused")

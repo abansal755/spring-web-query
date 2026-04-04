@@ -6,7 +6,11 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
-import lombok.*;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -35,7 +39,8 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
     protected final Validator<SortableFieldValidator.SortableField> sortableFieldValidator;
 
     /**
-     * Creates a pageable resolver base with shared global defaults.
+     * Creates a pageable resolver base that delegates raw pagination parsing to
+     * Spring and applies shared sort-field validation support.
      *
      * @param delegate Spring's pageable resolver used for base pagination parsing
      */
@@ -45,17 +50,17 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
     }
 
     @Override
-    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+    public boolean supportsParameter(MethodParameter parameter) {
         return Pageable.class.isAssignableFrom(parameter.getParameterType())
                 && super.supportsParameter(parameter);
     }
 
     @Override
     public Pageable resolveArgument(
-            @NonNull MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            @NonNull NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory
+            MethodParameter parameter,
+            @Nullable ModelAndViewContainer mavContainer,
+            NativeWebRequest webRequest,
+            @Nullable WebDataBinderFactory binderFactory
     ) {
         try {
             // Delegate parsing of page, size and sort parameters to Spring
@@ -95,7 +100,7 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
      *                  {@link WebQuery}
      * @return effective configuration used by pageable resolvers for sort validation
      */
-    protected QueryConfiguration getQueryConfiguration(@NonNull MethodParameter parameter) {
+    protected QueryConfiguration getQueryConfiguration(MethodParameter parameter) {
         // Only runs successfully if supportsParameter has already returned true
         // so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
         WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
