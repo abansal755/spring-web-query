@@ -6,7 +6,7 @@ import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
-import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.util.Map;
@@ -88,7 +88,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
      * @return {@code null} (visitor contract)
      */
     @Override
-    @NullUnmarked
+    @Nullable
     public Void visit(AndNode node, NodeMetadata metadata) {
         validateNode(node, metadata);
         node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
@@ -103,7 +103,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
      * @return {@code null} (visitor contract)
      */
     @Override
-    @NullUnmarked
+    @Nullable
     public Void visit(OrNode node, NodeMetadata metadata) {
         validateNode(node, metadata);
         node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
@@ -118,7 +118,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
      * @return {@code null} (visitor contract)
      */
     @Override
-    @NullUnmarked
+    @Nullable
     public Void visit(ComparisonNode node, NodeMetadata metadata) {
         validateNode(node, metadata);
         validateComparisonNode(node);
