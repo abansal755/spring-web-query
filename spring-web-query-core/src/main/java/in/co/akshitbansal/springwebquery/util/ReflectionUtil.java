@@ -9,6 +9,7 @@ import java.lang.reflect.WildcardType;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -57,14 +58,8 @@ public final class ReflectionUtil {
      *         does not expose resolvable generic information
      */
     public static Field resolveField(Class<?> type, String name) {
-        String[] fieldNames = name.split("\\.");
-        Class<?> current = type;
-        Field field = null;
-        for(String fieldName : fieldNames) {
-            field = resolveFieldUpHierarchy(current, fieldName);
-            current = unwrapContainerType(field);
-        }
-        return field;
+        List<Field> fields = resolveFieldPath(type, name);
+        return fields.get(fields.size() - 1);
     }
 
     /**
@@ -82,7 +77,9 @@ public final class ReflectionUtil {
      * @throws UnsupportedOperationException if intermediate collection generics cannot be resolved
      */
     public static List<Field> resolveFieldPath(Class<?> type, String name) {
+        if (name.isEmpty()) throw new IllegalArgumentException("Field path cannot be empty");
         String[] fieldNames = name.split("\\.");
+        if(fieldNames.length == 0) throw new IllegalArgumentException("Field path cannot be empty");
         Class<?> current = type;
         List<Field> path = new ArrayList<>();
         for(String fieldName : fieldNames) {
@@ -90,7 +87,7 @@ public final class ReflectionUtil {
             path.add(field);
             current = unwrapContainerType(field);
         }
-        return path;
+        return Collections.unmodifiableList(path);
     }
 
     /**
@@ -160,11 +157,10 @@ public final class ReflectionUtil {
      */
     private static Class<?> resolveGenericArgument(Field field, int index) {
         Type type = field.getGenericType();
-        if(type instanceof ParameterizedType parameterizedType) {
-            Type arg = parameterizedType.getActualTypeArguments()[index];
-            return toClass(arg);
-        }
-        throw new UnsupportedOperationException("Cannot resolve generic type for field: " + field.getName());
+        if(!(type instanceof ParameterizedType parameterizedType))
+            throw new UnsupportedOperationException("Cannot resolve generic type for field: " + field.getName());
+        Type arg = parameterizedType.getActualTypeArguments()[index];
+        return toClass(arg);
     }
 
     /**
