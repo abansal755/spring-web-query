@@ -4,6 +4,8 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FieldMappingsValidatorTest {
@@ -11,19 +13,19 @@ class FieldMappingsValidatorTest {
     @Test
     void validate_rejectsDuplicateAlias() {
         FieldMappingsValidator validator = new FieldMappingsValidator();
-        assertThrows(QueryConfigurationException.class, () -> validator.validate(new FieldMapping[]{
+        assertThrows(QueryConfigurationException.class, () -> validator.validate(List.of(
                 mapping("name", "a"),
                 mapping("name", "b")
-        }));
+        )));
     }
 
     @Test
     void validate_rejectsDuplicateTargetField() {
         FieldMappingsValidator validator = new FieldMappingsValidator();
-        assertThrows(QueryConfigurationException.class, () -> validator.validate(new FieldMapping[]{
+        assertThrows(QueryConfigurationException.class, () -> validator.validate(List.of(
                 mapping("a", "field"),
                 mapping("b", "field")
-        }));
+        )));
     }
 
     private static FieldMapping mapping(String name, String field) {
