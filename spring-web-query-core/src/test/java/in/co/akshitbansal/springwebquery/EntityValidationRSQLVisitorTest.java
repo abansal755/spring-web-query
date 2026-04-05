@@ -15,6 +15,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,7 +29,7 @@ class EntityValidationRSQLVisitorTest {
     void allows_filterableFieldWithAllowedOperator() {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
-                new FieldMapping[]{},
+                List.of(),
                 customOperators,
                 true,
                 false,
@@ -42,7 +43,7 @@ class EntityValidationRSQLVisitorTest {
     void rejects_unknownField() {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
-                new FieldMapping[]{},
+                List.of(),
                 customOperators,
                 true,
                 false,
@@ -58,7 +59,7 @@ class EntityValidationRSQLVisitorTest {
     void rejects_disallowedOperator() {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
-                new FieldMapping[]{},
+                List.of(),
                 customOperators,
                 true,
                 false,
@@ -74,7 +75,7 @@ class EntityValidationRSQLVisitorTest {
     void allows_aliasFieldMapping() {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
-                new FieldMapping[]{mapping("displayName", "name", false)},
+                List.of(mapping("displayName", "name", false)),
                 customOperators,
                 true,
                 false,
@@ -88,7 +89,7 @@ class EntityValidationRSQLVisitorTest {
     void rejects_originalMappedFieldWhenNotAllowed() {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
-                new FieldMapping[]{mapping("displayName", "name", false)},
+                List.of(mapping("displayName", "name", false)),
                 customOperators,
                 true,
                 false,
@@ -105,7 +106,7 @@ class EntityValidationRSQLVisitorTest {
         Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntityWithCustom.class,
-                new FieldMapping[]{},
+                List.of(),
                 customOperators,
                 true,
                 false,
@@ -120,7 +121,7 @@ class EntityValidationRSQLVisitorTest {
         Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntityWithCustom.class,
-                new FieldMapping[]{},
+                List.of(),
                 Map.of(),
                 true,
                 false,
@@ -136,7 +137,7 @@ class EntityValidationRSQLVisitorTest {
     void rejects_orOperator_whenNotAllowed() {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
-                new FieldMapping[]{},
+                List.of(),
                 customOperators,
                 true,
                 false,
@@ -152,7 +153,7 @@ class EntityValidationRSQLVisitorTest {
     void rejects_whenAstDepthExceeded() {
         EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
                 TestEntity.class,
-                new FieldMapping[]{},
+                List.of(),
                 customOperators,
                 true,
                 true,

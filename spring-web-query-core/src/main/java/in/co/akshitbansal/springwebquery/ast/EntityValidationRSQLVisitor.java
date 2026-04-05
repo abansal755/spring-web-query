@@ -11,6 +11,7 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,7 +35,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
      * Creates a new entity validation visitor with the specified configuration.
      *
      * @param entityClass    the entity class to validate against
-     * @param fieldMappings  array of field mappings (aliases) to consider
+     * @param fieldMappings  field mappings (aliases) to consider
      * @param customOperators registered custom operators keyed by implementation class
      * @param andNodeAllowed whether logical AND operator is allowed
      * @param orNodeAllowed whether logical OR operator is allowed
@@ -42,7 +43,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
      */
     public EntityValidationRSQLVisitor(
             Class<?> entityClass,
-            FieldMapping[] fieldMappings,
+            List<FieldMapping> fieldMappings,
             Map<Class<?>, RSQLCustomOperator<?>> customOperators,
             boolean andNodeAllowed,
             boolean orNodeAllowed,

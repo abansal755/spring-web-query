@@ -235,7 +235,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
                 .builder()
                 .entityClass(webQueryAnnotation.entityClass())
                 .dtoClass(webQueryAnnotation.dtoClass())
-                .fieldMappings(webQueryAnnotation.fieldMappings())
+                .fieldMappings(Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings())))
                 .filterParamName(filterParamName)
                 .andNodeAllowed(andNodeAllowed)
                 .orNodeAllowed(orNodeAllowed)
@@ -268,7 +268,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
          * Field mappings declared on {@link WebQuery}, used only by
          * entity-aware selector resolution.
          */
-        private final FieldMapping[] fieldMappings;
+        private final List<FieldMapping> fieldMappings;
 
         /**
          * Request parameter name used to read the raw RSQL filter expression

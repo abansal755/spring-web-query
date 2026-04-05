@@ -5,10 +5,7 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Validator for {@link FieldMapping} declarations supplied via {@link WebQuery}.
@@ -16,7 +13,7 @@ import java.util.Set;
  * <p>This validator ensures that aliases are unique and that no two aliases map
  * to the same underlying entity field.</p>
  */
-public class FieldMappingsValidator implements Validator<FieldMapping[]> {
+public class FieldMappingsValidator implements Validator<List<FieldMapping>> {
 
     /**
      * Validates {@link FieldMapping} definitions declared in {@link WebQuery}.
@@ -31,7 +28,7 @@ public class FieldMappingsValidator implements Validator<FieldMapping[]> {
      * @throws QueryConfigurationException if duplicate aliases or duplicate target fields are found
      */
     @Override
-    public void validate(FieldMapping[] fieldMappings) {
+    public void validate(List<FieldMapping> fieldMappings) {
         Set<String> nameSet = new HashSet<>();
         for (FieldMapping mapping : fieldMappings) {
             if(!nameSet.add(mapping.name())) throw new QueryConfigurationException(MessageFormat.format(

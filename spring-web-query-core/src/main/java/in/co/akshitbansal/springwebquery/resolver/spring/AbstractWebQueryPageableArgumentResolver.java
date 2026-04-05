@@ -18,6 +18,10 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Base resolver for {@link Pageable} parameters participating in
  * {@link WebQuery}-aware sorting.
@@ -108,7 +112,7 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
                 .builder()
                 .entityClass(webQueryAnnotation.entityClass())
                 .dtoClass(webQueryAnnotation.dtoClass())
-                .fieldMappings(webQueryAnnotation.fieldMappings())
+                .fieldMappings(Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings())))
                 .build();
     }
 
@@ -136,6 +140,6 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
          * Explicit field aliases declared on {@link WebQuery}, used only by
          * entity-aware pageable resolution.
          */
-        private final FieldMapping[] fieldMappings;
+        private final List<FieldMapping> fieldMappings;
     }
 }

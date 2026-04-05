@@ -16,7 +16,7 @@ import io.github.perplexhub.rsql.RSQLJPASupport;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,7 +35,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
     /**
      * Validator used to enforce uniqueness and consistency of declared field mappings.
      */
-    private final Validator<FieldMapping[]> fieldMappingsValidator;
+    private final Validator<List<FieldMapping>> fieldMappingsValidator;
 
     /**
      * Creates an entity-aware RSQL specification resolver.
@@ -104,8 +104,9 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
             root.accept(validationVisitor, NodeMetadata.of(0));
 
             // Convert field mappings to aliases map which rsql jpa support library accepts
-            Map<String, String> fieldMappingsMap = Arrays
-                    .stream(queryConfig.getFieldMappings())
+            Map<String, String> fieldMappingsMap = queryConfig
+                    .getFieldMappings()
+                    .stream()
                     .collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
 
             // Convert the validated RSQL query into a JPA Specification
