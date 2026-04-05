@@ -30,7 +30,7 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
     /**
      * Validator used to enforce uniqueness and consistency of declared field mappings.
      */
-    private final Validator<FieldMapping[]> fieldMappingsValidator;
+    private final Validator<List<FieldMapping>> fieldMappingsValidator;
 
     /**
      * Creates an entity-aware pageable resolver.

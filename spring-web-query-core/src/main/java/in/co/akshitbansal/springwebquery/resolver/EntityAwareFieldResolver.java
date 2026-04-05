@@ -7,9 +7,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -49,11 +49,11 @@ public class EntityAwareFieldResolver implements FieldResolver {
      * @param entityClass entity type used for path resolution
      * @param fieldMappings declared alias mappings from the public API contract
      */
-    public EntityAwareFieldResolver(Class<?> entityClass, FieldMapping[] fieldMappings) {
+    public EntityAwareFieldResolver(Class<?> entityClass, List<FieldMapping> fieldMappings) {
         this.entityClass = entityClass;
         // Map from name to FieldMapping
-        this.fieldMappingMap = Collections.unmodifiableMap(Arrays
-                .stream(fieldMappings)
+        this.fieldMappingMap = Collections.unmodifiableMap(fieldMappings
+                .stream()
                 .collect(Collectors.toMap(
                         FieldMapping::name,
                         mapping -> mapping,
@@ -62,8 +62,8 @@ public class EntityAwareFieldResolver implements FieldResolver {
                         HashMap::new
                 )));
         // Map from original field name to FieldMapping
-        this.originalFieldNameMap = Collections.unmodifiableMap(Arrays
-                .stream(fieldMappings)
+        this.originalFieldNameMap = Collections.unmodifiableMap(fieldMappings
+                .stream()
                 .collect(Collectors.toMap(
                         FieldMapping::field,
                         mapping -> mapping,
