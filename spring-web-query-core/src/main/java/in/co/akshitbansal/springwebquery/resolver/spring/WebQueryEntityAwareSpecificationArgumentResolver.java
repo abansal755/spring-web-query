@@ -77,12 +77,11 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
     }
 
     /**
-     * Parses, validates, and converts an entity-oriented RSQL filter into a
-     * JPA {@link Specification}.
+     * Parse, validate, and convert an entity-oriented RSQL filter into a query predicate.
      *
-     * @param queryConfig effective query configuration for the current request
+     * @param queryConfig effective query configuration for the current request, including entity class and field mappings
      * @param filter raw RSQL filter string from the request
-     * @return resolved specification for the validated filter
+     * @return the JPA {@link Specification} representing the validated filter
      */
     @Override
     protected Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter) {

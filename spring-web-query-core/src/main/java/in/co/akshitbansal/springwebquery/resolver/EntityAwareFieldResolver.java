@@ -40,14 +40,14 @@ public class EntityAwareFieldResolver implements FieldResolver {
     private final Map<String, FieldMapping> originalFieldNameMap;
 
     /**
-     * Creates an entity-aware resolver from raw field-mapping declarations.
+     * Create an EntityAwareFieldResolver configured with the provided field mappings.
      *
-     * <p>The supplied mappings are normalized into immutable lookup maps keyed
-     * by alias name and original entity field path so callers do not need to
-     * precompute resolver-specific structures.</p>
+     * <p>Normalizes the supplied mappings into two unmodifiable lookup maps:
+     * one keyed by alias name and one keyed by original entity field path.
+     * If duplicate keys are present, the first encountered mapping is retained.</p>
      *
-     * @param entityClass entity type used for path resolution
-     * @param fieldMappings declared alias mappings from the public API contract
+     * @param entityClass the entity type used to resolve field paths via reflection
+     * @param fieldMappings alias mappings from the public API used to build unmodifiable lookup maps keyed by alias name and original field path
      */
     public EntityAwareFieldResolver(Class<?> entityClass, List<FieldMapping> fieldMappings) {
         this.entityClass = entityClass;

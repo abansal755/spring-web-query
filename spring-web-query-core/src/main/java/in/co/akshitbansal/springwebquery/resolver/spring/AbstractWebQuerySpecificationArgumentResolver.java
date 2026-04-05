@@ -193,17 +193,18 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
     protected abstract Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter);
 
     /**
-     * Resolves the effective query configuration by combining method-level {@link WebQuery}
-     * settings with the configured global fallbacks.
-     *
-     * <p>A blank {@link WebQuery#filterParamName()} delegates to the resolver's
-     * configured global default filter parameter name. Non-blank annotation
-     * overrides are validated before they are used for request lookup.</p>
-     *
-     * @param parameter supported method parameter whose declaring method carries
-     *                  {@link WebQuery}
-     * @return effective configuration used by specification resolvers for validation and parsing
-     */
+         * Compute the effective QueryConfiguration by merging the method-level {@link WebQuery}
+         * annotation with this resolver's global defaults.
+         *
+         * <p>If {@link WebQuery#filterParamName()} is blank, the global filter parameter name is used;
+         * a non-blank name is validated before use. Logical operator policies use the annotation value
+         * unless set to {@code GLOBAL}, in which case the corresponding global allow/deny flag is applied.
+         * A negative {@link WebQuery#maxASTDepth()} delegates to the global max AST depth.</p>
+         *
+         * @param parameter a method parameter whose declaring method is annotated with {@link WebQuery}
+         * @return a {@link QueryConfiguration} containing resolved entity/dto classes, an immutable list of field mappings,
+         *         the effective filter parameter name, allowed logical operator flags, and the resolved max AST depth
+         */
     protected QueryConfiguration getQueryConfiguration(MethodParameter parameter) {
         // Only runs successfully if supportsParameter has already returned true
         // so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary

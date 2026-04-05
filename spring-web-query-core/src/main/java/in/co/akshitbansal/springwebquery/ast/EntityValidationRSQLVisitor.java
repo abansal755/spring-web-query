@@ -32,14 +32,17 @@ import java.util.Map;
 public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 
     /**
-     * Creates a new entity validation visitor with the specified configuration.
+     * Create a visitor that validates RSQL comparison selectors against the given entity model.
      *
-     * @param entityClass    the entity class to validate against
-     * @param fieldMappings  field mappings (aliases) to consider
-     * @param customOperators registered custom operators keyed by implementation class
-     * @param andNodeAllowed whether logical AND operator is allowed
-     * @param orNodeAllowed whether logical OR operator is allowed
-     * @param maxDepth maximum allowed depth for the RSQL AST
+     * The visitor resolves selectors using the provided field mappings and enforces operator
+     * compatibility and the configured AST constraints.
+     *
+     * @param entityClass   the entity class whose fields are validated
+     * @param fieldMappings mappings and aliases used to resolve request selectors
+     * @param customOperators custom operators available for validation, keyed by operator implementation class
+     * @param andNodeAllowed whether logical AND nodes are permitted in the AST
+     * @param orNodeAllowed  whether logical OR nodes are permitted in the AST
+     * @param maxDepth       maximum allowed depth for the RSQL AST
      */
     public EntityValidationRSQLVisitor(
             Class<?> entityClass,
