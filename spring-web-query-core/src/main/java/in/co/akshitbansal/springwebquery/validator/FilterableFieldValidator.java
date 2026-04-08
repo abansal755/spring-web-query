@@ -16,10 +16,7 @@ import lombok.ToString;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -122,7 +119,9 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
      * @return collected filterability declarations
      */
     private Set<RSQLFilterable> collectFilterables(Field field) {
-        return collectFilterables(field.getAnnotations());
+        Set<RSQLFilterable> filterables = new HashSet<>();
+        collectFilterables(field.getAnnotations(), filterables);
+        return Collections.unmodifiableSet(filterables);
     }
 
     /**
@@ -130,20 +129,18 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
      * annotations, supporting both direct and meta-annotation usage.
      *
      * @param annotations annotations to inspect
-     * @return collected filterability declarations
+     * @param filterables accumulator to which discovered filterability declarations are added
      */
-    private Set<RSQLFilterable> collectFilterables(Annotation[] annotations) {
-        Set<RSQLFilterable> filterables = new HashSet<>();
+    private void collectFilterables(Annotation[] annotations, Set<RSQLFilterable> filterables) {
         for(Annotation annotation : annotations) {
             Class<? extends Annotation> type = annotation.annotationType();
             if(annotation instanceof RSQLFilterable rsqlFilterable)
                 filterables.add(rsqlFilterable);
             else if(annotation instanceof RSQLFilterables rsqlFilterables)
-                filterables.addAll(Arrays.asList(rsqlFilterables.value()));
+                collectFilterables(rsqlFilterables.value(), filterables);
             else if(type.getName().startsWith("in.co.akshitbansal.springwebquery.annotation"))
-                filterables.addAll(collectFilterables(type.getAnnotations()));
+                collectFilterables(type.getAnnotations(), filterables);
         }
-        return filterables;
     }
 
     @RequiredArgsConstructor
