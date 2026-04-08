@@ -15,25 +15,26 @@ import jakarta.persistence.criteria.Predicate;
  */
 public interface RSQLCustomOperator<T extends Comparable<?>> {
 
-    /**
-     * Returns the RSQL {@link ComparisonOperator} for this custom operator.
-     *
-     * @return the comparison operator
-     */
-    ComparisonOperator getComparisonOperator();
+	/**
+	 * Returns the RSQL {@link ComparisonOperator} for this custom operator.
+	 *
+	 * @return the comparison operator
+	 */
+	ComparisonOperator getComparisonOperator();
 
-    /**
-     * Returns the Java type of the operand that this operator handles.
-     *
-     * @return the operand type
-     */
-    Class<T> getType();
+	/**
+	 * Returns the Java type of the operand that this operator handles.
+	 *
+	 * @return the operand type
+	 */
+	Class<T> getType();
 
-    /**
-     * Converts the RSQL operator and its input into a JPA {@link Predicate}.
-     *
-     * @param input the input containing the criteria builder, root, and values
-     * @return the JPA predicate
-     */
-    Predicate toPredicate(RSQLCustomPredicateInput input);
+	/**
+	 * Converts the RSQL operator and its input into a JPA {@link Predicate}.
+	 *
+	 * @param input the input containing the criteria builder, root, and values
+	 *
+	 * @return the JPA predicate
+	 */
+	Predicate toPredicate(RSQLCustomPredicateInput input);
 }

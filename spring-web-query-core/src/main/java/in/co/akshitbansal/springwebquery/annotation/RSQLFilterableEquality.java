@@ -14,6 +14,6 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@RSQLFilterable({ RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.NOT_EQUAL })
+@RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.NOT_EQUAL})
 public @interface RSQLFilterableEquality {
 }

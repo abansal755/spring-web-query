@@ -10,45 +10,50 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FieldMappingsValidatorTest {
 
-    @Test
-    void validate_rejectsDuplicateAlias() {
-        FieldMappingsValidator validator = new FieldMappingsValidator();
-        assertThrows(QueryConfigurationException.class, () -> validator.validate(List.of(
-                mapping("name", "a"),
-                mapping("name", "b")
-        )));
-    }
+	@Test
+	void validate_rejectsDuplicateAlias() {
+		FieldMappingsValidator validator = new FieldMappingsValidator();
+		assertThrows(
+				QueryConfigurationException.class, () -> validator.validate(List.of(
+						mapping("name", "a"),
+						mapping("name", "b")
+				))
+		);
+	}
 
-    @Test
-    void validate_rejectsDuplicateTargetField() {
-        FieldMappingsValidator validator = new FieldMappingsValidator();
-        assertThrows(QueryConfigurationException.class, () -> validator.validate(List.of(
-                mapping("a", "field"),
-                mapping("b", "field")
-        )));
-    }
+	@Test
+	void validate_rejectsDuplicateTargetField() {
+		FieldMappingsValidator validator = new FieldMappingsValidator();
+		assertThrows(
+				QueryConfigurationException.class, () -> validator.validate(List.of(
+						mapping("a", "field"),
+						mapping("b", "field")
+				))
+		);
+	}
 
-    private static FieldMapping mapping(String name, String field) {
-        return new FieldMapping() {
-            @Override
-            public String name() {
-                return name;
-            }
+	private static FieldMapping mapping(String name, String field) {
+		return new FieldMapping() {
 
-            @Override
-            public String field() {
-                return field;
-            }
+			@Override
+			public String name() {
+				return name;
+			}
 
-            @Override
-            public boolean allowOriginalFieldName() {
-                return false;
-            }
+			@Override
+			public String field() {
+				return field;
+			}
 
-            @Override
-            public Class<? extends java.lang.annotation.Annotation> annotationType() {
-                return FieldMapping.class;
-            }
-        };
-    }
+			@Override
+			public boolean allowOriginalFieldName() {
+				return false;
+			}
+
+			@Override
+			public Class<? extends java.lang.annotation.Annotation> annotationType() {
+				return FieldMapping.class;
+			}
+		};
+	}
 }

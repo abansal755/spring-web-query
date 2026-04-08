@@ -25,83 +25,85 @@ import java.util.Set;
  */
 public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQuerySpecificationArgumentResolver {
 
-    /**
-     * Creates a DTO-aware RSQL specification resolver.
-     *
-     * @param globalFilterParamName global default request parameter name used when
-     *                        {@link WebQuery#filterParamName()} is blank
-     * @param globalAllowAndOperator whether AND nodes are allowed by default when {@code @WebQuery}
-     *                               does not override that behavior
-     * @param globalAllowOrOperator whether OR nodes are allowed by default when {@code @WebQuery}
-     *                              does not override that behavior
-     * @param globalMaxASTDepth maximum AST depth allowed by default when {@code @WebQuery}
-     *                          does not override that behavior
-     * @param defaultOperators built-in operators accepted in RSQL expressions
-     * @param customOperators custom operators supported by parser and predicates
-     */
-    public WebQueryDTOAwareSpecificationArgumentResolver(
-            String globalFilterParamName,
-            boolean globalAllowAndOperator,
-            boolean globalAllowOrOperator,
-            int globalMaxASTDepth,
-            Set<RSQLDefaultOperator> defaultOperators,
-            Set<? extends RSQLCustomOperator<?>> customOperators
-    ) {
-        super(globalFilterParamName, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth, defaultOperators, customOperators);
-    }
+	/**
+	 * Creates a DTO-aware RSQL specification resolver.
+	 *
+	 * @param globalFilterParamName global default request parameter name used when
+	 * {@link WebQuery#filterParamName()} is blank
+	 * @param globalAllowAndOperator whether AND nodes are allowed by default when {@code @WebQuery}
+	 * does not override that behavior
+	 * @param globalAllowOrOperator whether OR nodes are allowed by default when {@code @WebQuery}
+	 * does not override that behavior
+	 * @param globalMaxASTDepth maximum AST depth allowed by default when {@code @WebQuery}
+	 * does not override that behavior
+	 * @param defaultOperators built-in operators accepted in RSQL expressions
+	 * @param customOperators custom operators supported by parser and predicates
+	 */
+	public WebQueryDTOAwareSpecificationArgumentResolver(
+			String globalFilterParamName,
+			boolean globalAllowAndOperator,
+			boolean globalAllowOrOperator,
+			int globalMaxASTDepth,
+			Set<RSQLDefaultOperator> defaultOperators,
+			Set<? extends RSQLCustomOperator<?>> customOperators
+	) {
+		super(globalFilterParamName, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth, defaultOperators, customOperators);
+	}
 
-    /**
-     * Determines whether this resolver should handle the given parameter.
-     *
-     * @param parameter method parameter under inspection
-     * @return {@code true} when parameter is a {@code Specification} with
-     *         method-level {@link WebQuery} and a configured DTO class
-     */
-    @Override
-    public boolean supportsParameter(MethodParameter parameter) {
-        return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
-                && getWebQueryAnnotation(parameter).dtoClass() != void.class; // so no exception handling is needed
-    }
+	/**
+	 * Determines whether this resolver should handle the given parameter.
+	 *
+	 * @param parameter method parameter under inspection
+	 *
+	 * @return {@code true} when parameter is a {@code Specification} with
+	 * method-level {@link WebQuery} and a configured DTO class
+	 */
+	@Override
+	public boolean supportsParameter(MethodParameter parameter) {
+		return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
+				&& getWebQueryAnnotation(parameter).dtoClass() != void.class; // so no exception handling is needed
+	}
 
-    /**
-     * Parses, validates, and converts a DTO-oriented RSQL filter into a JPA
-     * {@link Specification}.
-     *
-     * @param queryConfig effective query configuration for the current request
-     * @param filter raw RSQL filter string from the request
-     * @return resolved specification for the validated filter
-     */
-    @Override
-    protected Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter) {
-        try {
-            // Parse the RSQL query into an Abstract Syntax Tree (AST)
-            Node root = rsqlParser.parse(filter);
-            // Validate the parsed AST against the target DTO and its @RSQLFilterable fields, while also building field mappings from DTO to entity
-            DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(
-                    queryConfig.getEntityClass(),
-                    queryConfig.getDtoClass(),
-                    customOperators,
-                    queryConfig.isAndNodeAllowed(),
-                    queryConfig.isOrNodeAllowed(),
-                    queryConfig.getMaxASTDepth()
-            );
-            root.accept(visitor, NodeMetadata.of(0));
+	/**
+	 * Parses, validates, and converts a DTO-oriented RSQL filter into a JPA
+	 * {@link Specification}.
+	 *
+	 * @param queryConfig effective query configuration for the current request
+	 * @param filter raw RSQL filter string from the request
+	 *
+	 * @return resolved specification for the validated filter
+	 */
+	@Override
+	protected Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter) {
+		try {
+			// Parse the RSQL query into an Abstract Syntax Tree (AST)
+			Node root = rsqlParser.parse(filter);
+			// Validate the parsed AST against the target DTO and its @RSQLFilterable fields, while also building field mappings from DTO to entity
+			DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(
+					queryConfig.getEntityClass(),
+					queryConfig.getDtoClass(),
+					customOperators,
+					queryConfig.isAndNodeAllowed(),
+					queryConfig.isOrNodeAllowed(),
+					queryConfig.getMaxASTDepth()
+			);
+			root.accept(visitor, NodeMetadata.of(0));
 
-            // Convert the validated RSQL query into a JPA Specification
-            QuerySupport querySupport = QuerySupport
-                    .builder()
-                    .rsqlQuery(filter)
-                    .propertyPathMapper(visitor.getFieldMappings())
-                    .customPredicates(customPredicates)
-                    // prevents wildcard parsing for string equality operator
-                    // so that "name==John*" is treated as: name equals 'John*'
-                    // rather than: name starts with 'John'
-                    .strictEquality(true)
-                    .build();
-            return RSQLJPASupport.toSpecification(querySupport);
-        }
-        catch (RSQLParserException ex) {
-            throw new QueryValidationException("Unable to parse RSQL query param", ex);
-        }
-    }
+			// Convert the validated RSQL query into a JPA Specification
+			QuerySupport querySupport = QuerySupport
+					.builder()
+					.rsqlQuery(filter)
+					.propertyPathMapper(visitor.getFieldMappings())
+					.customPredicates(customPredicates)
+					// prevents wildcard parsing for string equality operator
+					// so that "name==John*" is treated as: name equals 'John*'
+					// rather than: name starts with 'John'
+					.strictEquality(true)
+					.build();
+			return RSQLJPASupport.toSpecification(querySupport);
+		}
+		catch (RSQLParserException ex) {
+			throw new QueryValidationException("Unable to parse RSQL query param", ex);
+		}
+	}
 }

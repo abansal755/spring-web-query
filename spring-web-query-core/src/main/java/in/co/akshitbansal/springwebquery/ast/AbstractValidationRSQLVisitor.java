@@ -29,131 +29,135 @@ import java.util.Map;
  */
 public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 
-    /**
-     * Resolver used by subclasses to translate selectors into entity-backed
-     * paths and expose the terminal field for validation.
-     */
-    protected final FieldResolver fieldResolver;
+	/**
+	 * Resolver used by subclasses to translate selectors into entity-backed
+	 * paths and expose the terminal field for validation.
+	 */
+	protected final FieldResolver fieldResolver;
 
-    /**
-     * Validator used by subclasses to enforce {@code @RSQLFilterable}
-     * constraints on resolved terminal fields.
-     */
-    protected final Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator;
+	/**
+	 * Validator used by subclasses to enforce {@code @RSQLFilterable}
+	 * constraints on resolved terminal fields.
+	 */
+	protected final Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator;
 
-    /**
-     * Whether logical AND operator is allowed in the query.
-     */
-    private final boolean andNodeAllowed;
+	/**
+	 * Whether logical AND operator is allowed in the query.
+	 */
+	private final boolean andNodeAllowed;
 
-    /**
-     * Whether logical OR operator is allowed in the query.
-     */
-    private final boolean orNodeAllowed;
+	/**
+	 * Whether logical OR operator is allowed in the query.
+	 */
+	private final boolean orNodeAllowed;
 
-    /**
-     * Maximum allowed depth for the RSQL AST during validation.
-     */
-    private final int maxDepth;
+	/**
+	 * Maximum allowed depth for the RSQL AST during validation.
+	 */
+	private final int maxDepth;
 
-    /**
-     * Creates a validation visitor with the supplied structural limits and
-     * custom operator registry.
-     *
-     * @param fieldResolver resolver used for selector-path resolution in concrete visitors
-     * @param customOperators registered custom operators keyed by implementation class
-     * @param andNodeAllowed whether logical AND nodes are allowed
-     * @param orNodeAllowed whether logical OR nodes are allowed
-     * @param maxDepth maximum allowed AST depth
-     */
-    protected AbstractValidationRSQLVisitor(
-            FieldResolver fieldResolver,
-            Map<Class<?>, RSQLCustomOperator<?>> customOperators,
-            boolean andNodeAllowed,
-            boolean orNodeAllowed,
-            int maxDepth
-    ) {
-        this.fieldResolver = fieldResolver;
-        this.filterableFieldValidator = new FilterableFieldValidator(customOperators);
-        this.andNodeAllowed = andNodeAllowed;
-        this.orNodeAllowed = orNodeAllowed;
-        this.maxDepth = maxDepth;
-    }
+	/**
+	 * Creates a validation visitor with the supplied structural limits and
+	 * custom operator registry.
+	 *
+	 * @param fieldResolver resolver used for selector-path resolution in concrete visitors
+	 * @param customOperators registered custom operators keyed by implementation class
+	 * @param andNodeAllowed whether logical AND nodes are allowed
+	 * @param orNodeAllowed whether logical OR nodes are allowed
+	 * @param maxDepth maximum allowed AST depth
+	 */
+	protected AbstractValidationRSQLVisitor(
+			FieldResolver fieldResolver,
+			Map<Class<?>, RSQLCustomOperator<?>> customOperators,
+			boolean andNodeAllowed,
+			boolean orNodeAllowed,
+			int maxDepth
+	) {
+		this.fieldResolver = fieldResolver;
+		this.filterableFieldValidator = new FilterableFieldValidator(customOperators);
+		this.andNodeAllowed = andNodeAllowed;
+		this.orNodeAllowed = orNodeAllowed;
+		this.maxDepth = maxDepth;
+	}
 
-    /**
-     * Validates AND nodes and recursively visits child nodes.
-     *
-     * @param node AND node to validate
-     * @param metadata traversal metadata including current depth
-     * @return {@code null} (visitor contract)
-     */
-    @Override
-    @Nullable
-    public Void visit(AndNode node, NodeMetadata metadata) {
-        validateNode(node, metadata);
-        node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
-        return null;
-    }
+	/**
+	 * Validates AND nodes and recursively visits child nodes.
+	 *
+	 * @param node AND node to validate
+	 * @param metadata traversal metadata including current depth
+	 *
+	 * @return {@code null} (visitor contract)
+	 */
+	@Override
+	@Nullable
+	public Void visit(AndNode node, NodeMetadata metadata) {
+		validateNode(node, metadata);
+		node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
+		return null;
+	}
 
-    /**
-     * Validates OR nodes and recursively visits child nodes.
-     *
-     * @param node OR node to validate
-     * @param metadata traversal metadata including current depth
-     * @return {@code null} (visitor contract)
-     */
-    @Override
-    @Nullable
-    public Void visit(OrNode node, NodeMetadata metadata) {
-        validateNode(node, metadata);
-        node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
-        return null;
-    }
+	/**
+	 * Validates OR nodes and recursively visits child nodes.
+	 *
+	 * @param node OR node to validate
+	 * @param metadata traversal metadata including current depth
+	 *
+	 * @return {@code null} (visitor contract)
+	 */
+	@Override
+	@Nullable
+	public Void visit(OrNode node, NodeMetadata metadata) {
+		validateNode(node, metadata);
+		node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
+		return null;
+	}
 
-    /**
-     * Validates comparison nodes and delegates field/operator validation.
-     *
-     * @param node comparison node to validate
-     * @param metadata traversal metadata including current depth
-     * @return {@code null} (visitor contract)
-     */
-    @Override
-    @Nullable
-    public Void visit(ComparisonNode node, NodeMetadata metadata) {
-        validateNode(node, metadata);
-        validateComparisonNode(node);
-        return null;
-    }
+	/**
+	 * Validates comparison nodes and delegates field/operator validation.
+	 *
+	 * @param node comparison node to validate
+	 * @param metadata traversal metadata including current depth
+	 *
+	 * @return {@code null} (visitor contract)
+	 */
+	@Override
+	@Nullable
+	public Void visit(ComparisonNode node, NodeMetadata metadata) {
+		validateNode(node, metadata);
+		validateComparisonNode(node);
+		return null;
+	}
 
-    /**
-     * Validates a comparison node for field/operator correctness.
-     *
-     * <p>Concrete subclasses implement this hook to resolve selectors against
-     * their active contract type and then invoke {@link #filterableFieldValidator}
-     * on the resolved terminal field.</p>
-     *
-     * @param node comparison node to validate
-     */
-    protected abstract void validateComparisonNode(ComparisonNode node);
+	/**
+	 * Validates a comparison node for field/operator correctness.
+	 *
+	 * <p>Concrete subclasses implement this hook to resolve selectors against
+	 * their active contract type and then invoke {@link #filterableFieldValidator}
+	 * on the resolved terminal field.</p>
+	 *
+	 * @param node comparison node to validate
+	 */
+	protected abstract void validateComparisonNode(ComparisonNode node);
 
-    /**
-     * Validates logical operator usage and depth constraints for the given node.
-     *
-     * @param node node to validate
-     * @param metadata node metadata including current depth
-     * @throws QueryValidationException if an operator is disallowed or the depth exceeds the limit
-     */
-    protected void validateNode(Node node, NodeMetadata metadata) {
-        if((node instanceof AndNode) && !andNodeAllowed)
-            throw new QueryValidationException("Logical AND operator is not allowed");
-        if((node instanceof OrNode) && !orNodeAllowed)
-            throw new QueryValidationException("Logical OR operator is not allowed");
-        int depth = metadata.getDepth();
-        if(depth > maxDepth) {
-            throw new QueryValidationException(MessageFormat.format(
-                    "Exceeded maximum allowed depth of RSQL Abstract Syntax Tree ({0}) at node: {1}",
-                    maxDepth, node
-            ));
-        }
-    }
+	/**
+	 * Validates logical operator usage and depth constraints for the given node.
+	 *
+	 * @param node node to validate
+	 * @param metadata node metadata including current depth
+	 *
+	 * @throws QueryValidationException if an operator is disallowed or the depth exceeds the limit
+	 */
+	protected void validateNode(Node node, NodeMetadata metadata) {
+		if ((node instanceof AndNode) && !andNodeAllowed)
+			throw new QueryValidationException("Logical AND operator is not allowed");
+		if ((node instanceof OrNode) && !orNodeAllowed)
+			throw new QueryValidationException("Logical OR operator is not allowed");
+		int depth = metadata.getDepth();
+		if (depth > maxDepth) {
+			throw new QueryValidationException(MessageFormat.format(
+					"Exceeded maximum allowed depth of RSQL Abstract Syntax Tree ({0}) at node: {1}",
+					maxDepth, node
+			));
+		}
+	}
 }

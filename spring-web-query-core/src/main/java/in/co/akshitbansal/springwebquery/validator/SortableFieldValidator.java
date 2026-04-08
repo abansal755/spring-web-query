@@ -15,37 +15,40 @@ import java.text.MessageFormat;
  */
 public class SortableFieldValidator implements Validator<SortableFieldValidator.SortableField> {
 
-    /**
-     * Validates that the requested field is explicitly marked as sortable.
-     *
-     * @param sortableField field being targeted by sort selector
-     * @throws QueryFieldValidationException if sorting is not allowed for the field
-     */
-    @Override
-    public void validate(SortableField sortableField) {
-        Field field = sortableField.getField();
-        String fieldPath = sortableField.getFieldPath();
-        if(!field.isAnnotationPresent(Sortable.class)) {
-            throw new QueryFieldValidationException(MessageFormat.format(
-                    "Sorting is not allowed on the field ''{0}''", fieldPath
-            ), fieldPath);
-        }
-    }
+	/**
+	 * Validates that the requested field is explicitly marked as sortable.
+	 *
+	 * @param sortableField field being targeted by sort selector
+	 *
+	 * @throws QueryFieldValidationException if sorting is not allowed for the field
+	 */
+	@Override
+	public void validate(SortableField sortableField) {
+		Field field = sortableField.getField();
+		String fieldPath = sortableField.getFieldPath();
+		if (!field.isAnnotationPresent(Sortable.class)) {
+			throw new QueryFieldValidationException(
+					MessageFormat.format(
+							"Sorting is not allowed on the field ''{0}''", fieldPath
+					), fieldPath
+			);
+		}
+	}
 
-    @RequiredArgsConstructor
-    @Getter
-    @EqualsAndHashCode
-    @ToString
-    public static class SortableField {
+	@RequiredArgsConstructor
+	@Getter
+	@EqualsAndHashCode
+	@ToString
+	public static class SortableField {
 
-        /**
-         * Reflected terminal field being validated.
-         */
-        private final Field field;
+		/**
+		 * Reflected terminal field being validated.
+		 */
+		private final Field field;
 
-        /**
-         * Original selector path from the incoming request.
-         */
-        private final String fieldPath;
-    }
+		/**
+		 * Original selector path from the incoming request.
+		 */
+		private final String fieldPath;
+	}
 }

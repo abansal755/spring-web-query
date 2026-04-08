@@ -20,9 +20,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @RSQLFilterable({
-        RSQLDefaultOperator.GREATER_THAN, RSQLDefaultOperator.GREATER_THAN_OR_EQUAL,
-        RSQLDefaultOperator.LESS_THAN, RSQLDefaultOperator.LESS_THAN_OR_EQUAL,
-        RSQLDefaultOperator.BETWEEN, RSQLDefaultOperator.NOT_BETWEEN
+		RSQLDefaultOperator.GREATER_THAN, RSQLDefaultOperator.GREATER_THAN_OR_EQUAL,
+		RSQLDefaultOperator.LESS_THAN, RSQLDefaultOperator.LESS_THAN_OR_EQUAL,
+		RSQLDefaultOperator.BETWEEN, RSQLDefaultOperator.NOT_BETWEEN
 })
 public @interface RSQLFilterableRange {
 }

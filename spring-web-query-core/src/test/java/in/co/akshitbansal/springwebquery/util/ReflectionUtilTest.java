@@ -10,63 +10,68 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ReflectionUtilTest {
 
-    @Test
-    void resolveField_resolvesFromSuperclass() {
-        Field field = ReflectionUtil.resolveField(ChildEntity.class, "id");
-        assertEquals("id", field.getName());
-        assertEquals(BaseEntity.class, field.getDeclaringClass());
-    }
+	@Test
+	void resolveField_resolvesFromSuperclass() {
+		Field field = ReflectionUtil.resolveField(ChildEntity.class, "id");
+		assertEquals("id", field.getName());
+		assertEquals(BaseEntity.class, field.getDeclaringClass());
+	}
 
-    @Test
-    void resolveField_resolvesNestedFieldThroughCollection() {
-        Field field = ReflectionUtil.resolveField(ParentEntity.class, "children.name");
-        assertEquals("name", field.getName());
-        assertEquals(NestedEntity.class, field.getDeclaringClass());
-    }
+	@Test
+	void resolveField_resolvesNestedFieldThroughCollection() {
+		Field field = ReflectionUtil.resolveField(ParentEntity.class, "children.name");
+		assertEquals("name", field.getName());
+		assertEquals(NestedEntity.class, field.getDeclaringClass());
+	}
 
-    @Test
-    void resolveField_resolvesNestedFieldThroughArray() {
-        Field field = ReflectionUtil.resolveField(ArrayParentEntity.class, "children.name");
-        assertEquals("name", field.getName());
-        assertEquals(NestedEntity.class, field.getDeclaringClass());
-    }
+	@Test
+	void resolveField_resolvesNestedFieldThroughArray() {
+		Field field = ReflectionUtil.resolveField(ArrayParentEntity.class, "children.name");
+		assertEquals("name", field.getName());
+		assertEquals(NestedEntity.class, field.getDeclaringClass());
+	}
 
-    @Test
-    void resolveFieldPath_returnsFullPath() {
-        java.util.List<Field> fields = ReflectionUtil.resolveFieldPath(ParentEntity.class, "children.name");
-        assertEquals(2, fields.size());
-        // assertEquals("children", fields.getFirst().getName());
-        // getFirst() was added in Java 21, using get(0) for compatibility with earlier versions
-        assertEquals("children", fields.get(0).getName());
-        assertEquals("name", fields.get(fields.size() - 1).getName());
-    }
+	@Test
+	void resolveFieldPath_returnsFullPath() {
+		java.util.List<Field> fields = ReflectionUtil.resolveFieldPath(ParentEntity.class, "children.name");
+		assertEquals(2, fields.size());
+		// assertEquals("children", fields.getFirst().getName());
+		// getFirst() was added in Java 21, using get(0) for compatibility with earlier versions
+		assertEquals("children", fields.get(0).getName());
+		assertEquals("name", fields.get(fields.size() - 1).getName());
+	}
 
-    @Test
-    void resolveField_throwsForUnknownSegment() {
-        RuntimeException ex = assertThrows(
-                RuntimeException.class,
-                () -> ReflectionUtil.resolveField(ParentEntity.class, "children.unknown")
-        );
-        assertEquals("Field 'unknown' not found in class hierarchy of class in.co.akshitbansal.springwebquery.util.ReflectionUtilTest$NestedEntity", ex.getMessage());
-    }
+	@Test
+	void resolveField_throwsForUnknownSegment() {
+		RuntimeException ex = assertThrows(
+				RuntimeException.class,
+				() -> ReflectionUtil.resolveField(ParentEntity.class, "children.unknown")
+		);
+		assertEquals("Field 'unknown' not found in class hierarchy of class in.co.akshitbansal.springwebquery.util.ReflectionUtilTest$NestedEntity", ex.getMessage());
+	}
 
-    private static class BaseEntity {
-        private String id;
-    }
+	private static class BaseEntity {
 
-    private static class ChildEntity extends BaseEntity {
-        private String value;
-    }
+		private String id;
+	}
 
-    private static class ParentEntity {
-        private List<NestedEntity> children;
-    }
+	private static class ChildEntity extends BaseEntity {
 
-    private static class ArrayParentEntity {
-        private NestedEntity[] children;
-    }
+		private String value;
+	}
 
-    private static class NestedEntity {
-        private String name;
-    }
+	private static class ParentEntity {
+
+		private List<NestedEntity> children;
+	}
+
+	private static class ArrayParentEntity {
+
+		private NestedEntity[] children;
+	}
+
+	private static class NestedEntity {
+
+		private String name;
+	}
 }

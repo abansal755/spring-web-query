@@ -23,214 +23,222 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EntityValidationRSQLVisitorTest {
 
-    private final Map<Class<?>, RSQLCustomOperator<?>> customOperators = Map.of(MockCustomOperator.class, new MockCustomOperator());
+	private final Map<Class<?>, RSQLCustomOperator<?>> customOperators = Map.of(MockCustomOperator.class, new MockCustomOperator());
 
-    @Test
-    void allows_filterableFieldWithAllowedOperator() {
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntity.class,
-                List.of(),
-                customOperators,
-                true,
-                false,
-                1
-        );
+	@Test
+	void allows_filterableFieldWithAllowedOperator() {
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntity.class,
+				List.of(),
+				customOperators,
+				true,
+				false,
+				1
+		);
 
-        new RSQLParser().parse("name==john").accept(visitor, NodeMetadata.of(0));
-    }
+		new RSQLParser().parse("name==john").accept(visitor, NodeMetadata.of(0));
+	}
 
-    @Test
-    void rejects_unknownField() {
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntity.class,
-                List.of(),
-                customOperators,
-                true,
-                false,
-                1
-        );
+	@Test
+	void rejects_unknownField() {
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntity.class,
+				List.of(),
+				customOperators,
+				true,
+				false,
+				1
+		);
 
-        assertThrows(QueryValidationException.class, () ->
-                new RSQLParser().parse("missing==x").accept(visitor, NodeMetadata.of(0))
-        );
-    }
+		assertThrows(
+				QueryValidationException.class, () ->
+						new RSQLParser().parse("missing==x").accept(visitor, NodeMetadata.of(0))
+		);
+	}
 
-    @Test
-    void rejects_disallowedOperator() {
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntity.class,
-                List.of(),
-                customOperators,
-                true,
-                false,
-                1
-        );
+	@Test
+	void rejects_disallowedOperator() {
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntity.class,
+				List.of(),
+				customOperators,
+				true,
+				false,
+				1
+		);
 
-        assertThrows(QueryValidationException.class, () ->
-                new RSQLParser().parse("name!=x").accept(visitor, NodeMetadata.of(0))
-        );
-    }
+		assertThrows(
+				QueryValidationException.class, () ->
+						new RSQLParser().parse("name!=x").accept(visitor, NodeMetadata.of(0))
+		);
+	}
 
-    @Test
-    void allows_aliasFieldMapping() {
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntity.class,
-                List.of(mapping("displayName", "name", false)),
-                customOperators,
-                true,
-                false,
-                1
-        );
+	@Test
+	void allows_aliasFieldMapping() {
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntity.class,
+				List.of(mapping("displayName", "name", false)),
+				customOperators,
+				true,
+				false,
+				1
+		);
 
-        new RSQLParser().parse("displayName==john").accept(visitor, NodeMetadata.of(0));
-    }
+		new RSQLParser().parse("displayName==john").accept(visitor, NodeMetadata.of(0));
+	}
 
-    @Test
-    void rejects_originalMappedFieldWhenNotAllowed() {
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntity.class,
-                List.of(mapping("displayName", "name", false)),
-                customOperators,
-                true,
-                false,
-                1
-        );
+	@Test
+	void rejects_originalMappedFieldWhenNotAllowed() {
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntity.class,
+				List.of(mapping("displayName", "name", false)),
+				customOperators,
+				true,
+				false,
+				1
+		);
 
-        assertThrows(QueryValidationException.class, () ->
-                new RSQLParser().parse("name==john").accept(visitor, NodeMetadata.of(0))
-        );
-    }
+		assertThrows(
+				QueryValidationException.class, () ->
+						new RSQLParser().parse("name==john").accept(visitor, NodeMetadata.of(0))
+		);
+	}
 
-    @Test
-    void allows_customOperatorWhenWhitelisted() {
-        Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntityWithCustom.class,
-                List.of(),
-                customOperators,
-                true,
-                false,
-                1
-        );
+	@Test
+	void allows_customOperatorWhenWhitelisted() {
+		Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntityWithCustom.class,
+				List.of(),
+				customOperators,
+				true,
+				false,
+				1
+		);
 
-        new RSQLParser(ops).parse("name=mock=value").accept(visitor, NodeMetadata.of(0));
-    }
+		new RSQLParser(ops).parse("name=mock=value").accept(visitor, NodeMetadata.of(0));
+	}
 
-    @Test
-    void rejects_unregisteredCustomOperator() {
-        Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntityWithCustom.class,
-                List.of(),
-                Map.of(),
-                true,
-                false,
-                1
-        );
+	@Test
+	void rejects_unregisteredCustomOperator() {
+		Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntityWithCustom.class,
+				List.of(),
+				Map.of(),
+				true,
+				false,
+				1
+		);
 
-        assertThrows(QueryConfigurationException.class, () ->
-                new RSQLParser(ops).parse("name=mock=value").accept(visitor, NodeMetadata.of(0))
-        );
-    }
+		assertThrows(
+				QueryConfigurationException.class, () ->
+						new RSQLParser(ops).parse("name=mock=value").accept(visitor, NodeMetadata.of(0))
+		);
+	}
 
-    @Test
-    void rejects_orOperator_whenNotAllowed() {
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntity.class,
-                List.of(),
-                customOperators,
-                true,
-                false,
-                1
-        );
+	@Test
+	void rejects_orOperator_whenNotAllowed() {
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntity.class,
+				List.of(),
+				customOperators,
+				true,
+				false,
+				1
+		);
 
-        assertThrows(QueryValidationException.class, () ->
-                new RSQLParser().parse("name==john,name==doe").accept(visitor, NodeMetadata.of(0))
-        );
-    }
+		assertThrows(
+				QueryValidationException.class, () ->
+						new RSQLParser().parse("name==john,name==doe").accept(visitor, NodeMetadata.of(0))
+		);
+	}
 
-    @Test
-    void rejects_whenAstDepthExceeded() {
-        EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
-                TestEntity.class,
-                List.of(),
-                customOperators,
-                true,
-                true,
-                0
-        );
+	@Test
+	void rejects_whenAstDepthExceeded() {
+		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+				TestEntity.class,
+				List.of(),
+				customOperators,
+				true,
+				true,
+				0
+		);
 
-        assertThrows(QueryValidationException.class, () ->
-                new RSQLParser().parse("name==john;name==doe").accept(visitor, NodeMetadata.of(0))
-        );
-    }
+		assertThrows(
+				QueryValidationException.class, () ->
+						new RSQLParser().parse("name==john;name==doe").accept(visitor, NodeMetadata.of(0))
+		);
+	}
 
-    private static class MockCustomOperator implements RSQLCustomOperator<String> {
+	private static class MockCustomOperator implements RSQLCustomOperator<String> {
 
-        @Override
-        public ComparisonOperator getComparisonOperator() {
-            return new ComparisonOperator("=mock=");
-        }
+		@Override
+		public ComparisonOperator getComparisonOperator() {
+			return new ComparisonOperator("=mock=");
+		}
 
-        @Override
-        public Class<String> getType() {
-            return String.class;
-        }
+		@Override
+		public Class<String> getType() {
+			return String.class;
+		}
 
-        @Override
-        public Predicate toPredicate(RSQLCustomPredicateInput input) {
-            return dummyPredicate();
-        }
-    }
+		@Override
+		public Predicate toPredicate(RSQLCustomPredicateInput input) {
+			return dummyPredicate();
+		}
+	}
 
-    private static Predicate dummyPredicate() {
-        return (Predicate) Proxy.newProxyInstance(
-                Predicate.class.getClassLoader(),
-                new Class[]{Predicate.class},
-                (proxy, method, args) -> switch (method.getName()) {
-                    case "toString" -> "dummyPredicate";
-                    case "hashCode" -> System.identityHashCode(proxy);
-                    case "equals" -> proxy == args[0];
-                    default -> throw new UnsupportedOperationException("Predicate should not be evaluated in this test");
-                }
-        );
-    }
+	private static Predicate dummyPredicate() {
+		return (Predicate) Proxy.newProxyInstance(
+				Predicate.class.getClassLoader(),
+				new Class[] {Predicate.class},
+				(proxy, method, args) -> switch (method.getName()) {
+					case "toString" -> "dummyPredicate";
+					case "hashCode" -> System.identityHashCode(proxy);
+					case "equals" -> proxy == args[0];
+					default ->
+							throw new UnsupportedOperationException("Predicate should not be evaluated in this test");
+				}
+		);
+	}
 
-    private static class TestEntity {
+	private static class TestEntity {
 
-        @RSQLFilterable({RSQLDefaultOperator.EQUAL})
-        private String name;
+		@RSQLFilterable({RSQLDefaultOperator.EQUAL})
+		private String name;
 
-        private Integer age;
-    }
+		private Integer age;
+	}
 
-    private static class TestEntityWithCustom {
+	private static class TestEntityWithCustom {
 
-        @RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
-        private String name;
-    }
+		@RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
+		private String name;
+	}
 
-    private static FieldMapping mapping(String name, String field, boolean allowOriginalFieldName) {
-        return new FieldMapping() {
-            @Override
-            public String name() {
-                return name;
-            }
+	private static FieldMapping mapping(String name, String field, boolean allowOriginalFieldName) {
+		return new FieldMapping() {
 
-            @Override
-            public String field() {
-                return field;
-            }
+			@Override
+			public String name() {
+				return name;
+			}
 
-            @Override
-            public boolean allowOriginalFieldName() {
-                return allowOriginalFieldName;
-            }
+			@Override
+			public String field() {
+				return field;
+			}
 
-            @Override
-            public Class<? extends java.lang.annotation.Annotation> annotationType() {
-                return FieldMapping.class;
-            }
-        };
-    }
+			@Override
+			public boolean allowOriginalFieldName() {
+				return allowOriginalFieldName;
+			}
+
+			@Override
+			public Class<? extends java.lang.annotation.Annotation> annotationType() {
+				return FieldMapping.class;
+			}
+		};
+	}
 }

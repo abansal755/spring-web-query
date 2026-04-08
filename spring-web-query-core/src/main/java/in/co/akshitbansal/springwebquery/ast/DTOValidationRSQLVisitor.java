@@ -32,66 +32,66 @@ import java.util.Map;
  */
 public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 
-    /**
-     * Mutable selector map accumulated during traversal.
-     */
-    private final Map<String, String> fieldMappings;
+	/**
+	 * Mutable selector map accumulated during traversal.
+	 */
+	private final Map<String, String> fieldMappings;
 
-    /**
-     * Creates a DTO-aware validation visitor.
-     *
-     * @param entityClass target entity type used for final path validation
-     * @param dtoClass DTO type used to validate incoming selector paths
-     * @param customOperators registered custom operators keyed by implementation class
-     * @param andNodeAllowed whether logical AND operator is allowed
-     * @param orNodeAllowed whether logical OR operator is allowed
-     * @param maxDepth maximum allowed depth for the RSQL AST
-     */
-    public DTOValidationRSQLVisitor(
-            Class<?> entityClass,
-            Class<?> dtoClass,
-            Map<Class<?>, RSQLCustomOperator<?>> customOperators,
-            boolean andNodeAllowed,
-            boolean orNodeAllowed,
-            int maxDepth
-    ) {
-        super(
-                new DTOAwareFieldResolver(entityClass, dtoClass),
-                customOperators,
-                andNodeAllowed,
-                orNodeAllowed,
-                maxDepth
-        );
-        this.fieldMappings = new HashMap<>();
-    }
+	/**
+	 * Creates a DTO-aware validation visitor.
+	 *
+	 * @param entityClass target entity type used for final path validation
+	 * @param dtoClass DTO type used to validate incoming selector paths
+	 * @param customOperators registered custom operators keyed by implementation class
+	 * @param andNodeAllowed whether logical AND operator is allowed
+	 * @param orNodeAllowed whether logical OR operator is allowed
+	 * @param maxDepth maximum allowed depth for the RSQL AST
+	 */
+	public DTOValidationRSQLVisitor(
+			Class<?> entityClass,
+			Class<?> dtoClass,
+			Map<Class<?>, RSQLCustomOperator<?>> customOperators,
+			boolean andNodeAllowed,
+			boolean orNodeAllowed,
+			int maxDepth
+	) {
+		super(
+				new DTOAwareFieldResolver(entityClass, dtoClass),
+				customOperators,
+				andNodeAllowed,
+				orNodeAllowed,
+				maxDepth
+		);
+		this.fieldMappings = new HashMap<>();
+	}
 
-    /**
-     * Returns immutable selector mappings generated while visiting nodes.
-     *
-     * @return map from request DTO path to resolved entity path collected so far
-     */
-    public Map<String, String> getFieldMappings() {
-        return Collections.unmodifiableMap(fieldMappings);
-    }
+	/**
+	 * Returns immutable selector mappings generated while visiting nodes.
+	 *
+	 * @return map from request DTO path to resolved entity path collected so far
+	 */
+	public Map<String, String> getFieldMappings() {
+		return Collections.unmodifiableMap(fieldMappings);
+	}
 
-    /**
-     * Validates a single comparison expression and records DTO-to-entity mapping.
-     *
-     * @param node node to validate
-     */
-    @Override
-    protected void validateComparisonNode(ComparisonNode node) {
-        // Extract the field name and operator from the RSQL node
-        String dtoPath = node.getSelector();
-        ComparisonOperator operator = node.getOperator();
+	/**
+	 * Validates a single comparison expression and records DTO-to-entity mapping.
+	 *
+	 * @param node node to validate
+	 */
+	@Override
+	protected void validateComparisonNode(ComparisonNode node) {
+		// Extract the field name and operator from the RSQL node
+		String dtoPath = node.getSelector();
+		ComparisonOperator operator = node.getOperator();
 
-        // Build the corresponding entity field path from the DTO path and validate the terminal field for filterability
-        String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
-                dtoPath,
-                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.FilterableField(terminalField, operator, dtoPath))
-        );
+		// Build the corresponding entity field path from the DTO path and validate the terminal field for filterability
+		String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
+				dtoPath,
+				terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.FilterableField(terminalField, operator, dtoPath))
+		);
 
-        // Store the mapping from DTO path to entity path for later use during query construction
-        fieldMappings.put(dtoPath, entityPath);
-    }
+		// Store the mapping from DTO path to entity path for later use during query construction
+		fieldMappings.put(dtoPath, entityPath);
+	}
 }

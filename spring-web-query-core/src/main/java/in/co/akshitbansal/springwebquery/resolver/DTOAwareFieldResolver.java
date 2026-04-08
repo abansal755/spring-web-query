@@ -28,64 +28,69 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class DTOAwareFieldResolver implements FieldResolver {
 
-    /**
-     * Entity type used to validate the translated path.
-     */
-    private final Class<?> entityClass;
+	/**
+	 * Entity type used to validate the translated path.
+	 */
+	private final Class<?> entityClass;
 
-    /**
-     * DTO type used as the external selector contract.
-     */
-    private final Class<?> dtoClass;
+	/**
+	 * DTO type used as the external selector contract.
+	 */
+	private final Class<?> dtoClass;
 
-    /**
-     * Resolves a DTO selector path, validates its terminal DTO field, and maps
-     * the selector to the corresponding entity path.
-     *
-     * @param dtoPath selector path from the incoming request
-     * @param terminalFieldValidator callback used to validate the terminal DTO
-     *                               field; when {@code null}, terminal-field
-     *                               validation is skipped
-     * @return resolved entity path corresponding to the DTO selector
-     */
-    @Override
-    public String resolvePathAndValidateTerminalField(String dtoPath, @Nullable Consumer<Field> terminalFieldValidator) {
-        // Resolve the field path in the DTO class
-        List<Field> dtoFields;
-        try {
-            dtoFields = ReflectionUtil.resolveFieldPath(dtoClass, dtoPath);
-        }
-        catch (Exception ex) {
-            throw new QueryFieldValidationException(MessageFormat.format(
-                    "Unknown field ''{0}''", dtoPath
-            ), dtoPath, ex);
-        }
+	/**
+	 * Resolves a DTO selector path, validates its terminal DTO field, and maps
+	 * the selector to the corresponding entity path.
+	 *
+	 * @param dtoPath selector path from the incoming request
+	 * @param terminalFieldValidator callback used to validate the terminal DTO
+	 * field; when {@code null}, terminal-field
+	 * validation is skipped
+	 *
+	 * @return resolved entity path corresponding to the DTO selector
+	 */
+	@Override
+	public String resolvePathAndValidateTerminalField(String dtoPath, @Nullable Consumer<Field> terminalFieldValidator) {
+		// Resolve the field path in the DTO class
+		List<Field> dtoFields;
+		try {
+			dtoFields = ReflectionUtil.resolveFieldPath(dtoClass, dtoPath);
+		}
+		catch (Exception ex) {
+			throw new QueryFieldValidationException(
+					MessageFormat.format(
+							"Unknown field ''{0}''", dtoPath
+					), dtoPath, ex
+			);
+		}
 
-        // Validate the last field in the path using the provided terminal field validator
-        if(terminalFieldValidator != null)
-            terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
+		// Validate the last field in the path using the provided terminal field validator
+		if (terminalFieldValidator != null)
+			terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
 
-        // Construct the corresponding entity field path using the @MapsTo annotation if present
-        List<String> entityPathSegments = new ArrayList<>();
-        for(Field dtoField : dtoFields) {
-            MapsTo mapsToAnnotation = dtoField.getAnnotation(MapsTo.class);
-            if(mapsToAnnotation == null) entityPathSegments.add(dtoField.getName());
-            else {
-                if(mapsToAnnotation.absolute()) entityPathSegments.clear();
-                entityPathSegments.add(mapsToAnnotation.value());
-            }
-        }
-        String entityPath = String.join(".", entityPathSegments);
-        // Validate that the constructed entity field path is resolvable in the entity class
-        try {
-            ReflectionUtil.resolveField(entityClass, entityPath);
-        }
-        catch (Exception ex) {
-            throw new QueryConfigurationException(MessageFormat.format(
-                    "Unable to resolve entity field path ''{0}'' mapped from DTO path ''{1}''", entityPath, dtoPath
-            ), ex);
-        }
+		// Construct the corresponding entity field path using the @MapsTo annotation if present
+		List<String> entityPathSegments = new ArrayList<>();
+		for (Field dtoField: dtoFields) {
+			MapsTo mapsToAnnotation = dtoField.getAnnotation(MapsTo.class);
+			if (mapsToAnnotation == null) entityPathSegments.add(dtoField.getName());
+			else {
+				if (mapsToAnnotation.absolute()) entityPathSegments.clear();
+				entityPathSegments.add(mapsToAnnotation.value());
+			}
+		}
+		String entityPath = String.join(".", entityPathSegments);
+		// Validate that the constructed entity field path is resolvable in the entity class
+		try {
+			ReflectionUtil.resolveField(entityClass, entityPath);
+		}
+		catch (Exception ex) {
+			throw new QueryConfigurationException(
+					MessageFormat.format(
+							"Unable to resolve entity field path ''{0}'' mapped from DTO path ''{1}''", entityPath, dtoPath
+					), ex
+			);
+		}
 
-        return entityPath;
-    }
+		return entityPath;
+	}
 }

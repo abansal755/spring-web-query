@@ -14,18 +14,19 @@ import lombok.ToString;
 @ToString
 public class NodeMetadata {
 
-    /**
-     * Current depth in the AST traversal.
-     */
-    private final int depth;
+	/**
+	 * Current depth in the AST traversal.
+	 */
+	private final int depth;
 
-    /**
-     * Creates metadata for the given depth.
-     *
-     * @param depth current depth in the AST
-     * @return metadata instance
-     */
-    public static NodeMetadata of(int depth) {
-        return new NodeMetadata(depth);
-    }
+	/**
+	 * Creates metadata for the given depth.
+	 *
+	 * @param depth current depth in the AST
+	 *
+	 * @return metadata instance
+	 */
+	public static NodeMetadata of(int depth) {
+		return new NodeMetadata(depth);
+	}
 }

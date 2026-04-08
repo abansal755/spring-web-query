@@ -8,10 +8,10 @@ package in.co.akshitbansal.springwebquery.validator;
  */
 public interface Validator<T> {
 
-    /**
-     * Validates the supplied object and throws an exception when a constraint is violated.
-     *
-     * @param object object to validate
-     */
-    void validate(T object);
+	/**
+	 * Validates the supplied object and throws an exception when a constraint is violated.
+	 *
+	 * @param object object to validate
+	 */
+	void validate(T object);
 }

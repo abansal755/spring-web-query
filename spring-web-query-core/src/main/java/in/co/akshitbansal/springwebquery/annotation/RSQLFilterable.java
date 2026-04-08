@@ -34,24 +34,24 @@ import java.lang.annotation.*;
  * @see RSQLDefaultOperator
  * @see RSQLFilterables
  */
-@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+@Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Repeatable(RSQLFilterables.class)
 public @interface RSQLFilterable {
 
-    /**
-     * The set of default RSQL operators that are allowed for filtering this field.
-     *
-     * @return an array of allowed {@link RSQLDefaultOperator} values
-     */
-    RSQLDefaultOperator[] value();
+	/**
+	 * The set of default RSQL operators that are allowed for filtering this field.
+	 *
+	 * @return an array of allowed {@link RSQLDefaultOperator} values
+	 */
+	RSQLDefaultOperator[] value();
 
-    /**
-     * The set of custom RSQL operators that are allowed for filtering this field.
-     * Referenced operator classes must be registered in the query resolver configuration.
-     *
-     * @return an array of custom operator classes
-     */
-    Class<? extends RSQLCustomOperator<?>>[] customOperators() default {};
+	/**
+	 * The set of custom RSQL operators that are allowed for filtering this field.
+	 * Referenced operator classes must be registered in the query resolver configuration.
+	 *
+	 * @return an array of custom operator classes
+	 */
+	Class<? extends RSQLCustomOperator<?>>[] customOperators() default {};
 }

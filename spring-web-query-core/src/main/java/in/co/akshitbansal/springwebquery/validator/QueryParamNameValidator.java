@@ -13,25 +13,26 @@ import java.text.MessageFormat;
  */
 public class QueryParamNameValidator implements Validator<String> {
 
-    /**
-     * Safe character set allowed for configured query parameter names.
-     */
-    private static final String regex = "^[A-Za-z0-9._-]+$";
+	/**
+	 * Safe character set allowed for configured query parameter names.
+	 */
+	private static final String regex = "^[A-Za-z0-9._-]+$";
 
-    /**
-     * Validates that the supplied parameter name matches the supported query
-     * parameter naming pattern.
-     *
-     * @param paramName query parameter name to validate
-     * @throws QueryConfigurationException if the parameter name contains
-     *                                     unsupported characters or is otherwise invalid
-     */
-    @Override
-    public void validate(String paramName) {
-        if(!paramName.matches(regex)) {
-            throw new QueryConfigurationException(MessageFormat.format(
-                    "Invalid query parameter name: {0}. Must match regex: {1}", paramName, regex
-            ));
-        }
-    }
+	/**
+	 * Validates that the supplied parameter name matches the supported query
+	 * parameter naming pattern.
+	 *
+	 * @param paramName query parameter name to validate
+	 *
+	 * @throws QueryConfigurationException if the parameter name contains
+	 * unsupported characters or is otherwise invalid
+	 */
+	@Override
+	public void validate(String paramName) {
+		if (!paramName.matches(regex)) {
+			throw new QueryConfigurationException(MessageFormat.format(
+					"Invalid query parameter name: {0}. Must match regex: {1}", paramName, regex
+			));
+		}
+	}
 }

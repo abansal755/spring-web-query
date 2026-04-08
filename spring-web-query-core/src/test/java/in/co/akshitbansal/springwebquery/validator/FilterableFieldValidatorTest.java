@@ -20,94 +20,100 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FilterableFieldValidatorTest {
 
-    @Test
-    void validate_acceptsDefaultOperator() throws Exception {
-        FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
-        var field = DefaultOnlyFilterableEntity.class.getDeclaredField("name");
-        assertDoesNotThrow(() -> validator.validate(new FilterableFieldValidator.FilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name")));
-    }
+	@Test
+	void validate_acceptsDefaultOperator() throws Exception {
+		FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
+		var field = DefaultOnlyFilterableEntity.class.getDeclaredField("name");
+		assertDoesNotThrow(() -> validator.validate(new FilterableFieldValidator.FilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name")));
+	}
 
-    @Test
-    void validate_acceptsCustomOperatorWhenRegistered() throws Exception {
-        FilterableFieldValidator validator = new FilterableFieldValidator(Map.of(MockCustomOperator.class, new MockCustomOperator()));
-        var field = FilterableEntity.class.getDeclaredField("name");
-        assertDoesNotThrow(() -> validator.validate(new FilterableFieldValidator.FilterableField(field, new ComparisonOperator("=mock="), "name")));
-    }
+	@Test
+	void validate_acceptsCustomOperatorWhenRegistered() throws Exception {
+		FilterableFieldValidator validator = new FilterableFieldValidator(Map.of(MockCustomOperator.class, new MockCustomOperator()));
+		var field = FilterableEntity.class.getDeclaredField("name");
+		assertDoesNotThrow(() -> validator.validate(new FilterableFieldValidator.FilterableField(field, new ComparisonOperator("=mock="), "name")));
+	}
 
-    @Test
-    void validate_rejectsUnregisteredCustomOperator() throws Exception {
-        FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
-        var field = FilterableEntity.class.getDeclaredField("name");
-        assertThrows(QueryConfigurationException.class, () -> validator.validate(new FilterableFieldValidator.FilterableField(field, new ComparisonOperator("=mock="), "name")));
-    }
+	@Test
+	void validate_rejectsUnregisteredCustomOperator() throws Exception {
+		FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
+		var field = FilterableEntity.class.getDeclaredField("name");
+		assertThrows(QueryConfigurationException.class, () -> validator.validate(new FilterableFieldValidator.FilterableField(field, new ComparisonOperator("=mock="), "name")));
+	}
 
-    @Test
-    void validate_rejectsDisallowedOperator() throws Exception {
-        FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
-        var field = DefaultOnlyFilterableEntity.class.getDeclaredField("name");
-        assertThrows(QueryForbiddenOperatorException.class, () -> validator.validate(new FilterableFieldValidator.FilterableField(field, RSQLDefaultOperator.NOT_EQUAL.getOperator(), "name")));
-    }
+	@Test
+	void validate_rejectsDisallowedOperator() throws Exception {
+		FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
+		var field = DefaultOnlyFilterableEntity.class.getDeclaredField("name");
+		assertThrows(QueryForbiddenOperatorException.class, () -> validator.validate(new FilterableFieldValidator.FilterableField(field, RSQLDefaultOperator.NOT_EQUAL.getOperator(), "name")));
+	}
 
-    @Test
-    void validate_rejectsNonFilterableField() throws Exception {
-        FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
-        var field = NonFilterableEntity.class.getDeclaredField("name");
-        assertThrows(QueryFieldValidationException.class, () -> validator.validate(new FilterableFieldValidator.FilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name")));
-    }
+	@Test
+	void validate_rejectsNonFilterableField() throws Exception {
+		FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
+		var field = NonFilterableEntity.class.getDeclaredField("name");
+		assertThrows(QueryFieldValidationException.class, () -> validator.validate(new FilterableFieldValidator.FilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name")));
+	}
 
-    @Test
-    void validate_supportsComposedAnnotations() throws Exception {
-        FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
-        var field = ComposedFilterableEntity.class.getDeclaredField("name");
-        assertDoesNotThrow(() -> validator.validate(new FilterableFieldValidator.FilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name")));
-    }
+	@Test
+	void validate_supportsComposedAnnotations() throws Exception {
+		FilterableFieldValidator validator = new FilterableFieldValidator(Map.of());
+		var field = ComposedFilterableEntity.class.getDeclaredField("name");
+		assertDoesNotThrow(() -> validator.validate(new FilterableFieldValidator.FilterableField(field, RSQLDefaultOperator.EQUAL.getOperator(), "name")));
+	}
 
-    private static class MockCustomOperator implements RSQLCustomOperator<String> {
-        @Override
-        public ComparisonOperator getComparisonOperator() {
-            return new ComparisonOperator("=mock=");
-        }
+	private static class MockCustomOperator implements RSQLCustomOperator<String> {
 
-        @Override
-        public Class<String> getType() {
-            return String.class;
-        }
+		@Override
+		public ComparisonOperator getComparisonOperator() {
+			return new ComparisonOperator("=mock=");
+		}
 
-        @Override
-        public Predicate toPredicate(RSQLCustomPredicateInput input) {
-            return dummyPredicate();
-        }
-    }
+		@Override
+		public Class<String> getType() {
+			return String.class;
+		}
 
-    private static Predicate dummyPredicate() {
-        return (Predicate) Proxy.newProxyInstance(
-                Predicate.class.getClassLoader(),
-                new Class[]{Predicate.class},
-                (proxy, method, args) -> switch (method.getName()) {
-                    case "toString" -> "dummyPredicate";
-                    case "hashCode" -> System.identityHashCode(proxy);
-                    case "equals" -> proxy == args[0];
-                    default -> throw new UnsupportedOperationException("Predicate should not be evaluated in this test");
-                }
-        );
-    }
+		@Override
+		public Predicate toPredicate(RSQLCustomPredicateInput input) {
+			return dummyPredicate();
+		}
+	}
 
-    private static class FilterableEntity {
-        @RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
-        private String name;
-    }
+	private static Predicate dummyPredicate() {
+		return (Predicate) Proxy.newProxyInstance(
+				Predicate.class.getClassLoader(),
+				new Class[] {Predicate.class},
+				(proxy, method, args) -> switch (method.getName()) {
+					case "toString" -> "dummyPredicate";
+					case "hashCode" -> System.identityHashCode(proxy);
+					case "equals" -> proxy == args[0];
+					default ->
+							throw new UnsupportedOperationException("Predicate should not be evaluated in this test");
+				}
+		);
+	}
 
-    private static class DefaultOnlyFilterableEntity {
-        @RSQLFilterable({RSQLDefaultOperator.EQUAL})
-        private String name;
-    }
+	private static class FilterableEntity {
 
-    private static class NonFilterableEntity {
-        private String name;
-    }
+		@RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
+		private String name;
+	}
 
-    private static class ComposedFilterableEntity {
-        @RSQLFilterableEquality
-        private String name;
-    }
+	private static class DefaultOnlyFilterableEntity {
+
+		@RSQLFilterable({RSQLDefaultOperator.EQUAL})
+		private String name;
+	}
+
+	private static class NonFilterableEntity {
+
+		private String name;
+	}
+
+	private static class ComposedFilterableEntity {
+
+		@RSQLFilterableEquality
+		private String name;
+	}
 }

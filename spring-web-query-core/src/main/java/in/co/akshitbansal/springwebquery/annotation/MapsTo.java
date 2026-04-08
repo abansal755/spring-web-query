@@ -28,20 +28,20 @@ import java.lang.annotation.*;
 @Documented
 public @interface MapsTo {
 
-    /**
-     * Entity-side field or path segment to use for this DTO field.
-     *
-     * @return mapped entity path segment
-     */
-    String value();
+	/**
+	 * Entity-side field or path segment to use for this DTO field.
+	 *
+	 * @return mapped entity path segment
+	 */
+	String value();
 
-    /**
-     * Whether this mapping starts a new absolute path from the entity root.
-     *
-     * <p>When {@code true}, previously accumulated parent segments are discarded
-     * before this segment is applied.</p>
-     *
-     * @return {@code true} to reset parent segments, otherwise {@code false}
-     */
-    boolean absolute() default false;
+	/**
+	 * Whether this mapping starts a new absolute path from the entity root.
+	 *
+	 * <p>When {@code true}, previously accumulated parent segments are discarded
+	 * before this segment is applied.</p>
+	 *
+	 * @return {@code true} to reset parent segments, otherwise {@code false}
+	 */
+	boolean absolute() default false;
 }

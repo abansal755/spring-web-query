@@ -20,15 +20,15 @@ import java.util.List;
 @Slf4j
 public class PageableArgumentResolverRegistrationAutoConfig implements WebMvcConfigurer {
 
-    private final WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver;
-    private final WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver;
+	private final WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver;
+	private final WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver;
 
-    @Override
-    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        // Ensure these resolvers are checked before Spring Data's default Pageable resolver.
-        resolvers.add(0, entityAwarePageableArgumentResolver);
-        resolvers.add(1, dtoAwarePageableArgumentResolver);
-        log.info("Registered {} for handling @WebQuery Pageable parameters", WebQueryEntityAwarePageableArgumentResolver.class.getSimpleName());
-        log.info("Registered {} for handling @WebQuery Pageable parameters", WebQueryDTOAwarePageableArgumentResolver.class.getSimpleName());
-    }
+	@Override
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+		// Ensure these resolvers are checked before Spring Data's default Pageable resolver.
+		resolvers.add(0, entityAwarePageableArgumentResolver);
+		resolvers.add(1, dtoAwarePageableArgumentResolver);
+		log.info("Registered {} for handling @WebQuery Pageable parameters", WebQueryEntityAwarePageableArgumentResolver.class.getSimpleName());
+		log.info("Registered {} for handling @WebQuery Pageable parameters", WebQueryDTOAwarePageableArgumentResolver.class.getSimpleName());
+	}
 }

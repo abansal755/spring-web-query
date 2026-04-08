@@ -10,10 +10,10 @@ import java.lang.annotation.*;
 @Documented
 public @interface RSQLFilterables {
 
-    /**
-     * Repeated {@link RSQLFilterable} entries declared on the same field.
-     *
-     * @return filterability declarations for the field
-     */
-    RSQLFilterable[] value();
+	/**
+	 * Repeated {@link RSQLFilterable} entries declared on the same field.
+	 *
+	 * @return filterability declarations for the field
+	 */
+	RSQLFilterable[] value();
 }

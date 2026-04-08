@@ -19,9 +19,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @RSQLFilterable({
-        RSQLDefaultOperator.LIKE, RSQLDefaultOperator.NOT_LIKE,
-        RSQLDefaultOperator.IGNORE_CASE_LIKE, RSQLDefaultOperator.IGNORE_CASE_NOT_LIKE,
-        RSQLDefaultOperator.IGNORE_CASE
+		RSQLDefaultOperator.LIKE, RSQLDefaultOperator.NOT_LIKE,
+		RSQLDefaultOperator.IGNORE_CASE_LIKE, RSQLDefaultOperator.IGNORE_CASE_NOT_LIKE,
+		RSQLDefaultOperator.IGNORE_CASE
 })
 public @interface RSQLFilterableText {
 }

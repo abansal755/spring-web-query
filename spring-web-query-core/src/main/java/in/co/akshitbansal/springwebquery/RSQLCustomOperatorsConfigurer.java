@@ -15,16 +15,16 @@ import java.util.Set;
 @FunctionalInterface
 public interface RSQLCustomOperatorsConfigurer {
 
-    /**
-     * Returns a set of custom RSQL operators to be registered.
-     * <p>
-     * If multiple {@code RSQLCustomOperatorsConfigurer} beans are present in the
-     * Spring context, their results will be combined into a single set of
-     * operators available for query resolution.
-     * </p>
-     *
-     * @return a set of custom operators, or an empty set if none
-     */
-    @NonNull
-    Set<? extends RSQLCustomOperator<?>> getCustomOperators();
+	/**
+	 * Returns a set of custom RSQL operators to be registered.
+	 * <p>
+	 * If multiple {@code RSQLCustomOperatorsConfigurer} beans are present in the
+	 * Spring context, their results will be combined into a single set of
+	 * operators available for query resolution.
+	 * </p>
+	 *
+	 * @return a set of custom operators, or an empty set if none
+	 */
+	@NonNull
+	Set<? extends RSQLCustomOperator<?>> getCustomOperators();
 }

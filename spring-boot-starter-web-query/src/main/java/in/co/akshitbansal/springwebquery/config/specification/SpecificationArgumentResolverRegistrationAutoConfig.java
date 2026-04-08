@@ -18,14 +18,14 @@ import java.util.List;
 @Slf4j
 public class SpecificationArgumentResolverRegistrationAutoConfig implements WebMvcConfigurer {
 
-    private final WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecResolver;
-    private final WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecResolver;
+	private final WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecResolver;
+	private final WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecResolver;
 
-    @Override
-    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(entityAwareSpecResolver);
-        resolvers.add(dtoAwareSpecResolver);
-        log.info("Registered {} for handling @WebQuery Specification parameters", WebQueryEntityAwareSpecificationArgumentResolver.class.getSimpleName());
-        log.info("Registered {} for handling @WebQuery Specification parameters", WebQueryDTOAwareSpecificationArgumentResolver.class.getSimpleName());
-    }
+	@Override
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+		resolvers.add(entityAwareSpecResolver);
+		resolvers.add(dtoAwareSpecResolver);
+		log.info("Registered {} for handling @WebQuery Specification parameters", WebQueryEntityAwareSpecificationArgumentResolver.class.getSimpleName());
+		log.info("Registered {} for handling @WebQuery Specification parameters", WebQueryDTOAwareSpecificationArgumentResolver.class.getSimpleName());
+	}
 }

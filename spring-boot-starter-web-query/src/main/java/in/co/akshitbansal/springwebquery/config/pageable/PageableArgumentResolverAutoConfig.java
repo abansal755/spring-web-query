@@ -12,13 +12,13 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 @AutoConfiguration
 public class PageableArgumentResolverAutoConfig {
 
-    @Bean
-    public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-        return new WebQueryEntityAwarePageableArgumentResolver(delegate);
-    }
+	@Bean
+	public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
+		return new WebQueryEntityAwarePageableArgumentResolver(delegate);
+	}
 
-    @Bean
-    public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-        return new WebQueryDTOAwarePageableArgumentResolver(delegate);
-    }
+	@Bean
+	public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
+		return new WebQueryDTOAwarePageableArgumentResolver(delegate);
+	}
 }

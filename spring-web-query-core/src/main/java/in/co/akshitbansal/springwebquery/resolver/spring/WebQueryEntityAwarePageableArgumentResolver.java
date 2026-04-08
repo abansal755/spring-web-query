@@ -27,68 +27,70 @@ import java.util.List;
  */
 public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQueryPageableArgumentResolver {
 
-    /**
-     * Validator used to enforce uniqueness and consistency of declared field mappings.
-     */
-    private final Validator<List<FieldMapping>> fieldMappingsValidator;
+	/**
+	 * Validator used to enforce uniqueness and consistency of declared field mappings.
+	 */
+	private final Validator<List<FieldMapping>> fieldMappingsValidator;
 
-    /**
-     * Creates an entity-aware pageable resolver.
-     *
-     * @param delegate Spring's pageable resolver used for page and size parsing
-     */
-    public WebQueryEntityAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-        super(delegate);
-        this.fieldMappingsValidator = new FieldMappingsValidator();
-    }
+	/**
+	 * Creates an entity-aware pageable resolver.
+	 *
+	 * @param delegate Spring's pageable resolver used for page and size parsing
+	 */
+	public WebQueryEntityAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
+		super(delegate);
+		this.fieldMappingsValidator = new FieldMappingsValidator();
+	}
 
-    /**
-     * Determines whether this resolver should handle the given parameter.
-     *
-     * @param parameter method parameter under inspection
-     * @return {@code true} when parameter is {@code Pageable} with
-     *         method-level {@link WebQuery} and no DTO mapping is configured
-     */
-    @Override
-    public boolean supportsParameter(MethodParameter parameter) {
-        return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
-                    && getWebQueryAnnotation(parameter).dtoClass() == void.class; // so no exception handling is needed
-    }
+	/**
+	 * Determines whether this resolver should handle the given parameter.
+	 *
+	 * @param parameter method parameter under inspection
+	 *
+	 * @return {@code true} when parameter is {@code Pageable} with
+	 * method-level {@link WebQuery} and no DTO mapping is configured
+	 */
+	@Override
+	public boolean supportsParameter(MethodParameter parameter) {
+		return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
+				&& getWebQueryAnnotation(parameter).dtoClass() == void.class; // so no exception handling is needed
+	}
 
-    /**
-     * Validates and remaps entity-facing sort properties on the supplied pageable.
-     *
-     * @param pageable pageable parsed from the request
-     * @param queryConfig effective query configuration for the current request
-     * @return pageable with validated entity sort paths
-     */
-    @Override
-    protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
-        // Validate field mappings to ensure they are well-formed and do not contain conflicts
-        fieldMappingsValidator.validate(queryConfig.getFieldMappings());
+	/**
+	 * Validates and remaps entity-facing sort properties on the supplied pageable.
+	 *
+	 * @param pageable pageable parsed from the request
+	 * @param queryConfig effective query configuration for the current request
+	 *
+	 * @return pageable with validated entity sort paths
+	 */
+	@Override
+	protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
+		// Validate field mappings to ensure they are well-formed and do not contain conflicts
+		fieldMappingsValidator.validate(queryConfig.getFieldMappings());
 
-        FieldResolver fieldResolver = new EntityAwareFieldResolver(
-                queryConfig.getEntityClass(),
-                queryConfig.getFieldMappings()
-        );
+		FieldResolver fieldResolver = new EntityAwareFieldResolver(
+				queryConfig.getEntityClass(),
+				queryConfig.getFieldMappings()
+		);
 
-        List<Sort.Order> newOrders = new ArrayList<>();
-        // Validate each requested sort order against entity metadata
-        for(Sort.Order order : pageable.getSort()) {
-            String reqFieldName = order.getProperty();
+		List<Sort.Order> newOrders = new ArrayList<>();
+		// Validate each requested sort order against entity metadata
+		for (Sort.Order order: pageable.getSort()) {
+			String reqFieldName = order.getProperty();
 
-            // Resolve the field on the entity class using the requested field name and field mappings
-            String fieldName = fieldResolver.resolvePathAndValidateTerminalField(
-                    reqFieldName,
-                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.SortableField(terminalField, reqFieldName))
-            );
+			// Resolve the field on the entity class using the requested field name and field mappings
+			String fieldName = fieldResolver.resolvePathAndValidateTerminalField(
+					reqFieldName,
+					terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.SortableField(terminalField, reqFieldName))
+			);
 
-            newOrders.add(new Sort.Order(order.getDirection(), fieldName));
-        }
+			newOrders.add(new Sort.Order(order.getDirection(), fieldName));
+		}
 
-        Sort sort = Sort.by(newOrders);
-        // Reconstruct pageable with mapped sort orders
-        if(pageable.isUnpaged()) return Pageable.unpaged(sort);
-        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-    }
+		Sort sort = Sort.by(newOrders);
+		// Reconstruct pageable with mapped sort orders
+		if (pageable.isUnpaged()) return Pageable.unpaged(sort);
+		return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+	}
 }

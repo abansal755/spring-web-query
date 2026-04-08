@@ -47,37 +47,37 @@ import java.lang.annotation.Target;
 @Target({})
 public @interface FieldMapping {
 
-    /**
-     * The alias name to use in API query strings.
-     * <p>
-     * This is the name that clients will use when constructing their queries.
-     * </p>
-     *
-     * @return the query parameter field name
-     */
-    String name();
+	/**
+	 * The alias name to use in API query strings.
+	 * <p>
+	 * This is the name that clients will use when constructing their queries.
+	 * </p>
+	 *
+	 * @return the query parameter field name
+	 */
+	String name();
 
-    /**
-     * The actual field name or path on the entity.
-     * <p>
-     * This can be a simple field name (e.g., {@code "userId"}) or a nested path
-     * using dot notation (e.g., {@code "profile.name"}).
-     * </p>
-     *
-     * @return the entity field name or path
-     */
-    String field();
+	/**
+	 * The actual field name or path on the entity.
+	 * <p>
+	 * This can be a simple field name (e.g., {@code "userId"}) or a nested path
+	 * using dot notation (e.g., {@code "profile.name"}).
+	 * </p>
+	 *
+	 * @return the entity field name or path
+	 */
+	String field();
 
-    /**
-     * Whether to allow the use of the original field name in addition to the alias.
-     * <p>
-     * When {@code false} (default), only the alias name defined in {@link #name()}
-     * can be used in entity-aware filter and sort expressions. When {@code true}, both the alias
-     * and the original field name are allowed.
-     * </p>
-     *
-     * @return {@code true} if the original field name should remain usable,
-     *         {@code false} to enforce exclusive use of the alias
-     */
-    boolean allowOriginalFieldName() default false;
+	/**
+	 * Whether to allow the use of the original field name in addition to the alias.
+	 * <p>
+	 * When {@code false} (default), only the alias name defined in {@link #name()}
+	 * can be used in entity-aware filter and sort expressions. When {@code true}, both the alias
+	 * and the original field name are allowed.
+	 * </p>
+	 *
+	 * @return {@code true} if the original field name should remain usable,
+	 * {@code false} to enforce exclusive use of the alias
+	 */
+	boolean allowOriginalFieldName() default false;
 }

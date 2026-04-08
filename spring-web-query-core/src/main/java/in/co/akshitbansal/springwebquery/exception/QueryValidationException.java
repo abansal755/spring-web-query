@@ -14,22 +14,22 @@ package in.co.akshitbansal.springwebquery.exception;
  */
 public class QueryValidationException extends QueryException {
 
-    /**
-     * Constructs a new query validation exception with the specified detail message.
-     *
-     * @param message the detail message explaining the reason for the validation failure
-     */
-    public QueryValidationException(String message) {
-        super(message);
-    }
+	/**
+	 * Constructs a new query validation exception with the specified detail message.
+	 *
+	 * @param message the detail message explaining the reason for the validation failure
+	 */
+	public QueryValidationException(String message) {
+		super(message);
+	}
 
-    /**
-     * Constructs a new query validation exception with the specified detail message and cause.
-     *
-     * @param message the detail message explaining the reason for the validation failure
-     * @param cause   the underlying cause of the validation failure (e.g., {@link cz.jirutka.rsql.parser.RSQLParserException})
-     */
-    public QueryValidationException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	/**
+	 * Constructs a new query validation exception with the specified detail message and cause.
+	 *
+	 * @param message the detail message explaining the reason for the validation failure
+	 * @param cause the underlying cause of the validation failure (e.g., {@link cz.jirutka.rsql.parser.RSQLParserException})
+	 */
+	public QueryValidationException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

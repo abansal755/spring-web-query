@@ -24,54 +24,57 @@ import java.util.List;
  */
 public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPageableArgumentResolver {
 
-    /**
-     * Creates a DTO-aware pageable resolver.
-     *
-     * @param delegate Spring's pageable resolver used for page and size parsing
-     */
-    public WebQueryDTOAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-        super(delegate);
-    }
+	/**
+	 * Creates a DTO-aware pageable resolver.
+	 *
+	 * @param delegate Spring's pageable resolver used for page and size parsing
+	 */
+	public WebQueryDTOAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
+		super(delegate);
+	}
 
-    /**
-     * Determines whether this resolver should handle the given parameter.
-     *
-     * @param parameter method parameter under inspection
-     * @return {@code true} when parameter is {@code Pageable} with
-     *         method-level {@link WebQuery} and a configured DTO class
-     */
-    @Override
-    public boolean supportsParameter(MethodParameter parameter) {
-        return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
-                && getWebQueryAnnotation(parameter).dtoClass() != void.class; // so no exception handling is needed
-    }
+	/**
+	 * Determines whether this resolver should handle the given parameter.
+	 *
+	 * @param parameter method parameter under inspection
+	 *
+	 * @return {@code true} when parameter is {@code Pageable} with
+	 * method-level {@link WebQuery} and a configured DTO class
+	 */
+	@Override
+	public boolean supportsParameter(MethodParameter parameter) {
+		return super.supportsParameter(parameter) // supportsParameter in superclass checks for method-level @WebQuery presence
+				&& getWebQueryAnnotation(parameter).dtoClass() != void.class; // so no exception handling is needed
+	}
 
-    /**
-     * Validates DTO-facing sort properties and maps them to entity paths.
-     *
-     * @param pageable pageable parsed from the request
-     * @param queryConfig effective query configuration for the current request
-     * @return pageable with validated entity sort paths derived from DTO selectors
-     */
-    @Override
-    protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
-        FieldResolver fieldResolver = new DTOAwareFieldResolver(
-                queryConfig.getEntityClass(),
-                queryConfig.getDtoClass()
-        );
+	/**
+	 * Validates DTO-facing sort properties and maps them to entity paths.
+	 *
+	 * @param pageable pageable parsed from the request
+	 * @param queryConfig effective query configuration for the current request
+	 *
+	 * @return pageable with validated entity sort paths derived from DTO selectors
+	 */
+	@Override
+	protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
+		FieldResolver fieldResolver = new DTOAwareFieldResolver(
+				queryConfig.getEntityClass(),
+				queryConfig.getDtoClass()
+		);
 
-        List<Sort.Order> newOrders = new ArrayList<>();
-        for(Sort.Order order : pageable.getSort()) {
-            String dtoPath = order.getProperty();
-            // Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
-            String entityPath = fieldResolver.resolvePathAndValidateTerminalField(dtoPath,
-                    terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.SortableField(terminalField, dtoPath))
-            );
-            newOrders.add(new Sort.Order(order.getDirection(), entityPath));
-        }
-        Sort sort = Sort.by(newOrders);
-        // Reconstruct pageable with mapped sort orders
-        if(pageable.isUnpaged()) return Pageable.unpaged(sort);
-        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-    }
+		List<Sort.Order> newOrders = new ArrayList<>();
+		for (Sort.Order order: pageable.getSort()) {
+			String dtoPath = order.getProperty();
+			// Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
+			String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
+					dtoPath,
+					terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.SortableField(terminalField, dtoPath))
+			);
+			newOrders.add(new Sort.Order(order.getDirection(), entityPath));
+		}
+		Sort sort = Sort.by(newOrders);
+		// Reconstruct pageable with mapped sort orders
+		if (pageable.isUnpaged()) return Pageable.unpaged(sort);
+		return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+	}
 }

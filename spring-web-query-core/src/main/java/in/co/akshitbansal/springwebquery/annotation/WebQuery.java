@@ -19,83 +19,83 @@ import java.lang.annotation.Target;
 @Documented
 public @interface WebQuery {
 
-    /**
-     * Entity class against which filter and sort fields are resolved.
-     *
-     * @return target entity class
-     */
-    Class<?> entityClass();
+	/**
+	 * Entity class against which filter and sort fields are resolved.
+	 *
+	 * @return target entity class
+	 */
+	Class<?> entityClass();
 
-    /**
-     * Optional DTO class used as the API-facing query contract.
-     *
-     * <p>When set, incoming filter/sort paths are validated against this DTO and
-     * translated to entity paths (optionally using {@link MapsTo}). When left as
-     * {@code void.class}, entity fields are used directly.</p>
-     *
-     * @return DTO class or {@code void.class} when DTO mapping is disabled
-     */
-    Class<?> dtoClass() default void.class;
+	/**
+	 * Optional DTO class used as the API-facing query contract.
+	 *
+	 * <p>When set, incoming filter/sort paths are validated against this DTO and
+	 * translated to entity paths (optionally using {@link MapsTo}). When left as
+	 * {@code void.class}, entity fields are used directly.</p>
+	 *
+	 * @return DTO class or {@code void.class} when DTO mapping is disabled
+	 */
+	Class<?> dtoClass() default void.class;
 
-    /**
-     * Optional field mappings used to expose API-facing aliases for entity fields.
-     *
-     * <p>These mappings are applied in entity-aware mode
-     * ({@code dtoClass = void.class}). In DTO-aware mode, path translation is
-     * driven by {@link MapsTo} annotations on DTO fields.</p>
-     *
-     * @return mappings between API names and entity paths
-     */
-    FieldMapping[] fieldMappings() default {};
+	/**
+	 * Optional field mappings used to expose API-facing aliases for entity fields.
+	 *
+	 * <p>These mappings are applied in entity-aware mode
+	 * ({@code dtoClass = void.class}). In DTO-aware mode, path translation is
+	 * driven by {@link MapsTo} annotations on DTO fields.</p>
+	 *
+	 * @return mappings between API names and entity paths
+	 */
+	FieldMapping[] fieldMappings() default {};
 
-    /**
-     * Request parameter name from which RSQL filter expressions are read.
-     *
-     * <p>This setting applies to specification resolution in both entity-aware
-     * and DTO-aware modes. When left blank, the resolver falls back to its
-     * configured global default filter parameter name.</p>
-     *
-     * @return HTTP query parameter name containing the RSQL filter expression,
-     *         or a blank string to use the global default
-     */
-    String filterParamName() default "";
+	/**
+	 * Request parameter name from which RSQL filter expressions are read.
+	 *
+	 * <p>This setting applies to specification resolution in both entity-aware
+	 * and DTO-aware modes. When left blank, the resolver falls back to its
+	 * configured global default filter parameter name.</p>
+	 *
+	 * @return HTTP query parameter name containing the RSQL filter expression,
+	 * or a blank string to use the global default
+	 */
+	String filterParamName() default "";
 
-    /**
-     * Whether logical AND operator ({@code ;}) is allowed in RSQL filters.
-     *
-     * <p>The default is {@link OperatorPolicy#GLOBAL}, which delegates the decision
-     * to the resolver's configured global default.</p>
-     *
-     * @return operator policy for logical AND nodes
-     */
-    OperatorPolicy allowAndOperator() default OperatorPolicy.GLOBAL;
+	/**
+	 * Whether logical AND operator ({@code ;}) is allowed in RSQL filters.
+	 *
+	 * <p>The default is {@link OperatorPolicy#GLOBAL}, which delegates the decision
+	 * to the resolver's configured global default.</p>
+	 *
+	 * @return operator policy for logical AND nodes
+	 */
+	OperatorPolicy allowAndOperator() default OperatorPolicy.GLOBAL;
 
-    /**
-     * Whether logical OR operator ({@code ,}) is allowed in RSQL filters.
-     *
-     * <p>The default is {@link OperatorPolicy#GLOBAL}, which delegates the decision
-     * to the resolver's configured global default.</p>
-     *
-     * @return operator policy for logical OR nodes
-     */
-    OperatorPolicy allowOrOperator() default OperatorPolicy.GLOBAL;
+	/**
+	 * Whether logical OR operator ({@code ,}) is allowed in RSQL filters.
+	 *
+	 * <p>The default is {@link OperatorPolicy#GLOBAL}, which delegates the decision
+	 * to the resolver's configured global default.</p>
+	 *
+	 * @return operator policy for logical OR nodes
+	 */
+	OperatorPolicy allowOrOperator() default OperatorPolicy.GLOBAL;
 
-    /**
-     * Maximum allowed depth of the RSQL Abstract Syntax Tree.
-     *
-     * <p>Depth starts at {@code 0} for the root node. A negative value delegates to
-     * the resolver's configured global maximum.</p>
-     *
-     * @return maximum allowed AST depth
-     */
-    int maxASTDepth() default -1;
+	/**
+	 * Maximum allowed depth of the RSQL Abstract Syntax Tree.
+	 *
+	 * <p>Depth starts at {@code 0} for the root node. A negative value delegates to
+	 * the resolver's configured global maximum.</p>
+	 *
+	 * @return maximum allowed AST depth
+	 */
+	int maxASTDepth() default -1;
 
-    /**
-     * Policy for resolving whether a logical operator is permitted.
-     */
-    enum OperatorPolicy {
-        ALLOW,
-        DENY,
-        GLOBAL
-    }
+	/**
+	 * Policy for resolving whether a logical operator is permitted.
+	 */
+	enum OperatorPolicy {
+		ALLOW,
+		DENY,
+		GLOBAL
+	}
 }

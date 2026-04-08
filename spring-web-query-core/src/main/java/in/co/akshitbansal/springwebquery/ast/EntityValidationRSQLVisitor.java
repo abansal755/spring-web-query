@@ -31,52 +31,53 @@ import java.util.Map;
  */
 public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 
-    /**
-     * Creates a new entity validation visitor with the specified configuration.
-     *
-     * @param entityClass    the entity class to validate against
-     * @param fieldMappings  field mappings (aliases) to consider
-     * @param customOperators registered custom operators keyed by implementation class
-     * @param andNodeAllowed whether logical AND operator is allowed
-     * @param orNodeAllowed whether logical OR operator is allowed
-     * @param maxDepth maximum allowed depth for the RSQL AST
-     */
-    public EntityValidationRSQLVisitor(
-            Class<?> entityClass,
-            List<FieldMapping> fieldMappings,
-            Map<Class<?>, RSQLCustomOperator<?>> customOperators,
-            boolean andNodeAllowed,
-            boolean orNodeAllowed,
-            int maxDepth
-    ) {
-        super(
-                new EntityAwareFieldResolver(entityClass, fieldMappings),
-                customOperators,
-                andNodeAllowed,
-                orNodeAllowed,
-                maxDepth
-        );
-    }
+	/**
+	 * Creates a new entity validation visitor with the specified configuration.
+	 *
+	 * @param entityClass the entity class to validate against
+	 * @param fieldMappings field mappings (aliases) to consider
+	 * @param customOperators registered custom operators keyed by implementation class
+	 * @param andNodeAllowed whether logical AND operator is allowed
+	 * @param orNodeAllowed whether logical OR operator is allowed
+	 * @param maxDepth maximum allowed depth for the RSQL AST
+	 */
+	public EntityValidationRSQLVisitor(
+			Class<?> entityClass,
+			List<FieldMapping> fieldMappings,
+			Map<Class<?>, RSQLCustomOperator<?>> customOperators,
+			boolean andNodeAllowed,
+			boolean orNodeAllowed,
+			int maxDepth
+	) {
+		super(
+				new EntityAwareFieldResolver(entityClass, fieldMappings),
+				customOperators,
+				andNodeAllowed,
+				orNodeAllowed,
+				maxDepth
+		);
+	}
 
-    /**
-     * Validates a comparison node against the entity class.
-     *
-     * @param node the comparison node to validate
-     * @throws QueryValidationException if the field is unknown, not allowed,
-     *                                  or the operator is invalid for the
-     *                                  resolved terminal field
-     * @throws QueryConfigurationException if the field mapping is misconfigured
-     */
-    @Override
-    protected void validateComparisonNode(ComparisonNode node) {
-        // Extract the field name and operator from the RSQL node
-        String reqFieldName = node.getSelector();
-        ComparisonOperator operator = node.getOperator();
+	/**
+	 * Validates a comparison node against the entity class.
+	 *
+	 * @param node the comparison node to validate
+	 *
+	 * @throws QueryValidationException if the field is unknown, not allowed,
+	 * or the operator is invalid for the
+	 * resolved terminal field
+	 * @throws QueryConfigurationException if the field mapping is misconfigured
+	 */
+	@Override
+	protected void validateComparisonNode(ComparisonNode node) {
+		// Extract the field name and operator from the RSQL node
+		String reqFieldName = node.getSelector();
+		ComparisonOperator operator = node.getOperator();
 
-        // Resolve the field on the entity class using the requested field name and field mappings
-        fieldResolver.resolvePathAndValidateTerminalField(
-                reqFieldName,
-                terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.FilterableField(terminalField, operator, reqFieldName))
-        );
-    }
+		// Resolve the field on the entity class using the requested field name and field mappings
+		fieldResolver.resolvePathAndValidateTerminalField(
+				reqFieldName,
+				terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.FilterableField(terminalField, operator, reqFieldName))
+		);
+	}
 }
