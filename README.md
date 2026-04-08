@@ -533,6 +533,7 @@ spring-web-query.filtering.filter-param-name=filter
 spring-web-query.filtering.allow-and-operation=true
 spring-web-query.filtering.allow-or-operation=false
 spring-web-query.filtering.max-ast-depth=1
+spring-web-query.pagination.default-page-size=20
 spring-web-query.pagination.max-page-size=100
 ```
 
@@ -676,13 +677,24 @@ Flow:
 
 ### Max page size
 
-Max page size is configured globally to `100` by default.
+Max page size is configured globally to `100` by default. This default can be changed via the property below.
 
 ```properties
 spring-web-query.pagination.max-page-size=500
 ```
 
-This default can be changed via the property above.
+### Default page size
+
+When the request does not provide a `size` parameter, Spring's pageable resolver
+falls back to the configured default page size. The starter sets this to `20`
+by default. This default can be changed via the property below
+
+```properties
+spring-web-query.pagination.default-page-size=50
+```
+
+This value must be greater than `0` and less than or equal to
+`spring-web-query.pagination.max-page-size`.
 
 ## Exception Handling
 
