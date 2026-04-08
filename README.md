@@ -716,7 +716,7 @@ class PageableConfig {
     PageableHandlerMethodArgumentResolverCustomizer pageableCustomizer() {
         return resolver -> {
             resolver.setMaxPageSize(500);
-            resolver.setFallbackPageable(PageRequest.of(0, 50));
+            resolver.setFallbackPageable(Pageable.ofSize(50));
         };
     }
 }
