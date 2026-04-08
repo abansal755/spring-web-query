@@ -146,8 +146,6 @@ Includes:
 - core library
 - auto-configured argument resolvers
 - auto-configured beans (`AnnotationUtil`, operator sets)
-- automatic Spring Data Web support (`@EnableSpringDataWebSupport`)
-- pagination max-size customizer
 
 ### `spring-web-query-core`
 
@@ -184,9 +182,6 @@ Includes:
 ```
 
 If you use core directly, register resolver beans and MVC configuration manually. That includes enabling Spring Data Web support yourself when you want Spring MVC to resolve `Pageable` arguments.
-
-The starter now aligns better with existing Spring Boot web applications by depending on `spring-boot-starter-web`.
-It also enables Spring Data Web support automatically, so you do not need to add `@EnableSpringDataWebSupport` yourself when using `spring-boot-starter-web-query`.
 
 ## Quick start (DTO-aware, recommended)
 
@@ -535,8 +530,6 @@ spring-web-query.filtering.filter-param-name=filter
 spring-web-query.filtering.allow-and-operation=true
 spring-web-query.filtering.allow-or-operation=false
 spring-web-query.filtering.max-ast-depth=1
-spring-web-query.pagination.default-page-size=20
-spring-web-query.pagination.max-page-size=100
 ```
 
 `@WebQuery` can override the filtering defaults per endpoint:
@@ -679,24 +672,55 @@ Flow:
 
 ### Max page size
 
-Max page size is configured globally to `100` by default. This default can be changed via the property below.
+Max page size is configured by Spring Data Web. In a Spring Boot application, the standard property is:
 
 ```properties
-spring-web-query.pagination.max-page-size=500
+spring.data.web.pageable.max-page-size=500
 ```
 
 ### Default page size
 
 When the request does not provide a `size` parameter, Spring's pageable resolver
-falls back to the configured default page size. The starter sets this to `20`
-by default. This default can be changed via the property below
+falls back to the configured default page size. In a Spring Boot application,
+the standard property is:
 
 ```properties
-spring-web-query.pagination.default-page-size=50
+spring.data.web.pageable.default-page-size=50
 ```
 
-This value must be greater than `0` and less than or equal to
-`spring-web-query.pagination.max-page-size`.
+This value must be greater than `0` and should not exceed
+`spring.data.web.pageable.max-page-size`.
+
+### Serialization mode
+
+Spring Data also supports configuring how `Page` responses are serialized:
+
+```properties
+spring.data.web.pageable.serialization-mode=via-dto
+```
+
+### Important note about `@EnableSpringDataWebSupport`
+
+If you add `@EnableSpringDataWebSupport` manually, Spring Data Web support is
+configured directly and Spring Boot's `spring.data.web.pageable.*` properties
+will not be applied automatically.
+
+In that setup, register a `PageableHandlerMethodArgumentResolverCustomizer`
+bean yourself to customize the shared resolver:
+
+```java
+@Configuration
+class PageableConfig {
+
+    @Bean
+    PageableHandlerMethodArgumentResolverCustomizer pageableCustomizer() {
+        return resolver -> {
+            resolver.setMaxPageSize(500);
+            resolver.setFallbackPageable(PageRequest.of(0, 50));
+        };
+    }
+}
+```
 
 ## Exception Handling
 

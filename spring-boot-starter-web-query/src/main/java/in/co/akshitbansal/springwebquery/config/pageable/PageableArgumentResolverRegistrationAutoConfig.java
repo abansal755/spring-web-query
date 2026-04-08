@@ -21,7 +21,6 @@ import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePage
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -31,7 +30,6 @@ import java.util.List;
  * Registers WebQuery pageable resolvers ahead of Spring Data's default resolver.
  */
 @AutoConfiguration
-@EnableSpringDataWebSupport
 @RequiredArgsConstructor
 @Slf4j
 public class PageableArgumentResolverRegistrationAutoConfig implements WebMvcConfigurer {

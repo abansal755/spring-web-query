@@ -16,9 +16,7 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverAutoConfig;
 import in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverRegistrationAutoConfig;
-import in.co.akshitbansal.springwebquery.config.pageable.PaginationCustomizationAutoConfig;
 import in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverAutoConfig;
 import in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverRegistrationAutoConfig;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
@@ -30,45 +28,23 @@ import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePage
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.MethodParameter;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = {
-		PaginationCustomizationAutoConfig.class,
-		PageableArgumentResolverAutoConfig.class,
-		PageableArgumentResolverRegistrationAutoConfig.class,
-		RSQLOperatorsAutoConfig.class,
-		RSQLJPAAutoConfig.class,
-		SpecificationArgumentResolverAutoConfig.class,
-		SpecificationArgumentResolverRegistrationAutoConfig.class
-})
-@TestPropertySource(properties = "spring-web-query.pagination.max-page-size=50")
+@SpringBootTest
 class AutoConfigIntegrationTest {
 
 	@Autowired
 	private ApplicationContext context;
-
-	@Autowired
-	private PageableHandlerMethodArgumentResolverCustomizer pageableCustomizer;
 
 	@Autowired
 	private PageableArgumentResolverRegistrationAutoConfig pageableResolverConfig;
@@ -78,7 +54,6 @@ class AutoConfigIntegrationTest {
 
 	@Test
 	void beansAreRegistered() {
-		assertNotNull(pageableCustomizer);
 		assertNotNull(context.getBean(WebQueryEntityAwarePageableArgumentResolver.class));
 		assertNotNull(context.getBean(WebQueryDTOAwarePageableArgumentResolver.class));
 		assertNotNull(context.getBean(WebQueryEntityAwareSpecificationArgumentResolver.class));
@@ -127,60 +102,6 @@ class AutoConfigIntegrationTest {
 	}
 
 	@Test
-	void paginationCustomizerCapsResolvedPageSize() throws Exception {
-		PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
-		pageableCustomizer.customize(resolver);
-
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setParameter("size", "500");
-		Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
-
-		Pageable pageable = resolver.resolveArgument(
-				new MethodParameter(method, 0),
-				null,
-				new ServletWebRequest(request),
-				null
-		);
-
-		assertEquals(50, pageable.getPageSize());
-	}
-
-	@Test
-	void paginationCustomizerUsesConfiguredFallbackPageSize() throws Exception {
-		PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
-		pageableCustomizer.customize(resolver);
-
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
-
-		Pageable pageable = resolver.resolveArgument(
-				new MethodParameter(method, 0),
-				null,
-				new ServletWebRequest(request),
-				null
-		);
-
-		assertEquals(20, pageable.getPageSize());
-	}
-
-	@Test
-	void paginationConfigRejectsNonPositiveMaxPageSize() {
-		PaginationCustomizationAutoConfig config = new PaginationCustomizationAutoConfig();
-
-		assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(0, 20));
-		assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(-1, 20));
-	}
-
-	@Test
-	void paginationConfigRejectsInvalidDefaultPageSize() {
-		PaginationCustomizationAutoConfig config = new PaginationCustomizationAutoConfig();
-
-		assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(50, 0));
-		assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(50, -1));
-		assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(50, 51));
-	}
-
-	@Test
 	void specificationConfigRejectsNegativeMaxAstDepth() {
 		assertThrows(
 				QueryConfigurationException.class,
@@ -188,10 +109,13 @@ class AutoConfigIntegrationTest {
 		);
 	}
 
-	private static class TestController {
-
-		@SuppressWarnings("unused")
-		void search(Pageable pageable) {
-		}
+	@SpringBootConfiguration
+	@EnableAutoConfiguration(excludeName = {
+			"org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration",
+			"org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
+			"org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration",
+			"org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration"
+	})
+	static class TestApplication {
 	}
 }
