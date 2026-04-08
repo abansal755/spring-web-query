@@ -182,7 +182,7 @@
 						</indent>
 						<removeUnusedImports/>
 						<licenseHeader>
-							<file>../license-header.txt</file>
+							<file>license-header.txt</file>
 							<delimiter>package</delimiter>
 						</licenseHeader>
 					</java>
