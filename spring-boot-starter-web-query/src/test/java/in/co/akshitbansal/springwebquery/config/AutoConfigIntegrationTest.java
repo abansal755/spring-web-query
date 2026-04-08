@@ -52,8 +52,8 @@ class AutoConfigIntegrationTest {
 
     @Test
     void beansAreRegistered() {
-        assertNotNull(context.getBean(PageableHandlerMethodArgumentResolverCustomizer.class));
         assertNotNull(context.getBean(RSQLCustomOperatorsConfigurer.class));
+        assertNotNull(context.getBean(PageableHandlerMethodArgumentResolverCustomizer.class));
         assertNotNull(context.getBean(WebQueryEntityAwarePageableArgumentResolver.class));
         assertNotNull(context.getBean(WebQueryDTOAwarePageableArgumentResolver.class));
         assertNotNull(context.getBean(WebQueryEntityAwareSpecificationArgumentResolver.class));
@@ -107,8 +107,15 @@ class AutoConfigIntegrationTest {
 
     @Test
     void paginationConfigRejectsNonPositiveMaxPageSize() {
-        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(0));
-        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(-1));
+        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(0, 20));
+        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(-1, 20));
+    }
+
+    @Test
+    void paginationConfigRejectsInvalidDefaultPageSize() {
+        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(50, 0));
+        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(50, -1));
+        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(50, 51));
     }
 
     @Test

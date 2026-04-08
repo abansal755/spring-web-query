@@ -43,16 +43,12 @@ public class PaginationCustomizationAutoConfig {
     }
 
     @Bean
-    public PageableHandlerMethodArgumentResolverCustomizer defaultPageSizeCustomizer() {
-        log.info("{} registered to set default page size to {}",
-                PageableHandlerMethodArgumentResolverCustomizer.class.getSimpleName(), DEFAULT_PAGE_SIZE);
-        return resolver -> resolver.setFallbackPageable(Pageable.ofSize(DEFAULT_PAGE_SIZE));
-    }
-
-    @Bean
     public PageableHandlerMethodArgumentResolverCustomizer maxPageSizeCustomizer() {
-        log.info("{} registered to set max page size to {}",
-                PageableHandlerMethodArgumentResolverCustomizer.class.getSimpleName(), MAX_PAGE_SIZE);
-        return resolver -> resolver.setMaxPageSize(MAX_PAGE_SIZE);
+        log.info("{} registered to set max page size to {} and default page size to {}",
+                PageableHandlerMethodArgumentResolverCustomizer.class.getSimpleName(), MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE);
+        return resolver -> {
+            resolver.setMaxPageSize(MAX_PAGE_SIZE);
+            resolver.setFallbackPageable(Pageable.ofSize(MAX_PAGE_SIZE));
+        };
     }
 }
