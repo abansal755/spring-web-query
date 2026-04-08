@@ -1,10 +1,13 @@
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.RSQLCustomOperatorsConfigurer;
+import in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverAutoConfig;
 import in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverRegistrationAutoConfig;
 import in.co.akshitbansal.springwebquery.config.pageable.PaginationCustomizationAutoConfig;
+import in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverAutoConfig;
 import in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverRegistrationAutoConfig;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
@@ -25,6 +28,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -34,8 +38,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {
         PaginationCustomizationAutoConfig.class,
+        PageableArgumentResolverAutoConfig.class,
         PageableArgumentResolverRegistrationAutoConfig.class,
+        RSQLOperatorsAutoConfig.class,
         RSQLJPAAutoConfig.class,
+        SpecificationArgumentResolverAutoConfig.class,
         SpecificationArgumentResolverRegistrationAutoConfig.class
 })
 @TestPropertySource(properties = "spring-web-query.pagination.max-page-size=50")
@@ -45,7 +52,7 @@ class AutoConfigIntegrationTest {
     private ApplicationContext context;
 
     @Autowired
-    private PaginationCustomizationAutoConfig paginationConfig;
+    private PageableHandlerMethodArgumentResolverCustomizer pageableCustomizer;
 
     @Autowired
     private PageableArgumentResolverRegistrationAutoConfig pageableResolverConfig;
@@ -55,18 +62,32 @@ class AutoConfigIntegrationTest {
 
     @Test
     void beansAreRegistered() {
-        assertNotNull(context.getBean(RSQLCustomOperatorsConfigurer.class));
-        assertNotNull(context.getBean(PageableHandlerMethodArgumentResolverCustomizer.class));
+        assertNotNull(pageableCustomizer);
         assertNotNull(context.getBean(WebQueryEntityAwarePageableArgumentResolver.class));
         assertNotNull(context.getBean(WebQueryDTOAwarePageableArgumentResolver.class));
         assertNotNull(context.getBean(WebQueryEntityAwareSpecificationArgumentResolver.class));
         assertNotNull(context.getBean(WebQueryDTOAwareSpecificationArgumentResolver.class));
+        assertNotNull(context.getBean("defaultOperatorSet"));
+        assertNotNull(context.getBean("customOperatorSet"));
     }
 
     @Test
-    void defaultCustomOperatorsConfigurerReturnsEmptySet() {
-        RSQLCustomOperatorsConfigurer configurer = context.getBean(RSQLCustomOperatorsConfigurer.class);
-        assertTrue(configurer.getCustomOperators().isEmpty());
+    void customOperatorSetDefaultsToEmpty() {
+        @SuppressWarnings("unchecked")
+        Set<RSQLCustomOperator<?>> customOperators =
+                (Set<RSQLCustomOperator<?>>) context.getBean("customOperatorSet");
+
+        assertTrue(customOperators.isEmpty());
+    }
+
+    @Test
+    void defaultOperatorSetIsRegistered() {
+        @SuppressWarnings("unchecked")
+        Set<RSQLDefaultOperator> defaultOperators =
+                (Set<RSQLDefaultOperator>) context.getBean("defaultOperatorSet");
+
+        assertTrue(defaultOperators.contains(RSQLDefaultOperator.EQUAL));
+        assertTrue(defaultOperators.contains(RSQLDefaultOperator.IN));
     }
 
     @Test
@@ -90,9 +111,9 @@ class AutoConfigIntegrationTest {
     }
 
     @Test
-    void maxPageSizeCustomizerCapsResolvedPageSize() throws Exception {
+    void paginationCustomizerCapsResolvedPageSize() throws Exception {
         PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
-        paginationConfig.maxPageSizeCustomizer().customize(resolver);
+        pageableCustomizer.customize(resolver);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("size", "500");
@@ -109,21 +130,44 @@ class AutoConfigIntegrationTest {
     }
 
     @Test
+    void paginationCustomizerUsesConfiguredFallbackPageSize() throws Exception {
+        PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
+        pageableCustomizer.customize(resolver);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
+
+        Pageable pageable = resolver.resolveArgument(
+                new MethodParameter(method, 0),
+                null,
+                new ServletWebRequest(request),
+                null
+        );
+
+        assertEquals(50, pageable.getPageSize());
+    }
+
+    @Test
     void paginationConfigRejectsNonPositiveMaxPageSize() {
-        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(0, 20));
-        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(-1, 20));
+        PaginationCustomizationAutoConfig config = new PaginationCustomizationAutoConfig();
+
+        assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(0, 20));
+        assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(-1, 20));
     }
 
     @Test
     void paginationConfigRejectsInvalidDefaultPageSize() {
-        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(50, 0));
-        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(50, -1));
-        assertThrows(QueryConfigurationException.class, () -> new PaginationCustomizationAutoConfig(50, 51));
+        PaginationCustomizationAutoConfig config = new PaginationCustomizationAutoConfig();
+
+        assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(50, 0));
+        assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(50, -1));
+        assertThrows(QueryConfigurationException.class, () -> config.maxPageSizeCustomizer(50, 51));
     }
 
     @Test
-    void webQueryBeanConfigRejectsNegativeMaxAstDepth() {
-        assertThrows(QueryConfigurationException.class, () -> new RSQLJPAAutoConfig("filter", false, true, -1));
+    void specificationConfigRejectsNegativeMaxAstDepth() {
+        assertThrows(QueryConfigurationException.class,
+                () -> new SpecificationArgumentResolverAutoConfig("filter", false, true, -1));
     }
 
     private static class TestController {
