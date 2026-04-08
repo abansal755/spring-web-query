@@ -1,6 +1,9 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.RSQLCustomOperatorsConfigurer;
+import in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverRegistrationAutoConfig;
+import in.co.akshitbansal.springwebquery.config.pageable.PaginationCustomizationAutoConfig;
+import in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverRegistrationAutoConfig;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
@@ -31,9 +34,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {
         PaginationCustomizationAutoConfig.class,
-        WebQueryPageableArgumentResolverAutoConfig.class,
-        WebQueryBeanAutoConfig.class,
-        WebQuerySpecificationArgumentResolverAutoConfig.class
+        PageableArgumentResolverRegistrationAutoConfig.class,
+        RSQLJPAAutoConfig.class,
+        SpecificationArgumentResolverRegistrationAutoConfig.class
 })
 @TestPropertySource(properties = "spring-web-query.pagination.max-page-size=50")
 class AutoConfigIntegrationTest {
@@ -45,10 +48,10 @@ class AutoConfigIntegrationTest {
     private PaginationCustomizationAutoConfig paginationConfig;
 
     @Autowired
-    private WebQueryPageableArgumentResolverAutoConfig pageableResolverConfig;
+    private PageableArgumentResolverRegistrationAutoConfig pageableResolverConfig;
 
     @Autowired
-    private WebQuerySpecificationArgumentResolverAutoConfig specificationResolverConfig;
+    private SpecificationArgumentResolverRegistrationAutoConfig specificationResolverConfig;
 
     @Test
     void beansAreRegistered() {
@@ -120,7 +123,7 @@ class AutoConfigIntegrationTest {
 
     @Test
     void webQueryBeanConfigRejectsNegativeMaxAstDepth() {
-        assertThrows(QueryConfigurationException.class, () -> new WebQueryBeanAutoConfig("filter", false, true, -1));
+        assertThrows(QueryConfigurationException.class, () -> new RSQLJPAAutoConfig("filter", false, true, -1));
     }
 
     private static class TestController {

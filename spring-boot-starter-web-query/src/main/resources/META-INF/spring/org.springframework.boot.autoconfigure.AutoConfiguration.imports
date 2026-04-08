@@ -1,4 +1,9 @@
-in.co.akshitbansal.springwebquery.config.PaginationCustomizationAutoConfig
-in.co.akshitbansal.springwebquery.config.WebQueryPageableArgumentResolverAutoConfig
-in.co.akshitbansal.springwebquery.config.WebQueryBeanAutoConfig
-in.co.akshitbansal.springwebquery.config.WebQuerySpecificationArgumentResolverAutoConfig
+in.co.akshitbansal.springwebquery.config.RSQLJPAAutoConfig
+in.co.akshitbansal.springwebquery.config.RSQLOperatorsAutoConfig
+
+in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverAutoConfig
+in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverRegistrationAutoConfig
+in.co.akshitbansal.springwebquery.config.pageable.PaginationCustomizationAutoConfig
+
+in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverAutoConfig
+in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverRegistrationAutoConfig
