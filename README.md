@@ -146,6 +146,7 @@ Includes:
 - core library
 - auto-configured argument resolvers
 - auto-configured beans (`AnnotationUtil`, operator sets)
+- automatic Spring Data Web support (`@EnableSpringDataWebSupport`)
 - pagination max-size customizer
 
 ### `spring-web-query-core`
@@ -182,9 +183,10 @@ Includes:
 </dependency>
 ```
 
-If you use core directly, register resolver beans and MVC configuration manually.
+If you use core directly, register resolver beans and MVC configuration manually. That includes enabling Spring Data Web support yourself when you want Spring MVC to resolve `Pageable` arguments.
 
 The starter now aligns better with existing Spring Boot web applications by depending on `spring-boot-starter-web`.
+It also enables Spring Data Web support automatically, so you do not need to add `@EnableSpringDataWebSupport` yourself when using `spring-boot-starter-web-query`.
 
 ## Quick start (DTO-aware, recommended)
 
