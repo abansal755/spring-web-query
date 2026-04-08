@@ -10,6 +10,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
+/**
+ * Registers WebQuery specification resolvers with Spring MVC.
+ */
 @AutoConfiguration
 @RequiredArgsConstructor
 @Slf4j

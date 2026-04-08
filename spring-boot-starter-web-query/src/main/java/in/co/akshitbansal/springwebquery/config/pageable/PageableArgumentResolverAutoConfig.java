@@ -6,6 +6,9 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 
+/**
+ * Creates pageable argument resolvers that delegate base pagination parsing to Spring Data.
+ */
 @AutoConfiguration
 public class PageableArgumentResolverAutoConfig {
 

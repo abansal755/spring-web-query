@@ -11,6 +11,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
+/**
+ * Registers WebQuery pageable resolvers ahead of Spring Data's default resolver.
+ */
 @AutoConfiguration
 @EnableSpringDataWebSupport
 @RequiredArgsConstructor

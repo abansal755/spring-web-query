@@ -10,6 +10,9 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 
 import java.text.MessageFormat;
 
+/**
+ * Applies pageable defaults and validation for starter-managed pagination settings.
+ */
 @AutoConfiguration
 @Slf4j
 public class PaginationCustomizationAutoConfig {

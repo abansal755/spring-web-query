@@ -11,6 +11,9 @@ import org.springframework.context.annotation.Bean;
 import java.text.MessageFormat;
 import java.util.*;
 
+/**
+ * Registers validated default and custom RSQL operator sets for starter consumers.
+ */
 @AutoConfiguration
 @Slf4j
 public class RSQLOperatorsAutoConfig {

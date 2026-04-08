@@ -14,6 +14,9 @@ import org.springframework.context.annotation.Bean;
 import java.text.MessageFormat;
 import java.util.Set;
 
+/**
+ * Creates specification resolvers using the starter's global filtering configuration.
+ */
 @AutoConfiguration
 public class SpecificationArgumentResolverAutoConfig {
 

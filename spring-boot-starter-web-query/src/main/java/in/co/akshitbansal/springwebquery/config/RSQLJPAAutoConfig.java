@@ -8,6 +8,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 
+/**
+ * Registers RSQL JPA converters required by the starter.
+ */
 @AutoConfiguration
 public class RSQLJPAAutoConfig {
 
