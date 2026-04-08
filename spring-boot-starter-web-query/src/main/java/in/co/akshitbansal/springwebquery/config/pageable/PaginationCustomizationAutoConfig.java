@@ -11,7 +11,21 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 import java.text.MessageFormat;
 
 /**
- * Applies pageable defaults and validation for starter-managed pagination settings.
+ * Contributes pagination customization for Spring Data Web's shared
+ * {@link org.springframework.data.web.PageableHandlerMethodArgumentResolver}.
+ *
+ * <p>When Spring Data Web support is active, Spring creates a central
+ * {@code PageableHandlerMethodArgumentResolver} to parse request parameters such
+ * as {@code page}, {@code size}, and {@code sort}. Spring looks up any
+ * {@link PageableHandlerMethodArgumentResolverCustomizer} beans in the
+ * application context and invokes them while building that resolver, allowing
+ * starter code to adjust the resolver without replacing Spring's default
+ * infrastructure.</p>
+ *
+ * <p>This auto-configuration provides one such customizer bean. It validates
+ * the configured pagination properties and then applies the starter's global
+ * max page size and fallback page size to the resolver that Spring Data Web
+ * exposes to MVC argument resolution.</p>
  */
 @AutoConfiguration
 @Slf4j
