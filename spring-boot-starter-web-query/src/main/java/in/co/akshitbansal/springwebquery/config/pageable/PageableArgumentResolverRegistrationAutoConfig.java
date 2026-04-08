@@ -1,4 +1,4 @@
-package in.co.akshitbansal.springwebquery.config;
+package in.co.akshitbansal.springwebquery.config.pageable;
 
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
@@ -11,11 +11,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
+/**
+ * Registers WebQuery pageable resolvers ahead of Spring Data's default resolver.
+ */
 @AutoConfiguration
 @EnableSpringDataWebSupport
 @RequiredArgsConstructor
 @Slf4j
-public class WebQueryPageableArgumentResolverAutoConfig implements WebMvcConfigurer {
+public class PageableArgumentResolverRegistrationAutoConfig implements WebMvcConfigurer {
 
     private final WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver;
     private final WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver;

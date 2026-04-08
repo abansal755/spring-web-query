@@ -1,4 +1,4 @@
-package in.co.akshitbansal.springwebquery.config;
+package in.co.akshitbansal.springwebquery.config.specification;
 
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
@@ -10,10 +10,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
+/**
+ * Registers WebQuery specification resolvers with Spring MVC.
+ */
 @AutoConfiguration
 @RequiredArgsConstructor
 @Slf4j
-public class WebQuerySpecificationArgumentResolverAutoConfig implements WebMvcConfigurer {
+public class SpecificationArgumentResolverRegistrationAutoConfig implements WebMvcConfigurer {
 
     private final WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecResolver;
     private final WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecResolver;

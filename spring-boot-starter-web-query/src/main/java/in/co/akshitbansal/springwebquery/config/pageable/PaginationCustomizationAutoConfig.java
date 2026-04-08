@@ -1,4 +1,4 @@
-package in.co.akshitbansal.springwebquery.config;
+package in.co.akshitbansal.springwebquery.config.pageable;
 
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import lombok.extern.slf4j.Slf4j;
@@ -10,23 +10,39 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 
 import java.text.MessageFormat;
 
+/**
+ * Contributes pagination customization for Spring Data Web's shared
+ * {@link org.springframework.data.web.PageableHandlerMethodArgumentResolver}.
+ *
+ * <p>When Spring Data Web support is active, Spring creates a central
+ * {@code PageableHandlerMethodArgumentResolver} to parse request parameters such
+ * as {@code page}, {@code size}, and {@code sort}. Spring looks up any
+ * {@link PageableHandlerMethodArgumentResolverCustomizer} beans in the
+ * application context and invokes them while building that resolver, allowing
+ * starter code to adjust the resolver without replacing Spring's default
+ * infrastructure.</p>
+ *
+ * <p>This auto-configuration provides one such customizer bean. It validates
+ * the configured pagination properties and then applies the starter's global
+ * max page size and fallback page size to the resolver that Spring Data Web
+ * exposes to MVC argument resolution.</p>
+ */
 @AutoConfiguration
 @Slf4j
 public class PaginationCustomizationAutoConfig {
 
-    private final int MAX_PAGE_SIZE;
-    private final int DEFAULT_PAGE_SIZE;
-
-    public PaginationCustomizationAutoConfig(
+    @Bean
+    public PageableHandlerMethodArgumentResolverCustomizer maxPageSizeCustomizer(
             @Value("${spring-web-query.pagination.max-page-size:100}") int MAX_PAGE_SIZE,
             @Value("${spring-web-query.pagination.default-page-size:20}") int DEFAULT_PAGE_SIZE
     ) {
+        // Validating MAX_PAGE_SIZE
         if(MAX_PAGE_SIZE <= 0) throw new QueryConfigurationException(MessageFormat.format(
                 "Value for spring-web-query.pagination.max-page-size must be greater than 0. Provided value: {0}",
                 MAX_PAGE_SIZE
         ));
-        this.MAX_PAGE_SIZE = MAX_PAGE_SIZE;
 
+        // Validating DEFAULT_PAGE_SIZE
         if(DEFAULT_PAGE_SIZE <= 0) {
             throw new QueryConfigurationException(MessageFormat.format(
                     "Value for spring-web-query.pagination.default-page-size must be greater than 0. Provided value: {0}",
@@ -39,16 +55,12 @@ public class PaginationCustomizationAutoConfig {
                     DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
             ));
         }
-        this.DEFAULT_PAGE_SIZE = DEFAULT_PAGE_SIZE;
-    }
 
-    @Bean
-    public PageableHandlerMethodArgumentResolverCustomizer maxPageSizeCustomizer() {
         log.info("{} registered to set max page size to {} and default page size to {}",
                 PageableHandlerMethodArgumentResolverCustomizer.class.getSimpleName(), MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE);
         return resolver -> {
             resolver.setMaxPageSize(MAX_PAGE_SIZE);
-            resolver.setFallbackPageable(Pageable.ofSize(MAX_PAGE_SIZE));
+            resolver.setFallbackPageable(Pageable.ofSize(DEFAULT_PAGE_SIZE));
         };
     }
 }
