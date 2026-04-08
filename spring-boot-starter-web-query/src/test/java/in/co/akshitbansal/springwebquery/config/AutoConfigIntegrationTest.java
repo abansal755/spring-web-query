@@ -144,7 +144,7 @@ class AutoConfigIntegrationTest {
                 null
         );
 
-        assertEquals(50, pageable.getPageSize());
+        assertEquals(20, pageable.getPageSize());
     }
 
     @Test

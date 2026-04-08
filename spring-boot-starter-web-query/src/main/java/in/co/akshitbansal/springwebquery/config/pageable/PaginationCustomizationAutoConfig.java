@@ -46,7 +46,7 @@ public class PaginationCustomizationAutoConfig {
                 PageableHandlerMethodArgumentResolverCustomizer.class.getSimpleName(), MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE);
         return resolver -> {
             resolver.setMaxPageSize(MAX_PAGE_SIZE);
-            resolver.setFallbackPageable(Pageable.ofSize(MAX_PAGE_SIZE));
+            resolver.setFallbackPageable(Pageable.ofSize(DEFAULT_PAGE_SIZE));
         };
     }
 }
