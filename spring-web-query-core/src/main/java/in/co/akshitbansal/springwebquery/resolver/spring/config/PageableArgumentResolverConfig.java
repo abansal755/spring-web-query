@@ -23,7 +23,6 @@ import lombok.ToString;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Effective configuration used by pageable argument resolvers after extracting
@@ -39,6 +38,7 @@ import java.util.Objects;
 public class PageableArgumentResolverConfig extends AbstractArgumentResolverConfig {
 
 	public PageableArgumentResolverConfig(Class<?> entityClass, Class<?> dtoClass, List<FieldMapping> fieldMappings) {
+		// null checks present in superclass constructor
 		super(entityClass, dtoClass, fieldMappings);
 	}
 
@@ -74,11 +74,13 @@ public class PageableArgumentResolverConfig extends AbstractArgumentResolverConf
 			return this;
 		}
 
+		@SuppressWarnings("NullAway")
 		public PageableArgumentResolverConfig build() {
+			// this constructor calls the superclass constructor which has null checks present
 			return new PageableArgumentResolverConfig(
-					Objects.requireNonNull(entityClass, "entityClass must not be null"),
-					Objects.requireNonNull(dtoClass, "dtoClass must not be null"),
-					Objects.requireNonNull(fieldMappings, "fieldMappings must not be null")
+					entityClass,
+					dtoClass,
+					fieldMappings
 			);
 		}
 	}

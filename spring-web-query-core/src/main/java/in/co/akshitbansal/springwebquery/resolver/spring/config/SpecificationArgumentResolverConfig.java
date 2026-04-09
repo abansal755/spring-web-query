@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.resolver.spring.config;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.ToString;
 import org.jspecify.annotations.Nullable;
 
@@ -61,10 +62,10 @@ public class SpecificationArgumentResolverConfig extends AbstractArgumentResolve
 	private final int maxASTDepth;
 
 	public SpecificationArgumentResolverConfig(
-			Class<?> entityClass,
-			Class<?> dtoClass,
-			List<FieldMapping> fieldMappings,
-			String filterParamName,
+			Class<?> entityClass, // null check present in superclass constructor
+			Class<?> dtoClass, // null check present in superclass constructor
+			List<FieldMapping> fieldMappings, // null check present in superclass constructor
+			@NonNull String filterParamName,
 			boolean andNodeAllowed,
 			boolean orNodeAllowed,
 			int maxASTDepth
@@ -140,12 +141,14 @@ public class SpecificationArgumentResolverConfig extends AbstractArgumentResolve
 			return this;
 		}
 
+		@SuppressWarnings("NullAway")
 		public SpecificationArgumentResolverConfig build() {
 			return new SpecificationArgumentResolverConfig(
-					Objects.requireNonNull(entityClass, "entityClass must not be null"),
-					Objects.requireNonNull(dtoClass, "dtoClass must not be null"),
-					Objects.requireNonNull(fieldMappings, "fieldMappings must not be null"),
-					Objects.requireNonNull(filterParamName, "filterParamName must not be null"),
+					entityClass,
+					dtoClass,
+					fieldMappings,
+					filterParamName,
+					// null check for the rest of the fields to check if the builder's setter got called
 					Objects.requireNonNull(andNodeAllowed, "andNodeAllowed must not be null"),
 					Objects.requireNonNull(orNodeAllowed, "orNodeAllowed must not be null"),
 					Objects.requireNonNull(maxASTDepth, "maxASTDepth must not be null")

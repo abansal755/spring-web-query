@@ -40,12 +40,14 @@ public abstract class AbstractArgumentResolverConfig {
 	 * Entity type against which resolved query paths are ultimately validated
 	 * and executed.
 	 */
+	@NonNull
 	private final Class<?> entityClass;
 
 	/**
 	 * Optional DTO type used as the API-facing selector contract before paths
 	 * are translated to entity properties.
 	 */
+	@NonNull
 	private final Class<?> dtoClass;
 
 	/**
@@ -53,5 +55,6 @@ public abstract class AbstractArgumentResolverConfig {
 	 * resolver flows when request selectors are validated directly against the
 	 * entity model.
 	 */
+	@NonNull
 	private final List<FieldMapping> fieldMappings;
 }
