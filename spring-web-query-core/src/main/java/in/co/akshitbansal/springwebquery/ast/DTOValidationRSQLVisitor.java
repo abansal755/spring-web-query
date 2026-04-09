@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.ast;
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
+import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
@@ -62,7 +63,7 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 * @param maxDepth maximum allowed depth for the RSQL AST
 	 */
 	protected DTOValidationRSQLVisitor(
-			FieldResolver fieldResolver,
+			DTOAwareFieldResolver fieldResolver,
 			FilterableFieldValidator filterableFieldValidator,
 			boolean andNodeAllowed,
 			boolean orNodeAllowed,
