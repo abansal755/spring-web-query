@@ -23,6 +23,7 @@ import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecifi
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +35,7 @@ import java.util.Set;
  * Creates specification resolvers using the starter's global filtering configuration.
  */
 @AutoConfiguration
+@Slf4j
 public class SpecificationArgumentResolverAutoConfig {
 
 	private final String GLOBAL_FILTER_PARAM_NAME;
@@ -63,6 +65,11 @@ public class SpecificationArgumentResolverAutoConfig {
 			));
 		}
 		this.GLOBAL_MAX_AST_DEPTH = GLOBAL_MAX_AST_DEPTH;
+
+		log.info(
+				"Found global filtering configuration: filterParamName = {}, allowOrOperation = {}, allowAndOperation = {}, maxAstDepth = {}",
+				GLOBAL_FILTER_PARAM_NAME, GLOBAL_ALLOW_OR_OPERATION, GLOBAL_ALLOW_AND_OPERATION, GLOBAL_MAX_AST_DEPTH
+		);
 	}
 
 	@Bean
