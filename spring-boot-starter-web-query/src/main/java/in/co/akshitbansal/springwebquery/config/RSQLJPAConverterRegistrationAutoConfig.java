@@ -16,6 +16,7 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
+import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -27,8 +28,8 @@ import java.time.OffsetDateTime;
 /**
  * Registers RSQL JPA converters required by the starter.
  */
-@AutoConfiguration
-public class RSQLJPAAutoConfig {
+@AutoConfiguration(after = RSQLJPAAutoConfiguration.class)
+public class RSQLJPAConverterRegistrationAutoConfig {
 
 	// Allows RSQL to parse ISO-8601 Timestamp fields
 	// eg. 2025-12-08T00:00:00+00:00 or 2025-12-08T00:00:00Z
