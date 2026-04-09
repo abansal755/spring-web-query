@@ -26,24 +26,51 @@ import org.springframework.context.annotation.Bean;
 
 import java.util.Map;
 
+/**
+ * Publishes the validator components shared by pageable and specification
+ * resolver auto-configuration.
+ */
 @AutoConfiguration
 public class ValidatorAutoConfig {
 
+	/**
+	 * Registers the validator used for configured filter parameter names.
+	 *
+	 * @return query parameter name validator
+	 */
 	@Bean
 	public QueryParamNameValidator queryParamNameValidator() {
 		return new QueryParamNameValidator();
 	}
 
+	/**
+	 * Registers the validator used to enforce {@code @Sortable} constraints.
+	 *
+	 * @return sortable field validator
+	 */
 	@Bean
 	public SortableFieldValidator sortableFieldValidator() {
 		return new SortableFieldValidator();
 	}
 
+	/**
+	 * Registers the validator used to check explicit entity field aliases.
+	 *
+	 * @return field-mappings validator
+	 */
 	@Bean
 	public FieldMappingsValidator fieldMappingsValidator() {
 		return new FieldMappingsValidator();
 	}
 
+	/**
+	 * Registers the validator used to enforce {@code @RSQLFilterable}
+	 * constraints, backed by the current custom operator registry.
+	 *
+	 * @param customOperatorMap custom operators keyed by implementation class
+	 *
+	 * @return filterable field validator
+	 */
 	@Bean
 	public FilterableFieldValidator filterableFieldValidator(Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap) {
 		return new FilterableFieldValidator(customOperatorMap);

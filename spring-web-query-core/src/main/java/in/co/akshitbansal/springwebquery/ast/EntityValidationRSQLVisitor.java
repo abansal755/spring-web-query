@@ -46,9 +46,8 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	/**
 	 * Creates a new entity validation visitor with the specified configuration.
 	 *
-	 * @param entityClass the entity class to validate against
-	 * @param fieldMappings field mappings (aliases) to consider
-	 * @param customOperators registered custom operators keyed by implementation class
+	 * @param fieldResolver resolver that validates selectors against the effective entity contract
+	 * @param filterableFieldValidator validator used to enforce {@link RSQLFilterable} constraints
 	 * @param andNodeAllowed whether logical AND operator is allowed
 	 * @param orNodeAllowed whether logical OR operator is allowed
 	 * @param maxDepth maximum allowed depth for the RSQL AST

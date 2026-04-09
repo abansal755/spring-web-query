@@ -20,12 +20,34 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 
 import java.util.List;
 
+/**
+ * Factory for creating field resolvers used by validation visitors and
+ * pageable/specification resolver flows.
+ */
 public class FieldResolverFactory {
 
+	/**
+	 * Creates a resolver that validates API-facing paths against a DTO contract
+	 * and maps them to entity paths.
+	 *
+	 * @param entityClass backing entity type used for final path validation
+	 * @param dtoClass DTO type exposed as the query contract
+	 *
+	 * @return DTO-aware field resolver
+	 */
 	public DTOAwareFieldResolver newDtoAwareFieldResolver(Class<?> entityClass, Class<?> dtoClass) {
 		return new DTOAwareFieldResolver(entityClass, dtoClass);
 	}
 
+	/**
+	 * Creates a resolver that validates selectors directly against the entity
+	 * model while honoring explicit field aliases.
+	 *
+	 * @param entityClass backing entity type used for selector validation
+	 * @param fieldMappings aliases declared for entity-aware resolution
+	 *
+	 * @return entity-aware field resolver
+	 */
 	public EntityAwareFieldResolver newEntityAwareFieldResolver(Class<?> entityClass, List<FieldMapping> fieldMappings) {
 		return new EntityAwareFieldResolver(entityClass, fieldMappings);
 	}

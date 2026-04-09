@@ -64,8 +64,11 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 	 * does not override that behavior
 	 * @param globalMaxASTDepth maximum AST depth allowed by default when {@code @WebQuery}
 	 * does not override that behavior
-	 * @param defaultOperators built-in operators accepted in RSQL expressions
-	 * @param customOperators custom operators supported by parser and predicates
+	 * @param rsqlParser parser configured with the allowed comparison operators
+	 * @param customPredicates custom predicates contributed to specification generation
+	 * @param queryParamNameValidator validator used for filter parameter name overrides
+	 * @param validationRSQLVisitorFactory factory used to create entity-aware validation visitors
+	 * @param fieldMappingsValidator validator used to check declared {@link FieldMapping} aliases
 	 */
 	public WebQueryEntityAwareSpecificationArgumentResolver(
 			String globalFilterParamName,

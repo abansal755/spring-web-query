@@ -30,7 +30,8 @@ public class SortableFieldValidator {
 	/**
 	 * Validates that the requested field is explicitly marked as sortable.
 	 *
-	 * @param sortableField field being targeted by sort selector
+	 * @param field reflected terminal field being targeted by the sort selector
+	 * @param fieldPath original selector path from the incoming request
 	 *
 	 * @throws QueryFieldValidationException if sorting is not allowed for the field
 	 */

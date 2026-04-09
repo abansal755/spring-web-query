@@ -26,19 +26,43 @@ import org.springframework.context.annotation.Bean;
 
 import java.util.Set;
 
+/**
+ * Publishes shared infrastructure beans used by the starter's query resolvers.
+ */
 @AutoConfiguration
 public class WebQueryAutoConfig {
 
+	/**
+	 * Creates the shared RSQL parser configured with all allowed comparison operators.
+	 *
+	 * @param allowedOperatorSet comparison operators accepted by the parser
+	 *
+	 * @return configured RSQL parser
+	 */
 	@Bean
 	public RSQLParser rsqlParser(Set<ComparisonOperator> allowedOperatorSet) {
 		return new RSQLParser(allowedOperatorSet);
 	}
 
+	/**
+	 * Creates the shared factory for field resolver instances.
+	 *
+	 * @return field resolver factory
+	 */
 	@Bean
 	public FieldResolverFactory fieldResolverFactory() {
 		return new FieldResolverFactory();
 	}
 
+	/**
+	 * Creates the shared factory for validation visitors used during RSQL
+	 * specification resolution.
+	 *
+	 * @param fieldResolverFactory factory for DTO-aware and entity-aware field resolvers
+	 * @param filterableFieldValidator validator used for terminal field/operator checks
+	 *
+	 * @return validation visitor factory
+	 */
 	@Bean
 	public ValidationRSQLVisitorFactory validationRSQLVisitorFactory(
 			FieldResolverFactory fieldResolverFactory,

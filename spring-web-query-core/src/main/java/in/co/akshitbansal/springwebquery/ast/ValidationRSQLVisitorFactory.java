@@ -24,12 +24,28 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Factory for creating validation visitors with the shared resolver and
+ * filterability infrastructure used across specification resolvers.
+ */
 @RequiredArgsConstructor
 public class ValidationRSQLVisitorFactory {
 
 	private final FieldResolverFactory fieldResolverFactory;
 	private final FilterableFieldValidator filterableFieldValidator;
 
+	/**
+	 * Creates a visitor that validates selectors against a DTO contract and
+	 * records the resulting DTO-to-entity path mappings.
+	 *
+	 * @param entityClass backing entity type used for final path validation
+	 * @param dtoClass API-facing DTO type used for selector validation
+	 * @param andNodeAllowed whether logical AND nodes are permitted
+	 * @param orNodeAllowed whether logical OR nodes are permitted
+	 * @param maxDepth maximum allowed AST depth
+	 *
+	 * @return configured DTO-aware validation visitor
+	 */
 	public DTOValidationRSQLVisitor newDTOValidationRSQLVisitor(
 			Class<?> entityClass,
 			Class<?> dtoClass,
@@ -47,6 +63,18 @@ public class ValidationRSQLVisitorFactory {
 		);
 	}
 
+	/**
+	 * Creates a visitor that validates selectors directly against the entity
+	 * model, including any alias mappings declared on {@link FieldMapping}.
+	 *
+	 * @param entityClass backing entity type used for selector validation
+	 * @param fieldMappings entity-aware alias mappings declared for the endpoint
+	 * @param andNodeAllowed whether logical AND nodes are permitted
+	 * @param orNodeAllowed whether logical OR nodes are permitted
+	 * @param maxDepth maximum allowed AST depth
+	 *
+	 * @return configured entity-aware validation visitor
+	 */
 	public EntityValidationRSQLVisitor newEntityValidationRSQLVisitor(
 			Class<?> entityClass,
 			List<FieldMapping> fieldMappings,

@@ -44,6 +44,16 @@ public class SpecificationArgumentResolverAutoConfig {
 	private final boolean GLOBAL_ALLOW_AND_OPERATION;
 	private final int GLOBAL_MAX_AST_DEPTH;
 
+	/**
+	 * Creates the auto-configuration and validates the global filtering
+	 * properties contributed through application configuration.
+	 *
+	 * @param GLOBAL_FILTER_PARAM_NAME global default request parameter for RSQL filters
+	 * @param GLOBAL_ALLOW_OR_OPERATION whether logical OR is allowed by default
+	 * @param GLOBAL_ALLOW_AND_OPERATION whether logical AND is allowed by default
+	 * @param GLOBAL_MAX_AST_DEPTH maximum AST depth allowed by default
+	 * @param queryParamNameValidator validator used for the configured filter parameter name
+	 */
 	public SpecificationArgumentResolverAutoConfig(
 			@Value("${spring-web-query.filtering.filter-param-name:filter}") String GLOBAL_FILTER_PARAM_NAME,
 			@Value("${spring-web-query.filtering.allow-or-operation:false}") boolean GLOBAL_ALLOW_OR_OPERATION,
@@ -73,6 +83,18 @@ public class SpecificationArgumentResolverAutoConfig {
 		);
 	}
 
+	/**
+	 * Creates the entity-aware specification resolver used when {@code @WebQuery}
+	 * resolves selectors directly against entity fields and aliases.
+	 *
+	 * @param rsqlParser shared RSQL parser
+	 * @param customPredicates shared custom predicate adapters
+	 * @param queryParamNameValidator validator for request parameter name overrides
+	 * @param validationRSQLVisitorFactory factory for entity-aware validation visitors
+	 * @param fieldMappingsValidator validator for declared field aliases
+	 *
+	 * @return entity-aware specification resolver
+	 */
 	@Bean
 	public WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecArgumentResolver(
 			RSQLParser rsqlParser,
@@ -94,6 +116,17 @@ public class SpecificationArgumentResolverAutoConfig {
 		);
 	}
 
+	/**
+	 * Creates the DTO-aware specification resolver used when {@code @WebQuery}
+	 * exposes a DTO query contract.
+	 *
+	 * @param rsqlParser shared RSQL parser
+	 * @param customPredicates shared custom predicate adapters
+	 * @param queryParamNameValidator validator for request parameter name overrides
+	 * @param validationRSQLVisitorFactory factory for DTO-aware validation visitors
+	 *
+	 * @return DTO-aware specification resolver
+	 */
 	@Bean
 	public WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
 			RSQLParser rsqlParser,

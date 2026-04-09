@@ -41,11 +41,10 @@ import java.util.List;
  * Base {@link HandlerMethodArgumentResolver} for resolving RSQL-based
  * {@link org.springframework.data.jpa.domain.Specification} parameters.
  *
- * <p>This class initializes a parser constrained to the configured default and
- * custom operators, adapts custom operators into {@link RSQLCustomPredicate}
- * instances accepted by the underlying {@code rsql-jpa} integration, and
- * merges {@link WebQuery} annotation settings with global defaults before
- * delegating DTO-aware or entity-aware specification creation to subclasses.</p>
+ * <p>This class merges {@link WebQuery} annotation settings with global
+ * defaults, reads the raw RSQL filter from the effective request parameter,
+ * and delegates DTO-aware or entity-aware specification creation to
+ * subclasses.</p>
  */
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractWebQuerySpecificationArgumentResolver extends AbstractWebQueryResolver {
@@ -89,6 +88,9 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	 */
 	private final QueryParamNameValidator queryParamNameValidator;
 
+	/**
+	 * Factory used to create validation visitors matching the active query contract.
+	 */
 	protected final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
 
 	@Override
