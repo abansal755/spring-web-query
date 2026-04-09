@@ -16,10 +16,14 @@
 
 package in.co.akshitbansal.springwebquery.resolver.spring.config;
 
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.experimental.SuperBuilder;
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Effective configuration used by specification argument resolvers after
@@ -31,8 +35,7 @@ import lombok.experimental.SuperBuilder;
  * validation.</p>
  */
 @Getter
-@SuperBuilder
-@EqualsAndHashCode( callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class SpecificationArgumentResolverConfig extends AbstractArgumentResolverConfig {
 
@@ -56,4 +59,97 @@ public class SpecificationArgumentResolverConfig extends AbstractArgumentResolve
 	 * Maximum AST depth allowed in the effective query configuration.
 	 */
 	private final int maxASTDepth;
+
+	public SpecificationArgumentResolverConfig(
+			Class<?> entityClass,
+			Class<?> dtoClass,
+			List<FieldMapping> fieldMappings,
+			String filterParamName,
+			boolean andNodeAllowed,
+			boolean orNodeAllowed,
+			int maxASTDepth
+	) {
+		super(entityClass, dtoClass, fieldMappings);
+		this.filterParamName = filterParamName;
+		this.andNodeAllowed = andNodeAllowed;
+		this.orNodeAllowed = orNodeAllowed;
+		this.maxASTDepth = maxASTDepth;
+	}
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	@EqualsAndHashCode
+	@ToString
+	public static class Builder {
+
+		@Nullable
+		private Class<?> entityClass;
+
+		@Nullable
+		private Class<?> dtoClass;
+
+		@Nullable
+		private List<FieldMapping> fieldMappings;
+
+		@Nullable
+		private String filterParamName;
+
+		@Nullable
+		private Boolean andNodeAllowed;
+
+		@Nullable
+		private Boolean orNodeAllowed;
+
+		@Nullable
+		private Integer maxASTDepth;
+
+		public Builder entityClass(Class<?> entityClass) {
+			this.entityClass = entityClass;
+			return this;
+		}
+
+		public Builder dtoClass(Class<?> dtoClass) {
+			this.dtoClass = dtoClass;
+			return this;
+		}
+
+		public Builder fieldMappings(List<FieldMapping> fieldMappings) {
+			this.fieldMappings = fieldMappings;
+			return this;
+		}
+
+		public Builder filterParamName(String filterParamName) {
+			this.filterParamName = filterParamName;
+			return this;
+		}
+
+		public Builder andNodeAllowed(boolean andNodeAllowed) {
+			this.andNodeAllowed = andNodeAllowed;
+			return this;
+		}
+
+		public Builder orNodeAllowed(boolean orNodeAllowed) {
+			this.orNodeAllowed = orNodeAllowed;
+			return this;
+		}
+
+		public Builder maxASTDepth(int maxASTDepth) {
+			this.maxASTDepth = maxASTDepth;
+			return this;
+		}
+
+		public SpecificationArgumentResolverConfig build() {
+			return new SpecificationArgumentResolverConfig(
+					Objects.requireNonNull(entityClass, "entityClass must not be null"),
+					Objects.requireNonNull(dtoClass, "dtoClass must not be null"),
+					Objects.requireNonNull(fieldMappings, "fieldMappings must not be null"),
+					Objects.requireNonNull(filterParamName, "filterParamName must not be null"),
+					Objects.requireNonNull(andNodeAllowed, "andNodeAllowed must not be null"),
+					Objects.requireNonNull(orNodeAllowed, "orNodeAllowed must not be null"),
+					Objects.requireNonNull(maxASTDepth, "maxASTDepth must not be null")
+			);
+		}
+	}
 }

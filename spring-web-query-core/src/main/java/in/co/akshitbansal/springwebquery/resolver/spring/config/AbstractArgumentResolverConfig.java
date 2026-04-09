@@ -18,10 +18,7 @@ package in.co.akshitbansal.springwebquery.resolver.spring.config;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
+import lombok.*;
 
 import java.util.List;
 
@@ -33,8 +30,8 @@ import java.util.List;
  * specification resolver flows, including the backing entity type, the optional
  * DTO-facing query contract, and any declared entity-aware field aliases.</p>
  */
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@SuperBuilder
 @EqualsAndHashCode
 @ToString
 public abstract class AbstractArgumentResolverConfig {
