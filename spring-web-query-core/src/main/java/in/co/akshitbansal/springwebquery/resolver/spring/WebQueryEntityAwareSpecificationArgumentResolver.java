@@ -25,7 +25,6 @@ import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
@@ -74,10 +73,9 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 			int globalMaxASTDepth,
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
-			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap,
 			Validator<String> queryParamNameValidator,
-			Validator<List<FieldMapping>> fieldMappingsValidator,
-			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
+			ValidationRSQLVisitorFactory validationRSQLVisitorFactory,
+			Validator<List<FieldMapping>> fieldMappingsValidator
 	) {
 		super(
 				globalFilterParamName,
@@ -86,7 +84,6 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 				globalMaxASTDepth,
 				rsqlParser,
 				customPredicates,
-				customOperatorMap,
 				queryParamNameValidator,
 				validationRSQLVisitorFactory
 		);
@@ -125,8 +122,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 			// Parse the RSQL query into an Abstract Syntax Tree (AST)
 			Node root = rsqlParser.parse(filter);
 			// Validate the parsed AST against the target entity and its @RSQLFilterable fields
-			EntityValidationRSQLVisitor validationVisitor =
-			validationRSQLVisitorFactory.newEntityValidationRSQLVisitor(
+			EntityValidationRSQLVisitor validationVisitor = validationRSQLVisitorFactory.newEntityValidationRSQLVisitor(
 					queryConfig.getEntityClass(),
 					queryConfig.getFieldMappings(),
 					queryConfig.isAndNodeAllowed(),

@@ -24,7 +24,6 @@ import in.co.akshitbansal.springwebquery.ast.DTOValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
@@ -33,7 +32,6 @@ import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * DTO-based resolver for {@link Specification} parameters handled via
@@ -66,7 +64,6 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
 			int globalMaxASTDepth,
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
-			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap,
 			Validator<String> queryParamNameValidator,
 			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
 	) {
@@ -77,7 +74,6 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
 				globalMaxASTDepth,
 				rsqlParser,
 				customPredicates,
-				customOperatorMap,
 				queryParamNameValidator,
 				validationRSQLVisitorFactory
 		);

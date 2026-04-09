@@ -22,7 +22,6 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.*;
@@ -37,7 +36,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Base {@link HandlerMethodArgumentResolver} for resolving RSQL-based
@@ -84,12 +82,6 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	 * Custom predicates adapted for {@code rsql-jpa} specification conversion.
 	 */
 	protected final List<RSQLCustomPredicate<?>> customPredicates;
-
-	/**
-	 * Registered custom operators keyed by implementation class for downstream
-	 * validation visitors.
-	 */
-	protected final Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap;
 
 	/**
 	 * Validator used to enforce the supported query-parameter naming contract

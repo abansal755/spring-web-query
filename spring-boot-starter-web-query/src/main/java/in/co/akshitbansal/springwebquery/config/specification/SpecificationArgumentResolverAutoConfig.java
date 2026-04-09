@@ -20,7 +20,6 @@ import cz.jirutka.rsql.parser.RSQLParser;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
@@ -33,7 +32,6 @@ import org.springframework.context.annotation.Bean;
 
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Creates specification resolvers using the starter's global filtering configuration.
@@ -80,10 +78,9 @@ public class SpecificationArgumentResolverAutoConfig {
 	public WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecArgumentResolver(
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
-			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap,
 			Validator<String> queryParamNameValidator,
-			Validator<List<FieldMapping>> fieldMappingsValidator,
-			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
+			ValidationRSQLVisitorFactory validationRSQLVisitorFactory,
+			Validator<List<FieldMapping>> fieldMappingsValidator
 	) {
 		return new WebQueryEntityAwareSpecificationArgumentResolver(
 				GLOBAL_FILTER_PARAM_NAME,
@@ -92,10 +89,9 @@ public class SpecificationArgumentResolverAutoConfig {
 				GLOBAL_MAX_AST_DEPTH,
 				rsqlParser,
 				customPredicates,
-				customOperatorMap,
 				queryParamNameValidator,
-				fieldMappingsValidator,
-				validationRSQLVisitorFactory
+				validationRSQLVisitorFactory,
+				fieldMappingsValidator
 		);
 	}
 
@@ -103,7 +99,6 @@ public class SpecificationArgumentResolverAutoConfig {
 	public WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
-			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap,
 			Validator<String> queryParamNameValidator,
 			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
 	) {
@@ -114,7 +109,6 @@ public class SpecificationArgumentResolverAutoConfig {
 				GLOBAL_MAX_AST_DEPTH,
 				rsqlParser,
 				customPredicates,
-				customOperatorMap,
 				queryParamNameValidator,
 				validationRSQLVisitorFactory
 		);
