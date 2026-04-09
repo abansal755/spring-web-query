@@ -44,8 +44,6 @@ public class SpecificationArgumentResolverAutoConfig {
 	private final boolean GLOBAL_ALLOW_AND_OPERATION;
 	private final int GLOBAL_MAX_AST_DEPTH;
 
-	private final QueryParamNameValidator queryParamNameValidator;
-
 	public SpecificationArgumentResolverAutoConfig(
 			@Value("${spring-web-query.filtering.filter-param-name:filter}") String GLOBAL_FILTER_PARAM_NAME,
 			@Value("${spring-web-query.filtering.allow-or-operation:false}") boolean GLOBAL_ALLOW_OR_OPERATION,
