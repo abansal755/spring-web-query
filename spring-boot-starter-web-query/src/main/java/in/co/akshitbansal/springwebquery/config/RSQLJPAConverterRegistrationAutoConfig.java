@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.config;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 
 import java.sql.Timestamp;
@@ -29,6 +30,7 @@ import java.time.OffsetDateTime;
  * Registers RSQL JPA converters required by the starter.
  */
 @AutoConfiguration(after = RSQLJPAAutoConfiguration.class)
+@Slf4j
 public class RSQLJPAConverterRegistrationAutoConfig {
 
 	// Allows RSQL to parse ISO-8601 Timestamp fields
@@ -45,5 +47,6 @@ public class RSQLJPAConverterRegistrationAutoConfig {
 					return Timestamp.from(instant);
 				}
 		);
+		log.info("Registered RSQL JPA converter for ISO-8601 Timestamp fields");
 	}
 }
