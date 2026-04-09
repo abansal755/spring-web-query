@@ -16,24 +16,35 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
+import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.RSQLCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * Registers validated default and custom RSQL operator sets for starter consumers.
+ * Registers validated default operators, custom operators, and the derived
+ * parser/predicate helper collections used by the starter.
  */
 @AutoConfiguration
 @Slf4j
 public class RSQLOperatorsAutoConfig {
 
+	/**
+	 * Collects the built-in RSQL operators supported by the library and
+	 * validates that their symbols are unique.
+	 *
+	 * @return immutable set of default operators
+	 */
 	@Bean
 	public Set<RSQLDefaultOperator> defaultOperatorSet() {
 		// Set for checking duplicates
@@ -62,6 +73,16 @@ public class RSQLOperatorsAutoConfig {
 		return Collections.unmodifiableSet(defaultOperators);
 	}
 
+	/**
+	 * Collects custom operators from all configured
+	 * {@link RSQLCustomOperatorsConfigurer} beans and validates that their
+	 * symbols do not conflict with each other or with the default operators.
+	 *
+	 * @param rsqlCustomOperatorsConfigurers custom operator contributors
+	 * @param defaultOperatorSet previously validated default operators
+	 *
+	 * @return immutable set of registered custom operators
+	 */
 	@Bean
 	public Set<? extends RSQLCustomOperator<?>> customOperatorSet(
 			List<RSQLCustomOperatorsConfigurer> rsqlCustomOperatorsConfigurers,
@@ -95,5 +116,71 @@ public class RSQLOperatorsAutoConfig {
 						.toList()
 		);
 		return Collections.unmodifiableSet(customOperators);
+	}
+
+	/**
+	 * Builds the complete set of comparison operators accepted by the shared RSQL parser.
+	 *
+	 * @param defaultOperatorSet validated default operators
+	 * @param customOperatorSet validated custom operators
+	 *
+	 * @return immutable set of allowed comparison operators
+	 */
+	@Bean
+	public Set<ComparisonOperator> allowedOperatorSet(
+			Set<RSQLDefaultOperator> defaultOperatorSet,
+			Set<? extends RSQLCustomOperator<?>> customOperatorSet
+	) {
+		Stream<ComparisonOperator> defaultOperatorsStream = defaultOperatorSet
+				.stream()
+				.map(RSQLDefaultOperator::getOperator);
+		Stream<ComparisonOperator> customOperatorsStream = customOperatorSet
+				.stream()
+				.map(RSQLCustomOperator::getComparisonOperator);
+		return Collections.unmodifiableSet((Set<ComparisonOperator>) Stream
+				.concat(defaultOperatorsStream, customOperatorsStream)
+				.collect(Collectors.toCollection(HashSet::new)));
+	}
+
+	/**
+	 * Adapts registered custom operators into the predicate format expected by
+	 * the underlying {@code rsql-jpa} integration.
+	 *
+	 * @param customOperatorSet validated custom operators
+	 *
+	 * @return immutable list of custom predicates
+	 */
+	@Bean
+	public List<RSQLCustomPredicate<?>> customPredicates(Set<? extends RSQLCustomOperator<?>> customOperatorSet) {
+		return Collections.unmodifiableList((ArrayList<? extends RSQLCustomPredicate<?>>) customOperatorSet
+				.stream()
+				.map(operator -> new RSQLCustomPredicate<>(
+						operator.getComparisonOperator(),
+						operator.getType(),
+						operator::toPredicate
+				))
+				.collect(Collectors.toCollection(ArrayList::new)));
+	}
+
+	/**
+	 * Registers custom operators by implementation class for downstream
+	 * validator lookups.
+	 *
+	 * @param customOperatorSet validated custom operators
+	 *
+	 * @return immutable custom operator registry
+	 */
+	@Bean
+	public Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap(Set<? extends RSQLCustomOperator<?>> customOperatorSet) {
+		return Collections
+				.unmodifiableMap(customOperatorSet
+				.stream()
+				.collect(Collectors.toMap(
+						RSQLCustomOperator::getClass,
+						operator -> operator,
+						// Duplicates won't be present since validation is already done above in customOperatorSet method
+						(existing, duplicate) -> existing,
+						HashMap::new
+				)));
 	}
 }

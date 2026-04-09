@@ -16,20 +16,22 @@
 
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
+import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.DTOValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.QuerySupport;
+import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * DTO-based resolver for {@link Specification} parameters handled via
@@ -52,18 +54,31 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
 	 * does not override that behavior
 	 * @param globalMaxASTDepth maximum AST depth allowed by default when {@code @WebQuery}
 	 * does not override that behavior
-	 * @param defaultOperators built-in operators accepted in RSQL expressions
-	 * @param customOperators custom operators supported by parser and predicates
+	 * @param rsqlParser parser configured with the allowed comparison operators
+	 * @param customPredicates custom predicates contributed to specification generation
+	 * @param queryParamNameValidator validator used for filter parameter name overrides
+	 * @param validationRSQLVisitorFactory factory used to create DTO-aware validation visitors
 	 */
 	public WebQueryDTOAwareSpecificationArgumentResolver(
 			String globalFilterParamName,
 			boolean globalAllowAndOperator,
 			boolean globalAllowOrOperator,
 			int globalMaxASTDepth,
-			Set<RSQLDefaultOperator> defaultOperators,
-			Set<? extends RSQLCustomOperator<?>> customOperators
+			RSQLParser rsqlParser,
+			List<RSQLCustomPredicate<?>> customPredicates,
+			QueryParamNameValidator queryParamNameValidator,
+			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
 	) {
-		super(globalFilterParamName, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth, defaultOperators, customOperators);
+		super(
+				globalFilterParamName,
+				globalAllowAndOperator,
+				globalAllowOrOperator,
+				globalMaxASTDepth,
+				rsqlParser,
+				customPredicates,
+				queryParamNameValidator,
+				validationRSQLVisitorFactory
+		);
 	}
 
 	/**
@@ -95,10 +110,9 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
 			// Parse the RSQL query into an Abstract Syntax Tree (AST)
 			Node root = rsqlParser.parse(filter);
 			// Validate the parsed AST against the target DTO and its @RSQLFilterable fields, while also building field mappings from DTO to entity
-			DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(
+			DTOValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newDTOValidationRSQLVisitor(
 					queryConfig.getEntityClass(),
 					queryConfig.getDtoClass(),
-					customOperators,
 					queryConfig.isAndNodeAllowed(),
 					queryConfig.isOrNodeAllowed(),
 					queryConfig.getMaxASTDepth()

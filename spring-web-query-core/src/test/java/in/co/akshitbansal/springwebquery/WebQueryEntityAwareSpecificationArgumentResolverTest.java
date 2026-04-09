@@ -16,14 +16,21 @@
 
 package in.co.akshitbansal.springwebquery;
 
+import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
+import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
+import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
@@ -35,7 +42,10 @@ import org.springframework.web.context.request.ServletWebRequest;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -49,8 +59,14 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 			true,
 			false,
 			1,
-			Set.of(RSQLDefaultOperator.values()),
-			Set.of(new MockCustomOperator())
+			parserFor(Set.of(new MockCustomOperator())),
+			customPredicates(Set.of(new MockCustomOperator())),
+			new QueryParamNameValidator(),
+			new ValidationRSQLVisitorFactory(
+					new FieldResolverFactory(),
+					new FilterableFieldValidator(Map.of(MockCustomOperator.class, new MockCustomOperator()))
+			),
+			new FieldMappingsValidator()
 	);
 
 	@Test
@@ -244,5 +260,24 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
 		@RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
 		private String name;
+	}
+
+	private static RSQLParser parserFor(Set<? extends RSQLCustomOperator<?>> customOperators) {
+		Set<ComparisonOperator> operators = Set.of(RSQLDefaultOperator.values())
+				.stream()
+				.map(RSQLDefaultOperator::getOperator)
+				.collect(Collectors.toSet());
+		operators.addAll(customOperators.stream().map(RSQLCustomOperator::getComparisonOperator).collect(Collectors.toSet()));
+		return new RSQLParser(operators);
+	}
+
+	private static List<RSQLCustomPredicate<?>> customPredicates(Set<? extends RSQLCustomOperator<?>> customOperators) {
+		return customOperators.stream()
+				.map(operator -> new RSQLCustomPredicate<>(
+						operator.getComparisonOperator(),
+						operator.getType(),
+						operator::toPredicate
+				))
+				.collect(Collectors.toList());
 	}
 }

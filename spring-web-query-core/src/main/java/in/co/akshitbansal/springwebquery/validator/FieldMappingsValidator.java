@@ -29,7 +29,7 @@ import java.util.*;
  * <p>This validator ensures that aliases are unique and that no two aliases map
  * to the same underlying entity field.</p>
  */
-public class FieldMappingsValidator implements Validator<List<FieldMapping>> {
+public class FieldMappingsValidator {
 
 	/**
 	 * Validates {@link FieldMapping} definitions declared in {@link WebQuery}.
@@ -44,7 +44,6 @@ public class FieldMappingsValidator implements Validator<List<FieldMapping>> {
 	 *
 	 * @throws QueryConfigurationException if duplicate aliases or duplicate target fields are found
 	 */
-	@Override
 	public void validate(List<FieldMapping> fieldMappings) {
 		Set<String> nameSet = new HashSet<>();
 		for (FieldMapping mapping: fieldMappings) {

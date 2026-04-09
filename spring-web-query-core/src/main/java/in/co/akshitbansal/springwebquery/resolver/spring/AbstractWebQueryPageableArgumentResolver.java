@@ -21,11 +21,7 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +42,7 @@ import java.util.List;
  * {@link PageableHandlerMethodArgumentResolver} and lets subclasses validate
  * and remap sort properties against either entity or DTO metadata.</p>
  */
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 
 	/**
@@ -56,18 +53,7 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 	/**
 	 * Validator used to enforce {@code @Sortable} constraints on resolved sort fields.
 	 */
-	protected final Validator<SortableFieldValidator.SortableField> sortableFieldValidator;
-
-	/**
-	 * Creates a pageable resolver base that delegates raw pagination parsing to
-	 * Spring and applies shared sort-field validation support.
-	 *
-	 * @param delegate Spring's pageable resolver used for base pagination parsing
-	 */
-	protected AbstractWebQueryPageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-		this.delegate = delegate;
-		this.sortableFieldValidator = new SortableFieldValidator();
-	}
+	protected final SortableFieldValidator sortableFieldValidator;
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {

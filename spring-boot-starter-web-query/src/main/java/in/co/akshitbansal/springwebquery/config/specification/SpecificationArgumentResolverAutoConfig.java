@@ -16,20 +16,21 @@
 
 package in.co.akshitbansal.springwebquery.config.specification;
 
+import cz.jirutka.rsql.parser.RSQLParser;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
+import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import java.text.MessageFormat;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Creates specification resolvers using the starter's global filtering configuration.
@@ -43,14 +44,24 @@ public class SpecificationArgumentResolverAutoConfig {
 	private final boolean GLOBAL_ALLOW_AND_OPERATION;
 	private final int GLOBAL_MAX_AST_DEPTH;
 
+	/**
+	 * Creates the auto-configuration and validates the global filtering
+	 * properties contributed through application configuration.
+	 *
+	 * @param GLOBAL_FILTER_PARAM_NAME global default request parameter for RSQL filters
+	 * @param GLOBAL_ALLOW_OR_OPERATION whether logical OR is allowed by default
+	 * @param GLOBAL_ALLOW_AND_OPERATION whether logical AND is allowed by default
+	 * @param GLOBAL_MAX_AST_DEPTH maximum AST depth allowed by default
+	 * @param queryParamNameValidator validator used for the configured filter parameter name
+	 */
 	public SpecificationArgumentResolverAutoConfig(
 			@Value("${spring-web-query.filtering.filter-param-name:filter}") String GLOBAL_FILTER_PARAM_NAME,
 			@Value("${spring-web-query.filtering.allow-or-operation:false}") boolean GLOBAL_ALLOW_OR_OPERATION,
 			@Value("${spring-web-query.filtering.allow-and-operation:true}") boolean GLOBAL_ALLOW_AND_OPERATION,
-			@Value("${spring-web-query.filtering.max-ast-depth:1}") int GLOBAL_MAX_AST_DEPTH
+			@Value("${spring-web-query.filtering.max-ast-depth:1}") int GLOBAL_MAX_AST_DEPTH,
+			QueryParamNameValidator queryParamNameValidator
 	) {
 		// Validating GLOBAL_FILTER_PARAM_NAME
-		Validator<String> queryParamNameValidator = new QueryParamNameValidator();
 		queryParamNameValidator.validate(GLOBAL_FILTER_PARAM_NAME);
 		this.GLOBAL_FILTER_PARAM_NAME = GLOBAL_FILTER_PARAM_NAME;
 
@@ -72,33 +83,66 @@ public class SpecificationArgumentResolverAutoConfig {
 		);
 	}
 
+	/**
+	 * Creates the entity-aware specification resolver used when {@code @WebQuery}
+	 * resolves selectors directly against entity fields and aliases.
+	 *
+	 * @param rsqlParser shared RSQL parser
+	 * @param customPredicates shared custom predicate adapters
+	 * @param queryParamNameValidator validator for request parameter name overrides
+	 * @param validationRSQLVisitorFactory factory for entity-aware validation visitors
+	 * @param fieldMappingsValidator validator for declared field aliases
+	 *
+	 * @return entity-aware specification resolver
+	 */
 	@Bean
 	public WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecArgumentResolver(
-			Set<RSQLDefaultOperator> defaultOperatorSet,
-			Set<? extends RSQLCustomOperator<?>> customOperatorSet
+			RSQLParser rsqlParser,
+			List<RSQLCustomPredicate<?>> customPredicates,
+			QueryParamNameValidator queryParamNameValidator,
+			ValidationRSQLVisitorFactory validationRSQLVisitorFactory,
+			FieldMappingsValidator fieldMappingsValidator
 	) {
 		return new WebQueryEntityAwareSpecificationArgumentResolver(
 				GLOBAL_FILTER_PARAM_NAME,
 				GLOBAL_ALLOW_AND_OPERATION,
 				GLOBAL_ALLOW_OR_OPERATION,
 				GLOBAL_MAX_AST_DEPTH,
-				defaultOperatorSet,
-				customOperatorSet
+				rsqlParser,
+				customPredicates,
+				queryParamNameValidator,
+				validationRSQLVisitorFactory,
+				fieldMappingsValidator
 		);
 	}
 
+	/**
+	 * Creates the DTO-aware specification resolver used when {@code @WebQuery}
+	 * exposes a DTO query contract.
+	 *
+	 * @param rsqlParser shared RSQL parser
+	 * @param customPredicates shared custom predicate adapters
+	 * @param queryParamNameValidator validator for request parameter name overrides
+	 * @param validationRSQLVisitorFactory factory for DTO-aware validation visitors
+	 *
+	 * @return DTO-aware specification resolver
+	 */
 	@Bean
 	public WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
-			Set<RSQLDefaultOperator> defaultOperatorSet,
-			Set<? extends RSQLCustomOperator<?>> customOperatorSet
+			RSQLParser rsqlParser,
+			List<RSQLCustomPredicate<?>> customPredicates,
+			QueryParamNameValidator queryParamNameValidator,
+			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
 	) {
 		return new WebQueryDTOAwareSpecificationArgumentResolver(
 				GLOBAL_FILTER_PARAM_NAME,
 				GLOBAL_ALLOW_AND_OPERATION,
 				GLOBAL_ALLOW_OR_OPERATION,
 				GLOBAL_MAX_AST_DEPTH,
-				defaultOperatorSet,
-				customOperatorSet
+				rsqlParser,
+				customPredicates,
+				queryParamNameValidator,
+				validationRSQLVisitorFactory
 		);
 	}
 }

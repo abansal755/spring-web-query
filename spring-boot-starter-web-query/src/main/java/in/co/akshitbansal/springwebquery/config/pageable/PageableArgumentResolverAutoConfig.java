@@ -18,6 +18,8 @@ package in.co.akshitbansal.springwebquery.config.pageable;
 
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
+import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -28,13 +30,39 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 @AutoConfiguration
 public class PageableArgumentResolverAutoConfig {
 
+	/**
+	 * Creates the entity-aware pageable resolver used when {@code @WebQuery}
+	 * operates directly on entity fields and aliases.
+	 *
+	 * @param delegate Spring Data's base pageable resolver
+	 * @param sortableFieldValidator validator for sortable terminal fields
+	 * @param fieldMappingsValidator validator for declared field aliases
+	 *
+	 * @return entity-aware pageable resolver
+	 */
 	@Bean
-	public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-		return new WebQueryEntityAwarePageableArgumentResolver(delegate);
+	public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(
+			PageableHandlerMethodArgumentResolver delegate,
+			SortableFieldValidator sortableFieldValidator,
+			FieldMappingsValidator fieldMappingsValidator
+	) {
+		return new WebQueryEntityAwarePageableArgumentResolver(delegate, sortableFieldValidator, fieldMappingsValidator);
 	}
 
+	/**
+	 * Creates the DTO-aware pageable resolver used when {@code @WebQuery}
+	 * exposes a DTO query contract.
+	 *
+	 * @param delegate Spring Data's base pageable resolver
+	 * @param sortableFieldValidator validator for sortable terminal fields
+	 *
+	 * @return DTO-aware pageable resolver
+	 */
 	@Bean
-	public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-		return new WebQueryDTOAwarePageableArgumentResolver(delegate);
+	public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(
+			PageableHandlerMethodArgumentResolver delegate,
+			SortableFieldValidator sortableFieldValidator
+	) {
+		return new WebQueryDTOAwarePageableArgumentResolver(delegate, sortableFieldValidator);
 	}
 }

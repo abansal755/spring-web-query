@@ -16,25 +16,25 @@
 
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
+import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.QuerySupport;
+import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import io.github.perplexhub.rsql.RSQLJPASupport;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -51,7 +51,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 	/**
 	 * Validator used to enforce uniqueness and consistency of declared field mappings.
 	 */
-	private final Validator<List<FieldMapping>> fieldMappingsValidator;
+	private final FieldMappingsValidator fieldMappingsValidator;
 
 	/**
 	 * Creates an entity-aware RSQL specification resolver.
@@ -64,19 +64,34 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 	 * does not override that behavior
 	 * @param globalMaxASTDepth maximum AST depth allowed by default when {@code @WebQuery}
 	 * does not override that behavior
-	 * @param defaultOperators built-in operators accepted in RSQL expressions
-	 * @param customOperators custom operators supported by parser and predicates
+	 * @param rsqlParser parser configured with the allowed comparison operators
+	 * @param customPredicates custom predicates contributed to specification generation
+	 * @param queryParamNameValidator validator used for filter parameter name overrides
+	 * @param validationRSQLVisitorFactory factory used to create entity-aware validation visitors
+	 * @param fieldMappingsValidator validator used to check declared {@link FieldMapping} aliases
 	 */
 	public WebQueryEntityAwareSpecificationArgumentResolver(
 			String globalFilterParamName,
 			boolean globalAllowAndOperator,
 			boolean globalAllowOrOperator,
 			int globalMaxASTDepth,
-			Set<RSQLDefaultOperator> defaultOperators,
-			Set<? extends RSQLCustomOperator<?>> customOperators
+			RSQLParser rsqlParser,
+			List<RSQLCustomPredicate<?>> customPredicates,
+			QueryParamNameValidator queryParamNameValidator,
+			ValidationRSQLVisitorFactory validationRSQLVisitorFactory,
+			FieldMappingsValidator fieldMappingsValidator
 	) {
-		super(globalFilterParamName, globalAllowAndOperator, globalAllowOrOperator, globalMaxASTDepth, defaultOperators, customOperators);
-		this.fieldMappingsValidator = new FieldMappingsValidator();
+		super(
+				globalFilterParamName,
+				globalAllowAndOperator,
+				globalAllowOrOperator,
+				globalMaxASTDepth,
+				rsqlParser,
+				customPredicates,
+				queryParamNameValidator,
+				validationRSQLVisitorFactory
+		);
+		this.fieldMappingsValidator = fieldMappingsValidator;
 	}
 
 	/**
@@ -111,10 +126,9 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 			// Parse the RSQL query into an Abstract Syntax Tree (AST)
 			Node root = rsqlParser.parse(filter);
 			// Validate the parsed AST against the target entity and its @RSQLFilterable fields
-			EntityValidationRSQLVisitor validationVisitor = new EntityValidationRSQLVisitor(
+			EntityValidationRSQLVisitor validationVisitor = validationRSQLVisitorFactory.newEntityValidationRSQLVisitor(
 					queryConfig.getEntityClass(),
 					queryConfig.getFieldMappings(),
-					customOperators,
 					queryConfig.isAndNodeAllowed(),
 					queryConfig.isOrNodeAllowed(),
 					queryConfig.getMaxASTDepth()

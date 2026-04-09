@@ -18,10 +18,6 @@ package in.co.akshitbansal.springwebquery.validator;
 
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -29,19 +25,17 @@ import java.text.MessageFormat;
 /**
  * Validator that ensures a resolved terminal field is explicitly marked as sortable.
  */
-public class SortableFieldValidator implements Validator<SortableFieldValidator.SortableField> {
+public class SortableFieldValidator {
 
 	/**
 	 * Validates that the requested field is explicitly marked as sortable.
 	 *
-	 * @param sortableField field being targeted by sort selector
+	 * @param field reflected terminal field being targeted by the sort selector
+	 * @param fieldPath original selector path from the incoming request
 	 *
 	 * @throws QueryFieldValidationException if sorting is not allowed for the field
 	 */
-	@Override
-	public void validate(SortableField sortableField) {
-		Field field = sortableField.getField();
-		String fieldPath = sortableField.getFieldPath();
+	public void validate(Field field, String fieldPath) {
 		if (!field.isAnnotationPresent(Sortable.class)) {
 			throw new QueryFieldValidationException(
 					MessageFormat.format(
@@ -49,22 +43,5 @@ public class SortableFieldValidator implements Validator<SortableFieldValidator.
 					), fieldPath
 			);
 		}
-	}
-
-	@RequiredArgsConstructor
-	@Getter
-	@EqualsAndHashCode
-	@ToString
-	public static class SortableField {
-
-		/**
-		 * Reflected terminal field being validated.
-		 */
-		private final Field field;
-
-		/**
-		 * Original selector path from the incoming request.
-		 */
-		private final String fieldPath;
 	}
 }

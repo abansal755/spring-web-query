@@ -45,8 +45,11 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
 	 *
 	 * @param delegate Spring's pageable resolver used for page and size parsing
 	 */
-	public WebQueryDTOAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-		super(delegate);
+	public WebQueryDTOAwarePageableArgumentResolver(
+			PageableHandlerMethodArgumentResolver delegate,
+			SortableFieldValidator sortableFieldValidator
+	) {
+		super(delegate, sortableFieldValidator);
 	}
 
 	/**
@@ -84,7 +87,7 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
 			// Build the corresponding entity field path from the DTO path and validate the terminal field for sortability
 			String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
 					dtoPath,
-					terminalField -> sortableFieldValidator.validate(new SortableFieldValidator.SortableField(terminalField, dtoPath))
+					terminalField -> sortableFieldValidator.validate(terminalField, dtoPath)
 			);
 			newOrders.add(new Sort.Order(order.getDirection(), entityPath));
 		}
