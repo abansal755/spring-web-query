@@ -26,6 +26,7 @@ import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageabl
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -105,7 +106,7 @@ class AutoConfigIntegrationTest {
 	void specificationConfigRejectsNegativeMaxAstDepth() {
 		assertThrows(
 				QueryConfigurationException.class,
-				() -> new SpecificationArgumentResolverAutoConfig("filter", false, true, -1)
+				() -> new SpecificationArgumentResolverAutoConfig("filter", false, true, -1, new QueryParamNameValidator())
 		);
 	}
 

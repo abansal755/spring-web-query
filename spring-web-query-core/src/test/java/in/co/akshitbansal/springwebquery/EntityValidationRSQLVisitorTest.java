@@ -26,6 +26,8 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
@@ -43,7 +45,7 @@ class EntityValidationRSQLVisitorTest {
 
 	@Test
 	void allows_filterableFieldWithAllowedOperator() {
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntity.class,
 				List.of(),
 				customOperators,
@@ -57,7 +59,7 @@ class EntityValidationRSQLVisitorTest {
 
 	@Test
 	void rejects_unknownField() {
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntity.class,
 				List.of(),
 				customOperators,
@@ -74,7 +76,7 @@ class EntityValidationRSQLVisitorTest {
 
 	@Test
 	void rejects_disallowedOperator() {
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntity.class,
 				List.of(),
 				customOperators,
@@ -91,7 +93,7 @@ class EntityValidationRSQLVisitorTest {
 
 	@Test
 	void allows_aliasFieldMapping() {
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntity.class,
 				List.of(mapping("displayName", "name", false)),
 				customOperators,
@@ -105,7 +107,7 @@ class EntityValidationRSQLVisitorTest {
 
 	@Test
 	void rejects_originalMappedFieldWhenNotAllowed() {
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntity.class,
 				List.of(mapping("displayName", "name", false)),
 				customOperators,
@@ -123,7 +125,7 @@ class EntityValidationRSQLVisitorTest {
 	@Test
 	void allows_customOperatorWhenWhitelisted() {
 		Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntityWithCustom.class,
 				List.of(),
 				customOperators,
@@ -138,7 +140,7 @@ class EntityValidationRSQLVisitorTest {
 	@Test
 	void rejects_unregisteredCustomOperator() {
 		Set<ComparisonOperator> ops = Set.of(RSQLDefaultOperator.EQUAL.getOperator(), new MockCustomOperator().getComparisonOperator());
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntityWithCustom.class,
 				List.of(),
 				Map.of(),
@@ -155,7 +157,7 @@ class EntityValidationRSQLVisitorTest {
 
 	@Test
 	void rejects_orOperator_whenNotAllowed() {
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntity.class,
 				List.of(),
 				customOperators,
@@ -172,7 +174,7 @@ class EntityValidationRSQLVisitorTest {
 
 	@Test
 	void rejects_whenAstDepthExceeded() {
-		EntityValidationRSQLVisitor visitor = new EntityValidationRSQLVisitor(
+		EntityValidationRSQLVisitor visitor = newVisitor(
 				TestEntity.class,
 				List.of(),
 				customOperators,
@@ -184,6 +186,23 @@ class EntityValidationRSQLVisitorTest {
 		assertThrows(
 				QueryValidationException.class, () ->
 						new RSQLParser().parse("name==john;name==doe").accept(visitor, NodeMetadata.of(0))
+		);
+	}
+
+	private EntityValidationRSQLVisitor newVisitor(
+			Class<?> entityClass,
+			List<FieldMapping> fieldMappings,
+			Map<Class<?>, RSQLCustomOperator<?>> customOperators,
+			boolean andNodeAllowed,
+			boolean orNodeAllowed,
+			int maxDepth
+	) {
+		return new EntityValidationRSQLVisitor(
+				new EntityAwareFieldResolver(entityClass, fieldMappings),
+				new FilterableFieldValidator(customOperators),
+				andNodeAllowed,
+				orNodeAllowed,
+				maxDepth
 		);
 	}
 

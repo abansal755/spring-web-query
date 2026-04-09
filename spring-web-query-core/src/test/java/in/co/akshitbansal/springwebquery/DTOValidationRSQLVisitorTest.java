@@ -25,6 +25,8 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.resolver.DTOAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -38,7 +40,7 @@ class DTOValidationRSQLVisitorTest {
 
 	@Test
 	void builds_fieldMappingsForValidDtoPath() {
-		DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(TestEntity.class, QueryDto.class, customOperators, true, false, 1);
+		DTOValidationRSQLVisitor visitor = newVisitor(TestEntity.class, QueryDto.class, customOperators, true, false, 1);
 		new RSQLParser().parse("profile.city==London").accept(visitor, NodeMetadata.of(0));
 
 		assertEquals(Map.of("profile.city", "profile.address.city"), visitor.getFieldMappings());
@@ -46,28 +48,28 @@ class DTOValidationRSQLVisitorTest {
 
 	@Test
 	void rejects_unknownDtoPath() {
-		DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(TestEntity.class, QueryDto.class, customOperators, true, false, 1);
+		DTOValidationRSQLVisitor visitor = newVisitor(TestEntity.class, QueryDto.class, customOperators, true, false, 1);
 
 		assertThrows(QueryValidationException.class, () -> new RSQLParser().parse("missing==x").accept(visitor, NodeMetadata.of(0)));
 	}
 
 	@Test
 	void rejects_nonFilterableDtoField() {
-		DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(TestEntity.class, QueryDto.class, customOperators, true, false, 1);
+		DTOValidationRSQLVisitor visitor = newVisitor(TestEntity.class, QueryDto.class, customOperators, true, false, 1);
 
 		assertThrows(QueryValidationException.class, () -> new RSQLParser().parse("unfilterable==x").accept(visitor, NodeMetadata.of(0)));
 	}
 
 	@Test
 	void rejects_whenMappedEntityPathCannotBeResolved() {
-		DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(TestEntity.class, InvalidMappingDto.class, customOperators, true, false, 1);
+		DTOValidationRSQLVisitor visitor = newVisitor(TestEntity.class, InvalidMappingDto.class, customOperators, true, false, 1);
 
 		assertThrows(QueryConfigurationException.class, () -> new RSQLParser().parse("city==x").accept(visitor, NodeMetadata.of(0)));
 	}
 
 	@Test
 	void supports_absoluteMapReset() {
-		DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(TestEntity.class, AbsoluteDto.class, customOperators, true, false, 1);
+		DTOValidationRSQLVisitor visitor = newVisitor(TestEntity.class, AbsoluteDto.class, customOperators, true, false, 1);
 		new RSQLParser().parse("nested.city==x").accept(visitor, NodeMetadata.of(0));
 
 		assertEquals(Map.of("nested.city", "profile.address.city"), visitor.getFieldMappings());
@@ -75,7 +77,7 @@ class DTOValidationRSQLVisitorTest {
 
 	@Test
 	void rejects_andOperator_whenNotAllowed() {
-		DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(TestEntity.class, QueryDto.class, customOperators, false, false, 1);
+		DTOValidationRSQLVisitor visitor = newVisitor(TestEntity.class, QueryDto.class, customOperators, false, false, 1);
 		RSQLParser parser = new RSQLParser();
 
 		assertThrows(QueryValidationException.class, () -> parser.parse("profile.city==London;unfilterable==x").accept(visitor, NodeMetadata.of(0)));
@@ -83,7 +85,7 @@ class DTOValidationRSQLVisitorTest {
 
 	@Test
 	void rejects_orOperator_whenNotAllowed() {
-		DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(TestEntity.class, QueryDto.class, customOperators, true, false, 1);
+		DTOValidationRSQLVisitor visitor = newVisitor(TestEntity.class, QueryDto.class, customOperators, true, false, 1);
 		RSQLParser parser = new RSQLParser();
 
 		assertThrows(QueryValidationException.class, () -> parser.parse("profile.city==London,unfilterable==x").accept(visitor, NodeMetadata.of(0)));
@@ -91,8 +93,25 @@ class DTOValidationRSQLVisitorTest {
 
 	@Test
 	void allows_orOperator_whenExplicitlyEnabled() {
-		DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(TestEntity.class, QueryDto.class, customOperators, true, true, 1);
+		DTOValidationRSQLVisitor visitor = newVisitor(TestEntity.class, QueryDto.class, customOperators, true, true, 1);
 		new RSQLParser().parse("profile.city==London,profile.city==Paris").accept(visitor, NodeMetadata.of(0));
+	}
+
+	private DTOValidationRSQLVisitor newVisitor(
+			Class<?> entityClass,
+			Class<?> dtoClass,
+			Map<Class<?>, RSQLCustomOperator<?>> customOperators,
+			boolean andNodeAllowed,
+			boolean orNodeAllowed,
+			int maxDepth
+	) {
+		return new DTOValidationRSQLVisitor(
+				new DTOAwareFieldResolver(entityClass, dtoClass),
+				new FilterableFieldValidator(customOperators),
+				andNodeAllowed,
+				orNodeAllowed,
+				maxDepth
+		);
 	}
 
 	private static class TestEntity {

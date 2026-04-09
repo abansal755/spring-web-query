@@ -16,13 +16,19 @@
 
 package in.co.akshitbansal.springwebquery;
 
+import cz.jirutka.rsql.parser.RSQLParser;
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
+import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,12 +37,11 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class WebQueryDTOAwareSpecificationArgumentResolverTest {
 
@@ -45,8 +50,10 @@ class WebQueryDTOAwareSpecificationArgumentResolverTest {
 			true,
 			false,
 			1,
-			Set.of(RSQLDefaultOperator.values()),
-			Set.of()
+			new RSQLParser(Set.of(RSQLDefaultOperator.values()).stream().map(RSQLDefaultOperator::getOperator).collect(java.util.stream.Collectors.toSet())),
+			List.<RSQLCustomPredicate<?>>of(),
+			new QueryParamNameValidator(),
+			new ValidationRSQLVisitorFactory(new FieldResolverFactory(), new FilterableFieldValidator(Map.of()))
 	);
 
 	@Test
