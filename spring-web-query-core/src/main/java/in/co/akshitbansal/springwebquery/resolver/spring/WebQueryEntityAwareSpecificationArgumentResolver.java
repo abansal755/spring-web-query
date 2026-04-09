@@ -25,6 +25,7 @@ import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.QuerySupport;
@@ -118,7 +119,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 	 * @return resolved specification for the validated filter
 	 */
 	@Override
-	protected Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter) {
+	protected Specification<?> resolveSpecification(SpecificationArgumentResolverConfig queryConfig, String filter) {
 		try {
 			// Validate field mappings to ensure they are well-formed and do not contain conflicts
 			fieldMappingsValidator.validate(queryConfig.getFieldMappings());
@@ -126,13 +127,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 			// Parse the RSQL query into an Abstract Syntax Tree (AST)
 			Node root = rsqlParser.parse(filter);
 			// Validate the parsed AST against the target entity and its @RSQLFilterable fields
-			EntityValidationRSQLVisitor validationVisitor = validationRSQLVisitorFactory.newEntityValidationRSQLVisitor(
-					queryConfig.getEntityClass(),
-					queryConfig.getFieldMappings(),
-					queryConfig.isAndNodeAllowed(),
-					queryConfig.isOrNodeAllowed(),
-					queryConfig.getMaxASTDepth()
-			);
+			EntityValidationRSQLVisitor validationVisitor = (EntityValidationRSQLVisitor) validationRSQLVisitorFactory.newValidationRSQLVisitor(queryConfig);
 			root.accept(validationVisitor, NodeMetadata.of(0));
 
 			// Convert field mappings to aliases map which rsql jpa support library accepts

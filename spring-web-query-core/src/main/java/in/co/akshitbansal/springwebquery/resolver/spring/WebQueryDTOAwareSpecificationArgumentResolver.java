@@ -24,6 +24,7 @@ import in.co.akshitbansal.springwebquery.ast.DTOValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
@@ -105,18 +106,12 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
 	 * @return resolved specification for the validated filter
 	 */
 	@Override
-	protected Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter) {
+	protected Specification<?> resolveSpecification(SpecificationArgumentResolverConfig queryConfig, String filter) {
 		try {
 			// Parse the RSQL query into an Abstract Syntax Tree (AST)
 			Node root = rsqlParser.parse(filter);
 			// Validate the parsed AST against the target DTO and its @RSQLFilterable fields, while also building field mappings from DTO to entity
-			DTOValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newDTOValidationRSQLVisitor(
-					queryConfig.getEntityClass(),
-					queryConfig.getDtoClass(),
-					queryConfig.isAndNodeAllowed(),
-					queryConfig.isOrNodeAllowed(),
-					queryConfig.getMaxASTDepth()
-			);
+			DTOValidationRSQLVisitor visitor = (DTOValidationRSQLVisitor) validationRSQLVisitorFactory.newValidationRSQLVisitor(queryConfig);
 			root.accept(visitor, NodeMetadata.of(0));
 
 			// Convert the validated RSQL query into a JPA Specification

@@ -17,14 +17,15 @@
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParser;
-import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
@@ -108,7 +109,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	) {
 		try {
 			// Resolve effective endpoint settings from the current method parameter
-			QueryConfiguration queryConfig = getQueryConfiguration(parameter);
+			SpecificationArgumentResolverConfig queryConfig = getQueryConfiguration(parameter);
 
 			// Extract the RSQL query string from the request using the parameter name defined in @WebQuery
 			String filter = webRequest.getParameter(queryConfig.getFilterParamName());
@@ -134,7 +135,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	 *
 	 * @return resolved specification
 	 */
-	protected abstract Specification<?> resolveSpecification(QueryConfiguration queryConfig, String filter);
+	protected abstract Specification<?> resolveSpecification(SpecificationArgumentResolverConfig queryConfig, String filter);
 
 	/**
 	 * Resolves the effective query configuration by combining method-level {@link WebQuery}
@@ -149,7 +150,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	 *
 	 * @return effective configuration used by specification resolvers for validation and parsing
 	 */
-	protected QueryConfiguration getQueryConfiguration(MethodParameter parameter) {
+	protected SpecificationArgumentResolverConfig getQueryConfiguration(MethodParameter parameter) {
 		// Only runs successfully if supportsParameter has already returned true
 		// so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
 		WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
@@ -176,7 +177,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 		int maxDepth = webQueryAnnotation.maxASTDepth();
 		if (maxDepth < 0) maxDepth = globalMaxASTDepth;
 
-		return QueryConfiguration
+		return SpecificationArgumentResolverConfig
 				.builder()
 				.entityClass(webQueryAnnotation.entityClass())
 				.dtoClass(webQueryAnnotation.dtoClass())
@@ -186,54 +187,5 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 				.orNodeAllowed(orNodeAllowed)
 				.maxASTDepth(maxDepth)
 				.build();
-	}
-
-	/**
-	 * Effective specification-specific query metadata derived from a supported
-	 * {@link WebQuery}-annotated controller method after global defaults have
-	 * been applied.
-	 */
-	@Getter
-	@Builder
-	@EqualsAndHashCode
-	@ToString
-	protected static class QueryConfiguration {
-
-		/**
-		 * Target entity used for field validation and specification generation.
-		 */
-		private final Class<?> entityClass;
-
-		/**
-		 * Optional DTO contract used for API-facing field validation and mapping.
-		 */
-		private final Class<?> dtoClass;
-
-		/**
-		 * Field mappings declared on {@link WebQuery}, used only by
-		 * entity-aware selector resolution.
-		 */
-		private final List<FieldMapping> fieldMappings;
-
-		/**
-		 * Request parameter name used to read the raw RSQL filter expression
-		 * after applying the global default when the annotation value is blank.
-		 */
-		private final String filterParamName;
-
-		/**
-		 * Whether AND nodes are allowed in the effective query configuration.
-		 */
-		private final boolean andNodeAllowed;
-
-		/**
-		 * Whether OR nodes are allowed in the effective query configuration.
-		 */
-		private final boolean orNodeAllowed;
-
-		/**
-		 * Maximum AST depth allowed in the effective query configuration.
-		 */
-		private final int maxASTDepth;
 	}
 }

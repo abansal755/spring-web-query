@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.resolver;
+package in.co.akshitbansal.springwebquery.resolver.spring.config;
 
-import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgumentResolverConfig;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-/**
- * Factory for creating field resolvers used by validation visitors and
- * pageable/specification resolver flows.
- */
-public class FieldResolverFactory {
-
-	public FieldResolver newFieldResolver(AbstractArgumentResolverConfig config) {
-		if(config.getDtoClass() != void.class)
-			return new DTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());
-		return new EntityAwareFieldResolver(config.getEntityClass(), config.getFieldMappings());
-	}
+@SuperBuilder
+@EqualsAndHashCode( callSuper = true)
+@ToString( callSuper = true)
+public class PageableArgumentResolverConfig extends AbstractArgumentResolverConfig {
 }
