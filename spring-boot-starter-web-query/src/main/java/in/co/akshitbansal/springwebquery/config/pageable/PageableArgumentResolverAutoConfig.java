@@ -16,7 +16,7 @@
 
 package in.co.akshitbansal.springwebquery.config.pageable;
 
-import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
