@@ -22,13 +22,10 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
-
-import java.util.List;
-import java.util.Map;
+import in.co.akshitbansal.springwebquery.validator.Validator;
 
 /**
  * RSQL AST visitor that validates selectors directly against an entity model.
@@ -58,16 +55,15 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 * @param maxDepth maximum allowed depth for the RSQL AST
 	 */
 	public EntityValidationRSQLVisitor(
-			Class<?> entityClass,
-			List<FieldMapping> fieldMappings,
-			Map<Class<?>, RSQLCustomOperator<?>> customOperators,
+			FieldResolver fieldResolver,
+			Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator,
 			boolean andNodeAllowed,
 			boolean orNodeAllowed,
 			int maxDepth
 	) {
 		super(
-				new EntityAwareFieldResolver(entityClass, fieldMappings),
-				customOperators,
+				fieldResolver,
+				filterableFieldValidator,
 				andNodeAllowed,
 				orNodeAllowed,
 				maxDepth

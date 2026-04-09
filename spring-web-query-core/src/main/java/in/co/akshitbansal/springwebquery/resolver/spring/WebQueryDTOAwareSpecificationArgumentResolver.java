@@ -22,6 +22,7 @@ import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.DTOValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
@@ -66,7 +67,8 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
 			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap,
-			Validator<String> queryParamNameValidator
+			Validator<String> queryParamNameValidator,
+			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
 	) {
 		super(
 				globalFilterParamName,
@@ -76,7 +78,8 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
 				rsqlParser,
 				customPredicates,
 				customOperatorMap,
-				queryParamNameValidator
+				queryParamNameValidator,
+				validationRSQLVisitorFactory
 		);
 	}
 
@@ -109,10 +112,9 @@ public class WebQueryDTOAwareSpecificationArgumentResolver extends AbstractWebQu
 			// Parse the RSQL query into an Abstract Syntax Tree (AST)
 			Node root = rsqlParser.parse(filter);
 			// Validate the parsed AST against the target DTO and its @RSQLFilterable fields, while also building field mappings from DTO to entity
-			DTOValidationRSQLVisitor visitor = new DTOValidationRSQLVisitor(
+			DTOValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newDTOValidationRSQLVisitor(
 					queryConfig.getEntityClass(),
 					queryConfig.getDtoClass(),
-					customOperatorMap,
 					queryConfig.isAndNodeAllowed(),
 					queryConfig.isOrNodeAllowed(),
 					queryConfig.getMaxASTDepth()

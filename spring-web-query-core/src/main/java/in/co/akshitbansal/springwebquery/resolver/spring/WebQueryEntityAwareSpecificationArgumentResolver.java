@@ -23,6 +23,7 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
@@ -75,7 +76,8 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 			List<RSQLCustomPredicate<?>> customPredicates,
 			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap,
 			Validator<String> queryParamNameValidator,
-			Validator<List<FieldMapping>> fieldMappingsValidator
+			Validator<List<FieldMapping>> fieldMappingsValidator,
+			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
 	) {
 		super(
 				globalFilterParamName,
@@ -85,7 +87,8 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 				rsqlParser,
 				customPredicates,
 				customOperatorMap,
-				queryParamNameValidator
+				queryParamNameValidator,
+				validationRSQLVisitorFactory
 		);
 		this.fieldMappingsValidator = fieldMappingsValidator;
 	}
@@ -122,10 +125,10 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 			// Parse the RSQL query into an Abstract Syntax Tree (AST)
 			Node root = rsqlParser.parse(filter);
 			// Validate the parsed AST against the target entity and its @RSQLFilterable fields
-			EntityValidationRSQLVisitor validationVisitor = new EntityValidationRSQLVisitor(
+			EntityValidationRSQLVisitor validationVisitor =
+			validationRSQLVisitorFactory.newEntityValidationRSQLVisitor(
 					queryConfig.getEntityClass(),
 					queryConfig.getFieldMappings(),
-					customOperatorMap,
 					queryConfig.isAndNodeAllowed(),
 					queryConfig.isOrNodeAllowed(),
 					queryConfig.getMaxASTDepth()

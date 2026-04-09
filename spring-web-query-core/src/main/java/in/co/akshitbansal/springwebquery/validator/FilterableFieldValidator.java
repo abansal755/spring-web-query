@@ -50,7 +50,7 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
 	/**
 	 * Registered custom operators keyed by their implementation class.
 	 */
-	private final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
+	private final Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap;
 
 	/**
 	 * Validates that a field is marked as filterable and that the requested
@@ -127,7 +127,7 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
 	 * @throws QueryConfigurationException if the custom operator class is not registered
 	 */
 	private RSQLCustomOperator<?> getCustomOperator(Class<?> clazz) {
-		RSQLCustomOperator<?> operator = customOperators.get(clazz);
+		RSQLCustomOperator<?> operator = customOperatorMap.get(clazz);
 		if (operator == null) throw new QueryConfigurationException(MessageFormat.format(
 				"Custom operator ''{0}'' referenced in @RSQLFilterable is not registered", clazz.getSimpleName()
 		));

@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.resolver.spring;
 import cz.jirutka.rsql.parser.RSQLParser;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
@@ -95,6 +96,8 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	 * for resolved filter parameter names.
 	 */
 	private final Validator<String> queryParamNameValidator;
+
+	protected final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {

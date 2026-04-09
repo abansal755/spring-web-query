@@ -18,14 +18,14 @@ package in.co.akshitbansal.springwebquery.ast;
 
 import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
 import java.text.MessageFormat;
-import java.util.Map;
 
 /**
  * Base RSQL AST visitor that enforces structural validation rules while
@@ -43,6 +43,7 @@ import java.util.Map;
  * against either entity fields or DTO fields and invoke the shared
  * {@link #filterableFieldValidator} as needed.</p>
  */
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 
 	/**
@@ -71,30 +72,6 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 * Maximum allowed depth for the RSQL AST during validation.
 	 */
 	private final int maxDepth;
-
-	/**
-	 * Creates a validation visitor with the supplied structural limits and
-	 * custom operator registry.
-	 *
-	 * @param fieldResolver resolver used for selector-path resolution in concrete visitors
-	 * @param customOperators registered custom operators keyed by implementation class
-	 * @param andNodeAllowed whether logical AND nodes are allowed
-	 * @param orNodeAllowed whether logical OR nodes are allowed
-	 * @param maxDepth maximum allowed AST depth
-	 */
-	protected AbstractValidationRSQLVisitor(
-			FieldResolver fieldResolver,
-			Map<Class<?>, RSQLCustomOperator<?>> customOperators,
-			boolean andNodeAllowed,
-			boolean orNodeAllowed,
-			int maxDepth
-	) {
-		this.fieldResolver = fieldResolver;
-		this.filterableFieldValidator = new FilterableFieldValidator(customOperators);
-		this.andNodeAllowed = andNodeAllowed;
-		this.orNodeAllowed = orNodeAllowed;
-		this.maxDepth = maxDepth;
-	}
 
 	/**
 	 * Validates AND nodes and recursively visits child nodes.
