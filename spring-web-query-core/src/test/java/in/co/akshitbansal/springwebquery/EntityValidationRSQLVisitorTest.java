@@ -22,11 +22,13 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.resolver.field.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
@@ -197,13 +199,21 @@ class EntityValidationRSQLVisitorTest {
 			boolean orNodeAllowed,
 			int maxDepth
 	) {
-		return new EntityValidationRSQLVisitor(
-				new EntityAwareFieldResolver(entityClass, fieldMappings),
-				new FilterableFieldValidator(customOperators),
-				andNodeAllowed,
-				orNodeAllowed,
-				maxDepth
+		ValidationRSQLVisitorFactory factory = new ValidationRSQLVisitorFactory(
+				new FieldResolverFactory(),
+				new FilterableFieldValidator(customOperators)
 		);
+		SpecificationArgumentResolverConfig config = SpecificationArgumentResolverConfig
+				.builder()
+				.entityClass(entityClass)
+				.dtoClass(void.class)
+				.fieldMappings(fieldMappings)
+				.filterParamName("filter")
+				.andNodeAllowed(andNodeAllowed)
+				.orNodeAllowed(orNodeAllowed)
+				.maxASTDepth(maxDepth)
+				.build();
+		return (EntityValidationRSQLVisitor) factory.newValidationRSQLVisitor(config);
 	}
 
 	private static class MockCustomOperator implements RSQLCustomOperator<String> {

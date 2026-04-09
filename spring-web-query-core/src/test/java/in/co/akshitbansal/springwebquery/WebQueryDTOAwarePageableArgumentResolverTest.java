@@ -21,6 +21,7 @@ import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,8 @@ class WebQueryDTOAwarePageableArgumentResolverTest {
 
 	private final WebQueryDTOAwarePageableArgumentResolver resolver = new WebQueryDTOAwarePageableArgumentResolver(
 			new PageableHandlerMethodArgumentResolver(),
-			new SortableFieldValidator()
+			new SortableFieldValidator(),
+			new FieldResolverFactory()
 	);
 
 	@Test
