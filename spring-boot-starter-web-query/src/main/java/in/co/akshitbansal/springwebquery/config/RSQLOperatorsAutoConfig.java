@@ -152,14 +152,15 @@ public class RSQLOperatorsAutoConfig {
 	 */
 	@Bean
 	public List<RSQLCustomPredicate<?>> customPredicates(Set<? extends RSQLCustomOperator<?>> customOperatorSet) {
-		return Collections.unmodifiableList((ArrayList<? extends RSQLCustomPredicate<?>>) customOperatorSet
+		List<RSQLCustomPredicate<?>> customPredicates = customOperatorSet
 				.stream()
 				.map(operator -> new RSQLCustomPredicate<>(
 						operator.getComparisonOperator(),
 						operator.getType(),
 						operator::toPredicate
 				))
-				.collect(Collectors.toCollection(ArrayList::new)));
+				.collect(Collectors.toCollection(ArrayList::new));
+		return Collections.unmodifiableList(customPredicates);
 	}
 
 	/**
@@ -172,8 +173,7 @@ public class RSQLOperatorsAutoConfig {
 	 */
 	@Bean
 	public Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap(Set<? extends RSQLCustomOperator<?>> customOperatorSet) {
-		return Collections
-				.unmodifiableMap(customOperatorSet
+		Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap = customOperatorSet
 				.stream()
 				.collect(Collectors.toMap(
 						RSQLCustomOperator::getClass,
@@ -181,6 +181,7 @@ public class RSQLOperatorsAutoConfig {
 						// Duplicates won't be present since validation is already done above in customOperatorSet method
 						(existing, duplicate) -> existing,
 						HashMap::new
-				)));
+				));
+		return Collections.unmodifiableMap(customOperatorMap);
 	}
 }
