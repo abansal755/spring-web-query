@@ -16,20 +16,23 @@
 
 package in.co.akshitbansal.springwebquery.config.specification;
 
+import cz.jirutka.rsql.parser.RSQLParser;
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
+import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import java.text.MessageFormat;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Creates specification resolvers using the starter's global filtering configuration.
@@ -74,31 +77,41 @@ public class SpecificationArgumentResolverAutoConfig {
 
 	@Bean
 	public WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecArgumentResolver(
-			Set<RSQLDefaultOperator> defaultOperatorSet,
-			Set<? extends RSQLCustomOperator<?>> customOperatorSet
+			RSQLParser rsqlParser,
+			List<RSQLCustomPredicate<?>> customPredicates,
+			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap,
+			Validator<String> queryParamNameValidator,
+			Validator<List<FieldMapping>> fieldMappingsValidator
 	) {
 		return new WebQueryEntityAwareSpecificationArgumentResolver(
 				GLOBAL_FILTER_PARAM_NAME,
 				GLOBAL_ALLOW_AND_OPERATION,
 				GLOBAL_ALLOW_OR_OPERATION,
 				GLOBAL_MAX_AST_DEPTH,
-				defaultOperatorSet,
-				customOperatorSet
+				rsqlParser,
+				customPredicates,
+				customOperatorMap,
+				queryParamNameValidator,
+				fieldMappingsValidator
 		);
 	}
 
 	@Bean
 	public WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
-			Set<RSQLDefaultOperator> defaultOperatorSet,
-			Set<? extends RSQLCustomOperator<?>> customOperatorSet
+			RSQLParser rsqlParser,
+			List<RSQLCustomPredicate<?>> customPredicates,
+			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap,
+			Validator<String> queryParamNameValidator
 	) {
 		return new WebQueryDTOAwareSpecificationArgumentResolver(
 				GLOBAL_FILTER_PARAM_NAME,
 				GLOBAL_ALLOW_AND_OPERATION,
 				GLOBAL_ALLOW_OR_OPERATION,
 				GLOBAL_MAX_AST_DEPTH,
-				defaultOperatorSet,
-				customOperatorSet
+				rsqlParser,
+				customPredicates,
+				customOperatorMap,
+				queryParamNameValidator
 		);
 	}
 }

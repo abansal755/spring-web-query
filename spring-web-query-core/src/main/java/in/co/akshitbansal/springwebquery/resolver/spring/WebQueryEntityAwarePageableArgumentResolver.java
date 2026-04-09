@@ -20,7 +20,6 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
-import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 import org.springframework.core.MethodParameter;
@@ -53,9 +52,13 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
 	 *
 	 * @param delegate Spring's pageable resolver used for page and size parsing
 	 */
-	public WebQueryEntityAwarePageableArgumentResolver(PageableHandlerMethodArgumentResolver delegate) {
-		super(delegate);
-		this.fieldMappingsValidator = new FieldMappingsValidator();
+	public WebQueryEntityAwarePageableArgumentResolver(
+			PageableHandlerMethodArgumentResolver delegate,
+			Validator<SortableFieldValidator.SortableField> sortableFieldValidator,
+			Validator<List<FieldMapping>> fieldMappingsValidator
+	) {
+		super(delegate, sortableFieldValidator);
+		this.fieldMappingsValidator = fieldMappingsValidator;
 	}
 
 	/**

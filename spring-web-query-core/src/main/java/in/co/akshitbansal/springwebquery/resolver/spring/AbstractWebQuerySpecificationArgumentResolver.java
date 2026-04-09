@@ -17,20 +17,14 @@
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParser;
-import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
@@ -39,9 +33,10 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base {@link HandlerMethodArgumentResolver} for resolving RSQL-based
@@ -53,6 +48,7 @@ import java.util.stream.Stream;
  * merges {@link WebQuery} annotation settings with global defaults before
  * delegating DTO-aware or entity-aware specification creation to subclasses.</p>
  */
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractWebQuerySpecificationArgumentResolver extends AbstractWebQueryResolver {
 
 	/**
@@ -92,79 +88,13 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	 * Registered custom operators keyed by implementation class for downstream
 	 * validation visitors.
 	 */
-	protected final Map<Class<?>, RSQLCustomOperator<?>> customOperators;
+	protected final Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap;
 
 	/**
 	 * Validator used to enforce the supported query-parameter naming contract
 	 * for resolved filter parameter names.
 	 */
 	private final Validator<String> queryParamNameValidator;
-
-	/**
-	 * Creates the resolver base with global validation defaults, parser
-	 * configuration, and custom predicate adaptation.
-	 *
-	 * @param globalFilterParamName global default request parameter name used when
-	 * {@link WebQuery#filterParamName()} is blank
-	 * @param globalAllowAndOperator fallback AND-node policy used when {@code @WebQuery} defers to global settings
-	 * @param globalAllowOrOperator fallback OR-node policy used when {@code @WebQuery} defers to global settings
-	 * @param globalMaxASTDepth fallback maximum AST depth used when {@code @WebQuery} defers to global settings
-	 * @param defaultOperators built-in operators accepted by the parser
-	 * @param customOperators custom operators to register for parsing and predicate generation
-	 */
-	protected AbstractWebQuerySpecificationArgumentResolver(
-			String globalFilterParamName,
-			boolean globalAllowAndOperator,
-			boolean globalAllowOrOperator,
-			int globalMaxASTDepth,
-			Set<RSQLDefaultOperator> defaultOperators,
-			Set<? extends RSQLCustomOperator<?>> customOperators
-	) {
-		// Global configuration
-		this.globalFilterParamName = globalFilterParamName;
-		this.globalAllowAndOperator = globalAllowAndOperator;
-		this.globalAllowOrOperator = globalAllowOrOperator;
-		this.globalMaxASTDepth = globalMaxASTDepth;
-
-		// Combine default and custom operators into a single set of allowed ComparisonOperators for the RSQL parser
-		Stream<ComparisonOperator> defaultOperatorsStream = defaultOperators
-				.stream()
-				.map(RSQLDefaultOperator::getOperator);
-		Stream<ComparisonOperator> customOperatorsStream = customOperators
-				.stream()
-				.map(RSQLCustomOperator::getComparisonOperator);
-		HashSet<ComparisonOperator> allowedOperators = Stream
-				.concat(defaultOperatorsStream, customOperatorsStream)
-				.collect(Collectors.toCollection(HashSet::new));
-		this.rsqlParser = new RSQLParser(Collections.unmodifiableSet(allowedOperators));
-
-		// Convert custom operators to the format which rsql jpa support library accepts
-		List<RSQLCustomPredicate<?>> customPredicates = new ArrayList<>();
-		for (RSQLCustomOperator<?> operator: customOperators) {
-			RSQLCustomPredicate<?> predicate = new RSQLCustomPredicate<>(
-					operator.getComparisonOperator(),
-					operator.getType(),
-					operator::toPredicate
-			);
-			customPredicates.add(predicate);
-		}
-		this.customPredicates = Collections.unmodifiableList(customPredicates);
-
-		// Register custom operators by class for downstream validation visitors
-		this.customOperators = Collections.unmodifiableMap(customOperators
-				.stream()
-				.collect(Collectors.toMap(
-						RSQLCustomOperator::getClass,
-						operator -> operator,
-						// Might happen in case multiple instances of an operator are registered
-						// In that case, we can just keep one of them since they should be functionally equivalent
-						(existing, duplicate) -> existing,
-						HashMap::new
-				)));
-
-		// For query parameter name validation
-		this.queryParamNameValidator = new QueryParamNameValidator();
-	}
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
