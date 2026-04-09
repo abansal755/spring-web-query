@@ -20,6 +20,14 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * Effective configuration used by pageable argument resolvers after extracting
+ * the relevant {@code @WebQuery} metadata from the controller method.
+ *
+ * <p>Pageable resolution needs only the shared contract state from
+ * {@link AbstractArgumentResolverConfig}, so this subtype intentionally adds no
+ * extra fields.</p>
+ */
 @SuperBuilder
 @EqualsAndHashCode( callSuper = true)
 @ToString( callSuper = true)

@@ -21,6 +21,15 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * Effective configuration used by specification argument resolvers after
+ * combining method-level {@code @WebQuery} settings with global defaults.
+ *
+ * <p>In addition to the shared selector-contract state from
+ * {@link AbstractArgumentResolverConfig}, this subtype carries the effective
+ * filter parameter name and the AST/operator policy used during RSQL
+ * validation.</p>
+ */
 @Getter
 @SuperBuilder
 @EqualsAndHashCode( callSuper = true)

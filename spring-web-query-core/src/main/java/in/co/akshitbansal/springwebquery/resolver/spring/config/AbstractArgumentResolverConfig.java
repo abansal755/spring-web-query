@@ -25,6 +25,14 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
+/**
+ * Shared base configuration for effective {@link WebQuery} metadata resolved
+ * from a supported controller method.
+ *
+ * <p>This type captures the contract information common to pageable and
+ * specification resolver flows, including the backing entity type, the optional
+ * DTO-facing query contract, and any declared entity-aware field aliases.</p>
+ */
 @Getter
 @SuperBuilder
 @EqualsAndHashCode
@@ -32,18 +40,21 @@ import java.util.List;
 public abstract class AbstractArgumentResolverConfig {
 
 	/**
-	 * Entity type that ultimately receives validated sort paths.
+	 * Entity type against which resolved query paths are ultimately validated
+	 * and executed.
 	 */
 	private final Class<?> entityClass;
 
 	/**
-	 * Optional DTO type used to validate API-facing sort selectors.
+	 * Optional DTO type used as the API-facing selector contract before paths
+	 * are translated to entity properties.
 	 */
 	private final Class<?> dtoClass;
 
 	/**
-	 * Explicit field aliases declared on {@link WebQuery}, used only by
-	 * entity-aware pageable resolution.
+	 * Explicit field aliases declared on {@link WebQuery}, used by entity-aware
+	 * resolver flows when request selectors are validated directly against the
+	 * entity model.
 	 */
 	private final List<FieldMapping> fieldMappings;
 }
