@@ -16,33 +16,17 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
-import cz.jirutka.rsql.parser.RSQLParser;
-import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
-import java.util.Set;
-
 /**
  * Publishes shared infrastructure beans used by the starter's query resolvers.
  */
 @AutoConfiguration
-public class WebQueryAutoConfig {
-
-	/**
-	 * Creates the shared RSQL parser configured with all allowed comparison operators.
-	 *
-	 * @param allowedOperatorSet comparison operators accepted by the parser
-	 *
-	 * @return configured RSQL parser
-	 */
-	@Bean
-	public RSQLParser rsqlParser(Set<ComparisonOperator> allowedOperatorSet) {
-		return new RSQLParser(allowedOperatorSet);
-	}
+public class FactoryAutoConfig {
 
 	/**
 	 * Creates the shared factory for field resolver instances.

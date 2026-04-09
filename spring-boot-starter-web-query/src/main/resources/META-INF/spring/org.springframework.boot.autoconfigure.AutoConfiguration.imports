@@ -1,7 +1,8 @@
 in.co.akshitbansal.springwebquery.config.RSQLJPAConverterRegistrationAutoConfig
 in.co.akshitbansal.springwebquery.config.RSQLOperatorsAutoConfig
+in.co.akshitbansal.springwebquery.config.RSQLParserAutoConfig
 in.co.akshitbansal.springwebquery.config.ValidatorAutoConfig
-in.co.akshitbansal.springwebquery.config.WebQueryAutoConfig
+in.co.akshitbansal.springwebquery.config.FactoryAutoConfig
 
 in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverAutoConfig
 in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverRegistrationAutoConfig
