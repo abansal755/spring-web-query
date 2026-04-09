@@ -178,8 +178,7 @@ public class RSQLOperatorsAutoConfig {
 				.collect(Collectors.toMap(
 						RSQLCustomOperator::getClass,
 						operator -> operator,
-						// Might happen in case multiple instances of an operator are registered
-						// In that case, we can just keep one of them since they should be functionally equivalent
+						// Duplicates won't be present since validation is already done above in customOperatorSet method
 						(existing, duplicate) -> existing,
 						HashMap::new
 				)));

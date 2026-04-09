@@ -51,6 +51,8 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
 	 * Creates an entity-aware pageable resolver.
 	 *
 	 * @param delegate Spring's pageable resolver used for page and size parsing
+	 * @param sortableFieldValidator validator used to enforce {@code @Sortable} constraints
+	 * @param fieldMappingsValidator validator used to check declared {@link FieldMapping} aliases
 	 */
 	public WebQueryEntityAwarePageableArgumentResolver(
 			PageableHandlerMethodArgumentResolver delegate,
