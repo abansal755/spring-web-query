@@ -16,37 +16,36 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
-import in.co.akshitbansal.springwebquery.validator.*;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
+import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
+import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
-import java.util.List;
 import java.util.Map;
 
 @AutoConfiguration
 public class ValidatorAutoConfig {
 
 	@Bean
-	public Validator<String> queryParamNameValidator() {
+	public QueryParamNameValidator queryParamNameValidator() {
 		return new QueryParamNameValidator();
 	}
 
 	@Bean
-	public Validator<SortableFieldValidator.SortableField> sortableFieldValidator() {
+	public SortableFieldValidator sortableFieldValidator() {
 		return new SortableFieldValidator();
 	}
 
 	@Bean
-	public Validator<List<FieldMapping>> fieldMappingsValidator() {
+	public FieldMappingsValidator fieldMappingsValidator() {
 		return new FieldMappingsValidator();
 	}
 
 	@Bean
-	public Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator(
-			Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap
-	) {
+	public FilterableFieldValidator filterableFieldValidator(Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap) {
 		return new FilterableFieldValidator(customOperatorMap);
 	}
 }

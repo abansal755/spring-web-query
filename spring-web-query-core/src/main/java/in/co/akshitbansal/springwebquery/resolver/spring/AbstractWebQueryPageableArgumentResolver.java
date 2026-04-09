@@ -21,7 +21,6 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 import lombok.*;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -54,7 +53,7 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 	/**
 	 * Validator used to enforce {@code @Sortable} constraints on resolved sort fields.
 	 */
-	protected final Validator<SortableFieldValidator.SortableField> sortableFieldValidator;
+	protected final SortableFieldValidator sortableFieldValidator;
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {

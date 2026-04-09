@@ -21,7 +21,6 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.resolver.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +47,7 @@ public class WebQueryDTOAwarePageableArgumentResolver extends AbstractWebQueryPa
 	 */
 	public WebQueryDTOAwarePageableArgumentResolver(
 			PageableHandlerMethodArgumentResolver delegate,
-			Validator<SortableFieldValidator.SortableField> sortableFieldValidator
+			SortableFieldValidator sortableFieldValidator
 	) {
 		super(delegate, sortableFieldValidator);
 	}

@@ -21,7 +21,6 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
@@ -43,7 +42,7 @@ public class WebQueryAutoConfig {
 	@Bean
 	public ValidationRSQLVisitorFactory validationRSQLVisitorFactory(
 			FieldResolverFactory fieldResolverFactory,
-			Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator
+			FilterableFieldValidator filterableFieldValidator
 	) {
 		return new ValidationRSQLVisitorFactory(fieldResolverFactory, filterableFieldValidator);
 	}

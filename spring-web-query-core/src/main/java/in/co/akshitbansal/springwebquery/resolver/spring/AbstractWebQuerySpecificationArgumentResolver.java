@@ -22,7 +22,7 @@ import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
-import in.co.akshitbansal.springwebquery.validator.Validator;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.*;
 import org.jspecify.annotations.Nullable;
@@ -87,7 +87,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	 * Validator used to enforce the supported query-parameter naming contract
 	 * for resolved filter parameter names.
 	 */
-	private final Validator<String> queryParamNameValidator;
+	private final QueryParamNameValidator queryParamNameValidator;
 
 	protected final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
 

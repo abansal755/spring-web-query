@@ -22,11 +22,11 @@ import java.util.List;
 
 public class FieldResolverFactory {
 
-	public FieldResolver newDtoAwareFieldResolver(Class<?> entityClass, Class<?> dtoClass) {
+	public DTOAwareFieldResolver newDtoAwareFieldResolver(Class<?> entityClass, Class<?> dtoClass) {
 		return new DTOAwareFieldResolver(entityClass, dtoClass);
 	}
 
-	public FieldResolver newEntityAwareFieldResolver(Class<?> entityClass, List<FieldMapping> fieldMappings) {
+	public EntityAwareFieldResolver newEntityAwareFieldResolver(Class<?> entityClass, List<FieldMapping> fieldMappings) {
 		return new EntityAwareFieldResolver(entityClass, fieldMappings);
 	}
 }

@@ -17,11 +17,11 @@
 package in.co.akshitbansal.springwebquery.config.specification;
 
 import cz.jirutka.rsql.parser.RSQLParser;
-import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
@@ -78,9 +78,9 @@ public class SpecificationArgumentResolverAutoConfig {
 	public WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecArgumentResolver(
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
-			Validator<String> queryParamNameValidator,
+			QueryParamNameValidator queryParamNameValidator,
 			ValidationRSQLVisitorFactory validationRSQLVisitorFactory,
-			Validator<List<FieldMapping>> fieldMappingsValidator
+			FieldMappingsValidator fieldMappingsValidator
 	) {
 		return new WebQueryEntityAwareSpecificationArgumentResolver(
 				GLOBAL_FILTER_PARAM_NAME,
@@ -99,7 +99,7 @@ public class SpecificationArgumentResolverAutoConfig {
 	public WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
-			Validator<String> queryParamNameValidator,
+			QueryParamNameValidator queryParamNameValidator,
 			ValidationRSQLVisitorFactory validationRSQLVisitorFactory
 	) {
 		return new WebQueryDTOAwareSpecificationArgumentResolver(

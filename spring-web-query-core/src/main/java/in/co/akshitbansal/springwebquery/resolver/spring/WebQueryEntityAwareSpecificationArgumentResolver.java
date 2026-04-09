@@ -25,7 +25,8 @@ import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.validator.Validator;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
+import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.QuerySupport;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import io.github.perplexhub.rsql.RSQLJPASupport;
@@ -50,7 +51,7 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 	/**
 	 * Validator used to enforce uniqueness and consistency of declared field mappings.
 	 */
-	private final Validator<List<FieldMapping>> fieldMappingsValidator;
+	private final FieldMappingsValidator fieldMappingsValidator;
 
 	/**
 	 * Creates an entity-aware RSQL specification resolver.
@@ -73,9 +74,9 @@ public class WebQueryEntityAwareSpecificationArgumentResolver extends AbstractWe
 			int globalMaxASTDepth,
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
-			Validator<String> queryParamNameValidator,
+			QueryParamNameValidator queryParamNameValidator,
 			ValidationRSQLVisitorFactory validationRSQLVisitorFactory,
-			Validator<List<FieldMapping>> fieldMappingsValidator
+			FieldMappingsValidator fieldMappingsValidator
 	) {
 		super(
 				globalFilterParamName,
