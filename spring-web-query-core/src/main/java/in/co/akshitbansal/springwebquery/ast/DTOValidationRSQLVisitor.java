@@ -61,7 +61,7 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 * @param orNodeAllowed whether logical OR operator is allowed
 	 * @param maxDepth maximum allowed depth for the RSQL AST
 	 */
-	public DTOValidationRSQLVisitor(
+	protected DTOValidationRSQLVisitor(
 			FieldResolver fieldResolver,
 			FilterableFieldValidator filterableFieldValidator,
 			boolean andNodeAllowed,

@@ -52,7 +52,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 * @param orNodeAllowed whether logical OR operator is allowed
 	 * @param maxDepth maximum allowed depth for the RSQL AST
 	 */
-	public EntityValidationRSQLVisitor(
+	protected EntityValidationRSQLVisitor(
 			FieldResolver fieldResolver,
 			FilterableFieldValidator filterableFieldValidator,
 			boolean andNodeAllowed,
