@@ -25,7 +25,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.resolver.DTOAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import org.junit.jupiter.api.Test;
 

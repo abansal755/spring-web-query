@@ -16,8 +16,8 @@
 
 package in.co.akshitbansal.springwebquery.ast;
 
-import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.RequiredArgsConstructor;

@@ -18,8 +18,8 @@ package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.PageableArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.core.MethodParameter;

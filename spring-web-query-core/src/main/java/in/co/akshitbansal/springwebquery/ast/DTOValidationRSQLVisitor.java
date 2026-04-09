@@ -19,7 +19,7 @@ package in.co.akshitbansal.springwebquery.ast;
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 import java.util.Collections;
@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * RSQL AST visitor that validates filters against a DTO contract and maps DTO
  * property paths to entity property paths via a shared
- * {@link in.co.akshitbansal.springwebquery.resolver.FieldResolver} contract.
+ * {@link FieldResolver} contract.
  *
  * <p>This visitor is used when {@link in.co.akshitbansal.springwebquery.annotation.WebQuery#dtoClass()}
  * is configured. It enforces that:</p>

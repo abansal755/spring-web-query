@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.resolver;
+package in.co.akshitbansal.springwebquery.resolver.field;
 
 import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgumentResolverConfig;
 

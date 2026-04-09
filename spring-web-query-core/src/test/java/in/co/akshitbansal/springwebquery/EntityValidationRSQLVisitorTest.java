@@ -26,7 +26,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.EntityAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import io.github.perplexhub.rsql.RSQLCustomPredicateInput;
 import jakarta.persistence.criteria.Predicate;
