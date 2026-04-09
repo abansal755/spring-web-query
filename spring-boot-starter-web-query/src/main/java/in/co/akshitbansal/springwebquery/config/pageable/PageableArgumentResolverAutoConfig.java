@@ -16,16 +16,13 @@
 
 package in.co.akshitbansal.springwebquery.config.pageable;
 
-import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-
-import java.util.List;
 
 /**
  * Creates pageable argument resolvers that delegate base pagination parsing to Spring Data.
@@ -36,8 +33,8 @@ public class PageableArgumentResolverAutoConfig {
 	@Bean
 	public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(
 			PageableHandlerMethodArgumentResolver delegate,
-			Validator<SortableFieldValidator.SortableField> sortableFieldValidator,
-			Validator<List<FieldMapping>> fieldMappingsValidator
+			SortableFieldValidator sortableFieldValidator,
+			FieldMappingsValidator fieldMappingsValidator
 	) {
 		return new WebQueryEntityAwarePageableArgumentResolver(delegate, sortableFieldValidator, fieldMappingsValidator);
 	}
@@ -45,7 +42,7 @@ public class PageableArgumentResolverAutoConfig {
 	@Bean
 	public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(
 			PageableHandlerMethodArgumentResolver delegate,
-			Validator<SortableFieldValidator.SortableField> sortableFieldValidator
+			SortableFieldValidator sortableFieldValidator
 	) {
 		return new WebQueryDTOAwarePageableArgumentResolver(delegate, sortableFieldValidator);
 	}

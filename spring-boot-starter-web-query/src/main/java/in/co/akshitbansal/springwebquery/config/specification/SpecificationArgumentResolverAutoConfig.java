@@ -23,7 +23,6 @@ import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecifi
 import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,14 +44,16 @@ public class SpecificationArgumentResolverAutoConfig {
 	private final boolean GLOBAL_ALLOW_AND_OPERATION;
 	private final int GLOBAL_MAX_AST_DEPTH;
 
+	private final QueryParamNameValidator queryParamNameValidator;
+
 	public SpecificationArgumentResolverAutoConfig(
 			@Value("${spring-web-query.filtering.filter-param-name:filter}") String GLOBAL_FILTER_PARAM_NAME,
 			@Value("${spring-web-query.filtering.allow-or-operation:false}") boolean GLOBAL_ALLOW_OR_OPERATION,
 			@Value("${spring-web-query.filtering.allow-and-operation:true}") boolean GLOBAL_ALLOW_AND_OPERATION,
-			@Value("${spring-web-query.filtering.max-ast-depth:1}") int GLOBAL_MAX_AST_DEPTH
+			@Value("${spring-web-query.filtering.max-ast-depth:1}") int GLOBAL_MAX_AST_DEPTH,
+			QueryParamNameValidator queryParamNameValidator
 	) {
 		// Validating GLOBAL_FILTER_PARAM_NAME
-		Validator<String> queryParamNameValidator = new QueryParamNameValidator();
 		queryParamNameValidator.validate(GLOBAL_FILTER_PARAM_NAME);
 		this.GLOBAL_FILTER_PARAM_NAME = GLOBAL_FILTER_PARAM_NAME;
 
