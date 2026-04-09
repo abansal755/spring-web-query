@@ -21,7 +21,6 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,7 +64,7 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 */
 	public DTOValidationRSQLVisitor(
 			FieldResolver fieldResolver,
-			Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator,
+			FilterableFieldValidator filterableFieldValidator,
 			boolean andNodeAllowed,
 			boolean orNodeAllowed,
 			int maxDepth
@@ -103,7 +102,7 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 		// Build the corresponding entity field path from the DTO path and validate the terminal field for filterability
 		String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
 				dtoPath,
-				terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.FilterableField(terminalField, operator, dtoPath))
+				terminalField -> filterableFieldValidator.validate(terminalField, operator, dtoPath)
 		);
 
 		// Store the mapping from DTO path to entity path for later use during query construction

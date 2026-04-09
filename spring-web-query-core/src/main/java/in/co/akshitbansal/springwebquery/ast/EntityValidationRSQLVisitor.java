@@ -25,7 +25,6 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 
 /**
  * RSQL AST visitor that validates selectors directly against an entity model.
@@ -56,7 +55,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 */
 	public EntityValidationRSQLVisitor(
 			FieldResolver fieldResolver,
-			Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator,
+			FilterableFieldValidator filterableFieldValidator,
 			boolean andNodeAllowed,
 			boolean orNodeAllowed,
 			int maxDepth
@@ -89,7 +88,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 		// Resolve the field on the entity class using the requested field name and field mappings
 		fieldResolver.resolvePathAndValidateTerminalField(
 				reqFieldName,
-				terminalField -> filterableFieldValidator.validate(new FilterableFieldValidator.FilterableField(terminalField, operator, reqFieldName))
+				terminalField -> filterableFieldValidator.validate(terminalField, operator, reqFieldName)
 		);
 	}
 }

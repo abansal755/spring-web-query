@@ -20,7 +20,6 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -29,7 +28,7 @@ import java.util.List;
 public class ValidationRSQLVisitorFactory {
 
 	private final FieldResolverFactory fieldResolverFactory;
-	private final Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator;
+	private final FilterableFieldValidator filterableFieldValidator;
 
 	public DTOValidationRSQLVisitor newDTOValidationRSQLVisitor(
 			Class<?> entityClass,

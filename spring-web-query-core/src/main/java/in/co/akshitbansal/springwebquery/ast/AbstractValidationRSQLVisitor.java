@@ -20,7 +20,6 @@ import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.Validator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -56,7 +55,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 * Validator used by subclasses to enforce {@code @RSQLFilterable}
 	 * constraints on resolved terminal fields.
 	 */
-	protected final Validator<FilterableFieldValidator.FilterableField> filterableFieldValidator;
+	protected final FilterableFieldValidator filterableFieldValidator;
 
 	/**
 	 * Whether logical AND operator is allowed in the query.

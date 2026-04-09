@@ -24,10 +24,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -45,7 +42,7 @@ import java.util.stream.Stream;
  * registry.</p>
  */
 @RequiredArgsConstructor
-public class FilterableFieldValidator implements Validator<FilterableFieldValidator.FilterableField> {
+public class FilterableFieldValidator {
 
 	/**
 	 * Registered custom operators keyed by their implementation class.
@@ -61,12 +58,7 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
 	 * @throws QueryFieldValidationException if the field is not filterable
 	 * @throws QueryForbiddenOperatorException if the operator is not allowed for the field
 	 */
-	@Override
-	public void validate(FilterableField filterableField) {
-		Field field = filterableField.getField();
-		ComparisonOperator operator = filterableField.getOperator();
-		String fieldPath = filterableField.getFieldPath();
-
+	public void validate(Field field, ComparisonOperator operator, String fieldPath) {
 		// Retrieve the RSQLFilterable annotations on the field (if present)
 		Set<RSQLFilterable> filterables = collectFilterables(field);
 		// Throw exception if the field is not annotated as filterable
@@ -165,27 +157,5 @@ public class FilterableFieldValidator implements Validator<FilterableFieldValida
 			else if (type.getName().startsWith("in.co.akshitbansal.springwebquery.annotation"))
 				collectFilterables(type.getAnnotations(), filterables);
 		}
-	}
-
-	@RequiredArgsConstructor
-	@Getter
-	@EqualsAndHashCode
-	@ToString
-	public static class FilterableField {
-
-		/**
-		 * Reflected terminal field being validated.
-		 */
-		private final Field field;
-
-		/**
-		 * Comparison operator requested for the selector.
-		 */
-		private final ComparisonOperator operator;
-
-		/**
-		 * Original selector path from the incoming request.
-		 */
-		private final String fieldPath;
 	}
 }

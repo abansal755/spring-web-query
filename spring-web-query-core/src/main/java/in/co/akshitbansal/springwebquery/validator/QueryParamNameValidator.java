@@ -27,7 +27,7 @@ import java.text.MessageFormat;
  * subset so configured names remain unambiguous in URLs and compatible with
  * Spring request parameter lookup.</p>
  */
-public class QueryParamNameValidator implements Validator<String> {
+public class QueryParamNameValidator {
 
 	/**
 	 * Safe character set allowed for configured query parameter names.
@@ -43,7 +43,6 @@ public class QueryParamNameValidator implements Validator<String> {
 	 * @throws QueryConfigurationException if the parameter name contains
 	 * unsupported characters or is otherwise invalid
 	 */
-	@Override
 	public void validate(String paramName) {
 		if (!paramName.matches(regex)) {
 			throw new QueryConfigurationException(MessageFormat.format(
