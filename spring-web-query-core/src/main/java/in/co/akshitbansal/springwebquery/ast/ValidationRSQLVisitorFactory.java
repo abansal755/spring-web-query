@@ -16,6 +16,8 @@
 
 package in.co.akshitbansal.springwebquery.ast;
 
+import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.EntityAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
@@ -34,8 +36,25 @@ public class ValidationRSQLVisitorFactory {
 
 	public AbstractValidationRSQLVisitor newValidationRSQLVisitor(SpecificationArgumentResolverConfig config) {
 		FieldResolver fieldResolver = fieldResolverFactory.newFieldResolver(config);
-		if(config.getDtoClass() != void.class)
-			return new DTOValidationRSQLVisitor(fieldResolver, filterableFieldValidator, config.isAndNodeAllowed(), config.isOrNodeAllowed(), config.getMaxASTDepth());
-		return new EntityValidationRSQLVisitor(fieldResolver, filterableFieldValidator, config.isAndNodeAllowed(), config.isOrNodeAllowed(), config.getMaxASTDepth());
+
+		// DTOValidationRSQLVisitor
+		if (config.getDtoClass() != void.class) {
+			return new DTOValidationRSQLVisitor(
+					(DTOAwareFieldResolver) fieldResolver,
+					filterableFieldValidator,
+					config.isAndNodeAllowed(),
+					config.isOrNodeAllowed(),
+					config.getMaxASTDepth()
+			);
+		}
+
+		// EntityValidationRSQLVisitor
+		return new EntityValidationRSQLVisitor(
+				(EntityAwareFieldResolver) fieldResolver,
+				filterableFieldValidator,
+				config.isAndNodeAllowed(),
+				config.isOrNodeAllowed(),
+				config.getMaxASTDepth()
+		);
 	}
 }
