@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.resolver;
+package in.co.akshitbansal.springwebquery.resolver.field;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
@@ -65,7 +65,7 @@ public class EntityAwareFieldResolver implements FieldResolver {
 	 * @param entityClass entity type used for path resolution
 	 * @param fieldMappings declared alias mappings from the public API contract
 	 */
-	public EntityAwareFieldResolver(Class<?> entityClass, List<FieldMapping> fieldMappings) {
+	protected EntityAwareFieldResolver(Class<?> entityClass, List<FieldMapping> fieldMappings) {
 		this.entityClass = entityClass;
 		// Map from name to FieldMapping
 		this.fieldMappingMap = Collections.unmodifiableMap(fieldMappings

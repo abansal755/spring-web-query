@@ -18,7 +18,7 @@ package in.co.akshitbansal.springwebquery.ast;
 
 import cz.jirutka.rsql.parser.ast.*;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

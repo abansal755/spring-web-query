@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.resolver;
+package in.co.akshitbansal.springwebquery.resolver.field;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
@@ -41,7 +42,7 @@ import java.util.function.Consumer;
  *     verify that the resulting entity path exists.</li>
  * </ul>
  */
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class DTOAwareFieldResolver implements FieldResolver {
 
 	/**

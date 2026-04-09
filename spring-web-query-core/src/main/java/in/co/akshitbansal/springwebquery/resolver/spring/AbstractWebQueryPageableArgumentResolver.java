@@ -16,12 +16,14 @@
 
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
-import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.PageableArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +34,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Base resolver for {@link Pageable} parameters participating in
@@ -55,6 +56,8 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 	 */
 	protected final SortableFieldValidator sortableFieldValidator;
 
+	protected final FieldResolverFactory fieldResolverFactory;
+
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
 		return Pageable.class.isAssignableFrom(parameter.getParameterType())
@@ -72,7 +75,7 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 			// Delegate parsing of page, size and sort parameters to Spring
 			Pageable pageable = delegate.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
 			// Resolve effective endpoint settings from the current method parameter
-			QueryConfiguration queryConfig = getQueryConfiguration(parameter);
+			PageableArgumentResolverConfig queryConfig = getQueryConfiguration(parameter);
 			// Perform pageable resolution and validation based on the extracted configuration
 			return resolvePageable(pageable, queryConfig);
 		}
@@ -92,7 +95,7 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 	 *
 	 * @return pageable with validated and possibly remapped sort orders
 	 */
-	protected abstract Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig);
+	protected abstract Pageable resolvePageable(Pageable pageable, PageableArgumentResolverConfig queryConfig);
 
 	/**
 	 * Extracts pageable-specific query metadata directly from the
@@ -108,42 +111,15 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 	 *
 	 * @return effective configuration used by pageable resolvers for sort validation
 	 */
-	protected QueryConfiguration getQueryConfiguration(MethodParameter parameter) {
+	protected PageableArgumentResolverConfig getQueryConfiguration(MethodParameter parameter) {
 		// Only runs successfully if supportsParameter has already returned true
 		// so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
 		WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
-		return QueryConfiguration
+		return PageableArgumentResolverConfig
 				.builder()
 				.entityClass(webQueryAnnotation.entityClass())
 				.dtoClass(webQueryAnnotation.dtoClass())
 				.fieldMappings(Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings())))
 				.build();
-	}
-
-	/**
-	 * Effective pageable-specific query metadata extracted from a supported
-	 * {@link WebQuery}-annotated controller method.
-	 */
-	@Getter
-	@Builder
-	@EqualsAndHashCode
-	@ToString
-	protected static class QueryConfiguration {
-
-		/**
-		 * Entity type that ultimately receives validated sort paths.
-		 */
-		private final Class<?> entityClass;
-
-		/**
-		 * Optional DTO type used to validate API-facing sort selectors.
-		 */
-		private final Class<?> dtoClass;
-
-		/**
-		 * Explicit field aliases declared on {@link WebQuery}, used only by
-		 * entity-aware pageable resolution.
-		 */
-		private final List<FieldMapping> fieldMappings;
 	}
 }

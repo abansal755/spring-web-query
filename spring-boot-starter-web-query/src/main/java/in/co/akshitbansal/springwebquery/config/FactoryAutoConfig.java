@@ -17,7 +17,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;

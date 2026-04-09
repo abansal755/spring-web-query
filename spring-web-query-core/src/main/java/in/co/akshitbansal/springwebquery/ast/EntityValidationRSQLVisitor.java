@@ -23,7 +23,7 @@ import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 /**
@@ -52,7 +52,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 * @param orNodeAllowed whether logical OR operator is allowed
 	 * @param maxDepth maximum allowed depth for the RSQL AST
 	 */
-	public EntityValidationRSQLVisitor(
+	protected EntityValidationRSQLVisitor(
 			FieldResolver fieldResolver,
 			FilterableFieldValidator filterableFieldValidator,
 			boolean andNodeAllowed,

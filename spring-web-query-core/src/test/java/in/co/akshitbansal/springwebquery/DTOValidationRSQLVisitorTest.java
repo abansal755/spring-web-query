@@ -21,14 +21,17 @@ import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.ast.DTOValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.resolver.DTOAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -105,13 +108,21 @@ class DTOValidationRSQLVisitorTest {
 			boolean orNodeAllowed,
 			int maxDepth
 	) {
-		return new DTOValidationRSQLVisitor(
-				new DTOAwareFieldResolver(entityClass, dtoClass),
-				new FilterableFieldValidator(customOperators),
-				andNodeAllowed,
-				orNodeAllowed,
-				maxDepth
+		ValidationRSQLVisitorFactory factory = new ValidationRSQLVisitorFactory(
+				new FieldResolverFactory(),
+				new FilterableFieldValidator(customOperators)
 		);
+		SpecificationArgumentResolverConfig config = SpecificationArgumentResolverConfig
+				.builder()
+				.entityClass(entityClass)
+				.dtoClass(dtoClass)
+				.fieldMappings(List.of())
+				.filterParamName("filter")
+				.andNodeAllowed(andNodeAllowed)
+				.orNodeAllowed(orNodeAllowed)
+				.maxASTDepth(maxDepth)
+				.build();
+		return (DTOValidationRSQLVisitor) factory.newValidationRSQLVisitor(config);
 	}
 
 	private static class TestEntity {

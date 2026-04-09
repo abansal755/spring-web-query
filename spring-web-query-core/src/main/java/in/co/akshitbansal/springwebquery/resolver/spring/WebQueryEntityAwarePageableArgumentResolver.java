@@ -18,8 +18,10 @@ package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
-import in.co.akshitbansal.springwebquery.resolver.EntityAwareFieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.PageableArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.core.MethodParameter;
@@ -57,9 +59,10 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
 	public WebQueryEntityAwarePageableArgumentResolver(
 			PageableHandlerMethodArgumentResolver delegate,
 			SortableFieldValidator sortableFieldValidator,
-			FieldMappingsValidator fieldMappingsValidator
+			FieldMappingsValidator fieldMappingsValidator,
+			FieldResolverFactory fieldResolverFactory
 	) {
-		super(delegate, sortableFieldValidator);
+		super(delegate, sortableFieldValidator, fieldResolverFactory);
 		this.fieldMappingsValidator = fieldMappingsValidator;
 	}
 
@@ -86,14 +89,11 @@ public class WebQueryEntityAwarePageableArgumentResolver extends AbstractWebQuer
 	 * @return pageable with validated entity sort paths
 	 */
 	@Override
-	protected Pageable resolvePageable(Pageable pageable, QueryConfiguration queryConfig) {
+	protected Pageable resolvePageable(Pageable pageable, PageableArgumentResolverConfig queryConfig) {
 		// Validate field mappings to ensure they are well-formed and do not contain conflicts
 		fieldMappingsValidator.validate(queryConfig.getFieldMappings());
 
-		FieldResolver fieldResolver = new EntityAwareFieldResolver(
-				queryConfig.getEntityClass(),
-				queryConfig.getFieldMappings()
-		);
+		FieldResolver fieldResolver = fieldResolverFactory.newFieldResolver(queryConfig);
 
 		List<Sort.Order> newOrders = new ArrayList<>();
 		// Validate each requested sort order against entity metadata
