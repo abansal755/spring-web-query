@@ -112,16 +112,15 @@ class DTOValidationRSQLVisitorTest {
 				new FieldResolverFactory(),
 				new FilterableFieldValidator(customOperators)
 		);
-		SpecificationArgumentResolverConfig config = SpecificationArgumentResolverConfig
-				.builder()
-				.entityClass(entityClass)
-				.dtoClass(dtoClass)
-				.fieldMappings(List.of())
-				.filterParamName("filter")
-				.andNodeAllowed(andNodeAllowed)
-				.orNodeAllowed(orNodeAllowed)
-				.maxASTDepth(maxDepth)
-				.build();
+		SpecificationArgumentResolverConfig config = new SpecificationArgumentResolverConfig(
+				entityClass,
+				dtoClass,
+				List.of(),
+				"filter",
+				andNodeAllowed,
+				orNodeAllowed,
+				maxDepth
+		);
 		return (DTOValidationRSQLVisitor) factory.newValidationRSQLVisitor(config);
 	}
 
