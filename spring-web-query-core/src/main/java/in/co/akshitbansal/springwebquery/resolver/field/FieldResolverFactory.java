@@ -25,7 +25,7 @@ import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgument
 public class FieldResolverFactory {
 
 	public FieldResolver newFieldResolver(AbstractArgumentResolverConfig config) {
-		if(config.getDtoClass() != void.class)
+		if (config.getDtoClass() != void.class)
 			return new DTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());
 		return new EntityAwareFieldResolver(config.getEntityClass(), config.getFieldMappings());
 	}
