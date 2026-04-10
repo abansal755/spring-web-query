@@ -115,11 +115,10 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 		// Only runs successfully if supportsParameter has already returned true
 		// so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
 		WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
-		return PageableArgumentResolverConfig
-				.builder()
-				.entityClass(webQueryAnnotation.entityClass())
-				.dtoClass(webQueryAnnotation.dtoClass())
-				.fieldMappings(Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings())))
-				.build();
+		return new PageableArgumentResolverConfig(
+				webQueryAnnotation.entityClass(),
+				webQueryAnnotation.dtoClass(),
+				Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings()))
+		);
 	}
 }

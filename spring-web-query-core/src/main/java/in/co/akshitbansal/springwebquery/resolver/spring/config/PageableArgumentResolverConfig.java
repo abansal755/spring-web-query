@@ -20,7 +20,6 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -37,51 +36,8 @@ import java.util.List;
 @ToString(callSuper = true)
 public class PageableArgumentResolverConfig extends AbstractArgumentResolverConfig {
 
+
 	public PageableArgumentResolverConfig(Class<?> entityClass, Class<?> dtoClass, List<FieldMapping> fieldMappings) {
-		// null checks present in superclass constructor
 		super(entityClass, dtoClass, fieldMappings);
-	}
-
-	public static Builder builder() {
-		return new Builder();
-	}
-
-	@EqualsAndHashCode
-	@ToString
-	public static class Builder {
-
-		@Nullable
-		private Class<?> entityClass;
-
-		@Nullable
-		private Class<?> dtoClass;
-
-		@Nullable
-		private List<FieldMapping> fieldMappings;
-
-		public Builder entityClass(Class<?> entityClass) {
-			this.entityClass = entityClass;
-			return this;
-		}
-
-		public Builder dtoClass(Class<?> dtoClass) {
-			this.dtoClass = dtoClass;
-			return this;
-		}
-
-		public Builder fieldMappings(List<FieldMapping> fieldMappings) {
-			this.fieldMappings = fieldMappings;
-			return this;
-		}
-
-		@SuppressWarnings("NullAway")
-		public PageableArgumentResolverConfig build() {
-			// this constructor calls the superclass constructor which has null checks present
-			return new PageableArgumentResolverConfig(
-					entityClass,
-					dtoClass,
-					fieldMappings
-			);
-		}
 	}
 }

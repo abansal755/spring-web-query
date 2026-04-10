@@ -177,15 +177,14 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 		int maxDepth = webQueryAnnotation.maxASTDepth();
 		if (maxDepth < 0) maxDepth = globalMaxASTDepth;
 
-		return SpecificationArgumentResolverConfig
-				.builder()
-				.entityClass(webQueryAnnotation.entityClass())
-				.dtoClass(webQueryAnnotation.dtoClass())
-				.fieldMappings(Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings())))
-				.filterParamName(filterParamName)
-				.andNodeAllowed(andNodeAllowed)
-				.orNodeAllowed(orNodeAllowed)
-				.maxASTDepth(maxDepth)
-				.build();
+		return new SpecificationArgumentResolverConfig(
+				webQueryAnnotation.entityClass(),
+				webQueryAnnotation.dtoClass(),
+				Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings())),
+				filterParamName,
+				andNodeAllowed,
+				orNodeAllowed,
+				maxDepth
+		);
 	}
 }
