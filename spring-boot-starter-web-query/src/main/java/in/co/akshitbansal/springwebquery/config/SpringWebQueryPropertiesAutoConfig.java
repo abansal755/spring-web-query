@@ -6,6 +6,7 @@ import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 import java.text.MessageFormat;
@@ -15,6 +16,7 @@ import java.text.MessageFormat;
 public class SpringWebQueryPropertiesAutoConfig {
 
 	@Bean
+	@ConditionalOnMissingBean
 	public SpringWebQueryProperties springWebQueryProperties(
 			@Value("${spring-web-query.filtering.filter-param-name:filter}") String globalFilterParamName,
 			@Value("${spring-web-query.filtering.allow-and-operation:true}") boolean globalAllowAndOperation,
