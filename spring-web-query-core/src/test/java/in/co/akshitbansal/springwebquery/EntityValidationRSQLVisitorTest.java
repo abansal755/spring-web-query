@@ -203,16 +203,15 @@ class EntityValidationRSQLVisitorTest {
 				new FieldResolverFactory(),
 				new FilterableFieldValidator(customOperators)
 		);
-		SpecificationArgumentResolverConfig config = SpecificationArgumentResolverConfig
-				.builder()
-				.entityClass(entityClass)
-				.dtoClass(void.class)
-				.fieldMappings(fieldMappings)
-				.filterParamName("filter")
-				.andNodeAllowed(andNodeAllowed)
-				.orNodeAllowed(orNodeAllowed)
-				.maxASTDepth(maxDepth)
-				.build();
+		SpecificationArgumentResolverConfig config = new SpecificationArgumentResolverConfig(
+				entityClass,
+				void.class,
+				fieldMappings,
+				"filter",
+				andNodeAllowed,
+				orNodeAllowed,
+				maxDepth
+		);
 		return (EntityValidationRSQLVisitor) factory.newValidationRSQLVisitor(config);
 	}
 

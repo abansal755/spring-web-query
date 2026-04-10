@@ -19,12 +19,9 @@ package in.co.akshitbansal.springwebquery.resolver.spring.config;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.ToString;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Effective configuration used by specification argument resolvers after
@@ -62,10 +59,10 @@ public class SpecificationArgumentResolverConfig extends AbstractArgumentResolve
 	private final int maxASTDepth;
 
 	public SpecificationArgumentResolverConfig(
-			Class<?> entityClass, // null check present in superclass constructor
-			Class<?> dtoClass, // null check present in superclass constructor
-			List<FieldMapping> fieldMappings, // null check present in superclass constructor
-			@NonNull String filterParamName,
+			Class<?> entityClass,
+			Class<?> dtoClass,
+			List<FieldMapping> fieldMappings,
+			String filterParamName,
 			boolean andNodeAllowed,
 			boolean orNodeAllowed,
 			int maxASTDepth
@@ -75,84 +72,5 @@ public class SpecificationArgumentResolverConfig extends AbstractArgumentResolve
 		this.andNodeAllowed = andNodeAllowed;
 		this.orNodeAllowed = orNodeAllowed;
 		this.maxASTDepth = maxASTDepth;
-	}
-
-	public static Builder builder() {
-		return new Builder();
-	}
-
-	@EqualsAndHashCode
-	@ToString
-	public static class Builder {
-
-		@Nullable
-		private Class<?> entityClass;
-
-		@Nullable
-		private Class<?> dtoClass;
-
-		@Nullable
-		private List<FieldMapping> fieldMappings;
-
-		@Nullable
-		private String filterParamName;
-
-		@Nullable
-		private Boolean andNodeAllowed;
-
-		@Nullable
-		private Boolean orNodeAllowed;
-
-		@Nullable
-		private Integer maxASTDepth;
-
-		public Builder entityClass(Class<?> entityClass) {
-			this.entityClass = entityClass;
-			return this;
-		}
-
-		public Builder dtoClass(Class<?> dtoClass) {
-			this.dtoClass = dtoClass;
-			return this;
-		}
-
-		public Builder fieldMappings(List<FieldMapping> fieldMappings) {
-			this.fieldMappings = fieldMappings;
-			return this;
-		}
-
-		public Builder filterParamName(String filterParamName) {
-			this.filterParamName = filterParamName;
-			return this;
-		}
-
-		public Builder andNodeAllowed(boolean andNodeAllowed) {
-			this.andNodeAllowed = andNodeAllowed;
-			return this;
-		}
-
-		public Builder orNodeAllowed(boolean orNodeAllowed) {
-			this.orNodeAllowed = orNodeAllowed;
-			return this;
-		}
-
-		public Builder maxASTDepth(int maxASTDepth) {
-			this.maxASTDepth = maxASTDepth;
-			return this;
-		}
-
-		@SuppressWarnings("NullAway")
-		public SpecificationArgumentResolverConfig build() {
-			return new SpecificationArgumentResolverConfig(
-					entityClass,
-					dtoClass,
-					fieldMappings,
-					filterParamName,
-					// null check for the rest of the fields to check if the builder's setter got called
-					Objects.requireNonNull(andNodeAllowed, "andNodeAllowed must not be null"),
-					Objects.requireNonNull(orNodeAllowed, "orNodeAllowed must not be null"),
-					Objects.requireNonNull(maxASTDepth, "maxASTDepth must not be null")
-			);
-		}
 	}
 }
