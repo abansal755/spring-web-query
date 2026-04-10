@@ -20,6 +20,7 @@ import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -34,6 +35,7 @@ public class FactoryAutoConfig {
 	 * @return field resolver factory
 	 */
 	@Bean
+	@ConditionalOnMissingBean
 	public FieldResolverFactory fieldResolverFactory() {
 		return new FieldResolverFactory();
 	}
@@ -48,6 +50,7 @@ public class FactoryAutoConfig {
 	 * @return validation visitor factory
 	 */
 	@Bean
+	@ConditionalOnMissingBean
 	public ValidationRSQLVisitorFactory validationRSQLVisitorFactory(
 			FieldResolverFactory fieldResolverFactory,
 			FilterableFieldValidator filterableFieldValidator

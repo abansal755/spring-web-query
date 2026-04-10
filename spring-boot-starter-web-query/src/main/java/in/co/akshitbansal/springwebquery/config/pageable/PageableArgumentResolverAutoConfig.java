@@ -22,6 +22,7 @@ import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePage
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 
@@ -42,6 +43,7 @@ public class PageableArgumentResolverAutoConfig {
 	 * @return entity-aware pageable resolver
 	 */
 	@Bean
+	@ConditionalOnMissingBean
 	public WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver(
 			PageableHandlerMethodArgumentResolver delegate,
 			SortableFieldValidator sortableFieldValidator,
@@ -66,6 +68,7 @@ public class PageableArgumentResolverAutoConfig {
 	 * @return DTO-aware pageable resolver
 	 */
 	@Bean
+	@ConditionalOnMissingBean
 	public WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver(
 			PageableHandlerMethodArgumentResolver delegate,
 			SortableFieldValidator sortableFieldValidator,
