@@ -27,6 +27,7 @@ import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 import java.text.MessageFormat;
@@ -111,6 +112,7 @@ public class SpecificationArgumentResolverAutoConfig {
 	 * @return entity-aware specification resolver
 	 */
 	@Bean
+	@ConditionalOnMissingBean
 	public WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecArgumentResolver(
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
@@ -143,6 +145,7 @@ public class SpecificationArgumentResolverAutoConfig {
 	 * @return DTO-aware specification resolver
 	 */
 	@Bean
+	@ConditionalOnMissingBean
 	public WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecArgumentResolver(
 			RSQLParser rsqlParser,
 			List<RSQLCustomPredicate<?>> customPredicates,
