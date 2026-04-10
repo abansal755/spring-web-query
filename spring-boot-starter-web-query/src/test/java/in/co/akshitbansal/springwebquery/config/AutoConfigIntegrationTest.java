@@ -17,7 +17,6 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverRegistrationAutoConfig;
-import in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverAutoConfig;
 import in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverRegistrationAutoConfig;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
@@ -106,7 +105,8 @@ class AutoConfigIntegrationTest {
 	void specificationConfigRejectsNegativeMaxAstDepth() {
 		assertThrows(
 				QueryConfigurationException.class,
-				() -> new SpecificationArgumentResolverAutoConfig("filter", false, true, -1, new QueryParamNameValidator())
+				() -> new SpringWebQueryPropertiesAutoConfig()
+						.springWebQueryProperties("filter", true, false, -1, new QueryParamNameValidator())
 		);
 	}
 
