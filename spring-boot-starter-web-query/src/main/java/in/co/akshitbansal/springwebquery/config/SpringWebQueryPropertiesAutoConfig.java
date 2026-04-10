@@ -11,10 +11,28 @@ import org.springframework.context.annotation.Bean;
 
 import java.text.MessageFormat;
 
+/**
+ * Publishes the validated global filtering configuration used by the starter's
+ * specification resolver auto-configuration.
+ */
 @AutoConfiguration
 @Slf4j
 public class SpringWebQueryPropertiesAutoConfig {
 
+	/**
+	 * Creates the shared immutable container for global filtering defaults
+	 * contributed through application configuration.
+	 *
+	 * @param globalFilterParamName configured request parameter name for filter expressions
+	 * @param globalAllowAndOperation whether logical AND nodes are allowed by default
+	 * @param globalAllowOrOperation whether logical OR nodes are allowed by default
+	 * @param globalMaxASTDepth configured maximum allowed depth for parsed RSQL ASTs
+	 * @param queryParamNameValidator validator used for configured filter parameter names
+	 *
+	 * @return validated global filtering properties
+	 *
+	 * @throws QueryConfigurationException if the configured maximum AST depth is negative
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public SpringWebQueryProperties springWebQueryProperties(

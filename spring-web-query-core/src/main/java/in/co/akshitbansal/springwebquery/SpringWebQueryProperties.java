@@ -21,14 +21,33 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
+/**
+ * Immutable container for the resolved global filtering settings used by the
+ * Spring Web Query starter.
+ */
 @RequiredArgsConstructor
 @Getter
 @EqualsAndHashCode
 @ToString
 public class SpringWebQueryProperties {
 
+	/**
+	 * Global request parameter name used to read RSQL filter expressions.
+	 */
 	private final String globalFilterParamName;
+
+	/**
+	 * Global default indicating whether logical AND nodes are permitted.
+	 */
 	private final boolean globalAllowAndOperation;
+
+	/**
+	 * Global default indicating whether logical OR nodes are permitted.
+	 */
 	private final boolean globalAllowOrOperation;
+
+	/**
+	 * Global default maximum allowed depth for parsed RSQL ASTs.
+	 */
 	private final int globalMaxASTDepth;
 }

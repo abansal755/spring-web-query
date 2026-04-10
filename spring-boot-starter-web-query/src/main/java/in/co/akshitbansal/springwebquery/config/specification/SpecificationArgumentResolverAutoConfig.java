@@ -42,6 +42,7 @@ public class SpecificationArgumentResolverAutoConfig {
 	 * Creates the entity-aware specification resolver used when {@code @WebQuery}
 	 * resolves selectors directly against entity fields and aliases.
 	 *
+	 * @param properties validated global filtering defaults shared by resolver beans
 	 * @param rsqlParser shared RSQL parser
 	 * @param customPredicates shared custom predicate adapters
 	 * @param queryParamNameValidator validator for request parameter name overrides
@@ -77,6 +78,7 @@ public class SpecificationArgumentResolverAutoConfig {
 	 * Creates the DTO-aware specification resolver used when {@code @WebQuery}
 	 * exposes a DTO query contract.
 	 *
+	 * @param properties validated global filtering defaults shared by resolver beans
 	 * @param rsqlParser shared RSQL parser
 	 * @param customPredicates shared custom predicate adapters
 	 * @param queryParamNameValidator validator for request parameter name overrides
