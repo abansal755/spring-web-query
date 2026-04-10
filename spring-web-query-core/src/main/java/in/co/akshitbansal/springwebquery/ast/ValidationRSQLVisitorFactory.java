@@ -31,9 +31,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ValidationRSQLVisitorFactory {
 
+	/**
+	 * Factory for creating the field resolver that matches the active query contract.
+	 */
 	private final FieldResolverFactory fieldResolverFactory;
+
+	/**
+	 * Validator shared by created visitors for terminal-field filterability checks.
+	 */
 	private final FilterableFieldValidator filterableFieldValidator;
 
+	/**
+	 * Creates a validation visitor matching the supplied specification resolver configuration.
+	 *
+	 * <p>DTO-aware configurations produce {@link DTOValidationRSQLVisitor}; otherwise
+	 * an {@link EntityValidationRSQLVisitor} is created.</p>
+	 *
+	 * @param config effective specification resolver configuration
+	 *
+	 * @return validation visitor aligned with the configured query model
+	 */
 	public AbstractValidationRSQLVisitor newValidationRSQLVisitor(SpecificationArgumentResolverConfig config) {
 		FieldResolver fieldResolver = fieldResolverFactory.newFieldResolver(config);
 

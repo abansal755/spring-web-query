@@ -34,7 +34,14 @@ import java.util.List;
 @Slf4j
 public class PageableArgumentResolverRegistrationAutoConfig implements WebMvcConfigurer {
 
+	/**
+	 * Entity-aware pageable resolver registered ahead of Spring Data's default resolver.
+	 */
 	private final WebQueryEntityAwarePageableArgumentResolver entityAwarePageableArgumentResolver;
+
+	/**
+	 * DTO-aware pageable resolver registered ahead of Spring Data's default resolver.
+	 */
 	private final WebQueryDTOAwarePageableArgumentResolver dtoAwarePageableArgumentResolver;
 
 	@Override

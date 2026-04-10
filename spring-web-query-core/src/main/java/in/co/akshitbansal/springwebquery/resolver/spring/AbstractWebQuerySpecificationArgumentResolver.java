@@ -94,12 +94,36 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	 */
 	protected final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
 
+	/**
+	 * Determines whether the supplied parameter should be resolved as a
+	 * {@link Specification} participating in {@link WebQuery}-driven filtering.
+	 *
+	 * @param parameter method parameter under inspection
+	 *
+	 * @return {@code true} when the parameter type is assignable to
+	 * {@link Specification} and the declaring method is annotated with {@link WebQuery}
+	 */
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
 		return Specification.class.isAssignableFrom(parameter.getParameterType())
 				&& super.supportsParameter(parameter);
 	}
 
+	/**
+	 * Resolves the incoming request into a validated {@link Specification}
+	 * using the effective query configuration for the current controller method.
+	 *
+	 * @param parameter method parameter being resolved
+	 * @param mavContainer current model/view container, if any
+	 * @param webRequest current native web request
+	 * @param binderFactory web data binder factory, if available
+	 *
+	 * @return resolved specification for the current request, or
+	 * {@link Specification#unrestricted()} when no filter is supplied
+	 *
+	 * @throws QueryException when query-specific validation fails
+	 * @throws QueryConfigurationException when specification resolution fails unexpectedly
+	 */
 	@Override
 	public Specification<?> resolveArgument(
 			MethodParameter parameter,

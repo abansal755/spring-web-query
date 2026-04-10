@@ -56,14 +56,40 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 	 */
 	protected final SortableFieldValidator sortableFieldValidator;
 
+	/**
+	 * Factory used to create entity-aware or DTO-aware field resolvers for sort paths.
+	 */
 	protected final FieldResolverFactory fieldResolverFactory;
 
+	/**
+	 * Determines whether the supplied parameter should be resolved as a
+	 * {@link Pageable} participating in {@link WebQuery}-aware sorting.
+	 *
+	 * @param parameter method parameter under inspection
+	 *
+	 * @return {@code true} when the parameter type is assignable to
+	 * {@link Pageable} and the declaring method is annotated with {@link WebQuery}
+	 */
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
 		return Pageable.class.isAssignableFrom(parameter.getParameterType())
 				&& super.supportsParameter(parameter);
 	}
 
+	/**
+	 * Resolves the request into a validated {@link Pageable} using Spring's
+	 * standard parsing first and subclass-specific sort validation afterward.
+	 *
+	 * @param parameter method parameter being resolved
+	 * @param mavContainer current model/view container, if any
+	 * @param webRequest current native web request
+	 * @param binderFactory web data binder factory, if available
+	 *
+	 * @return validated pageable instance for the current request
+	 *
+	 * @throws QueryException when query-specific validation fails
+	 * @throws QueryConfigurationException when pageable resolution fails unexpectedly
+	 */
 	@Override
 	public Pageable resolveArgument(
 			MethodParameter parameter,

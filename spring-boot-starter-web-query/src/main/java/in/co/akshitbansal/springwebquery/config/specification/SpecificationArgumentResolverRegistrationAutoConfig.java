@@ -34,7 +34,14 @@ import java.util.List;
 @Slf4j
 public class SpecificationArgumentResolverRegistrationAutoConfig implements WebMvcConfigurer {
 
+	/**
+	 * Entity-aware specification resolver registered with Spring MVC.
+	 */
 	private final WebQueryEntityAwareSpecificationArgumentResolver entityAwareSpecResolver;
+
+	/**
+	 * DTO-aware specification resolver registered with Spring MVC.
+	 */
 	private final WebQueryDTOAwareSpecificationArgumentResolver dtoAwareSpecResolver;
 
 	@Override

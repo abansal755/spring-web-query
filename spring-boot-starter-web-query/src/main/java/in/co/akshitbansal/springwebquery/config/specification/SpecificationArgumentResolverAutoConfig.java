@@ -39,9 +39,24 @@ import java.util.List;
 @Slf4j
 public class SpecificationArgumentResolverAutoConfig {
 
+	/**
+	 * Global default request parameter name used to read RSQL filter expressions.
+	 */
 	private final String GLOBAL_FILTER_PARAM_NAME;
+
+	/**
+	 * Global default indicating whether logical OR nodes are permitted.
+	 */
 	private final boolean GLOBAL_ALLOW_OR_OPERATION;
+
+	/**
+	 * Global default indicating whether logical AND nodes are permitted.
+	 */
 	private final boolean GLOBAL_ALLOW_AND_OPERATION;
+
+	/**
+	 * Global default maximum allowed depth for parsed RSQL ASTs.
+	 */
 	private final int GLOBAL_MAX_AST_DEPTH;
 
 	/**
