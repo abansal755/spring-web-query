@@ -185,6 +185,9 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 						null,
 						null,
 						null,
+						// prevents wildcard parsing for string equality operator
+						// so that "name==John*" is treated as: name equals 'John*'
+						// rather than: name starts with 'John'
 						true,
 						null,
 						JsonbConfiguration.DEFAULT
