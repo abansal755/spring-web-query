@@ -25,6 +25,14 @@ import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
  */
 public class FieldResolverFactory {
 
+	/**
+	 * Creates the field resolver that matches the supplied effective query
+	 * configuration.
+	 *
+	 * @param config effective argument-resolver configuration
+	 *
+	 * @return entity-aware or DTO-aware field resolver
+	 */
 	public FieldResolver newFieldResolver(AbstractArgumentResolverConfig config) {
 		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE)
 			return new DTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());

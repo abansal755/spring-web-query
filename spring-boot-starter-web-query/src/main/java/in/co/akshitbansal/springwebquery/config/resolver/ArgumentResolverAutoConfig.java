@@ -33,9 +33,25 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 
 import java.util.List;
 
+/**
+ * Publishes the merged WebQuery argument resolvers used for pageable and
+ * specification handling.
+ */
 @AutoConfiguration
 public class ArgumentResolverAutoConfig {
 
+	/**
+	 * Creates the unified resolver for {@code Specification} parameters.
+	 *
+	 * @param properties global WebQuery filtering defaults
+	 * @param rsqlParser shared RSQL parser
+	 * @param customPredicates custom predicates used during JPA conversion
+	 * @param queryParamNameValidator validator for configured filter names
+	 * @param validationRSQLVisitorFactory factory for mode-aware validation visitors
+	 * @param fieldMappingsValidator validator for declared field mappings
+	 *
+	 * @return resolver for {@code Specification} parameters
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public WebQuerySpecificationArgumentResolver webQuerySpecificationArgumentResolver(
@@ -59,6 +75,16 @@ public class ArgumentResolverAutoConfig {
 		);
 	}
 
+	/**
+	 * Creates the unified resolver for {@code Pageable} parameters.
+	 *
+	 * @param delegate Spring's pageable argument resolver
+	 * @param sortableFieldValidator validator for sortable terminal fields
+	 * @param fieldResolverFactory factory for DTO-aware and entity-aware field resolution
+	 * @param fieldMappingsValidator validator for declared field mappings
+	 *
+	 * @return resolver for {@code Pageable} parameters
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public WebQueryPageableArgumentResolver webQueryPageableArgumentResolver(

@@ -50,9 +50,9 @@ public abstract class AbstractArgumentResolverConfig {
 	private final Class<?> dtoClass;
 
 	/**
-	 * Explicit field aliases declared on {@link WebQuery}, used by entity-aware
-	 * resolver flows when request selectors are validated directly against the
-	 * entity model.
+	 * Explicit field aliases declared on {@link WebQuery}. The mappings are
+	 * validated eagerly and then used by entity-aware resolver flows when
+	 * request selectors are validated directly against the entity model.
 	 */
 	private final List<FieldMapping> fieldMappings;
 

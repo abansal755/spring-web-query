@@ -42,12 +42,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Base resolver for {@link Pageable} parameters participating in
+ * Unified resolver for {@link Pageable} parameters participating in
  * {@link WebQuery}-aware sorting.
  *
- * <p>This class delegates standard page/size parsing to Spring's
- * {@link PageableHandlerMethodArgumentResolver} and lets subclasses validate
- * and remap sort properties against either entity or DTO metadata.</p>
+ * <p>This resolver delegates standard page/size parsing to Spring's
+ * {@link PageableHandlerMethodArgumentResolver} and then validates and remaps
+ * sort properties against either entity or DTO metadata.</p>
  */
 @RequiredArgsConstructor
 public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
@@ -67,6 +67,10 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 	 */
 	private final FieldResolverFactory fieldResolverFactory;
 
+	/**
+	 * Validator used to fail fast on malformed declared field mappings before
+	 * the effective query mode is resolved.
+	 */
 	private final FieldMappingsValidator fieldMappingsValidator;
 
 	/**
@@ -86,7 +90,7 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 
 	/**
 	 * Resolves the request into a validated {@link Pageable} using Spring's
-	 * standard parsing first and subclass-specific sort validation afterward.
+	 * standard parsing first and mode-aware sort validation/remapping afterward.
 	 *
 	 * @param parameter method parameter being resolved
 	 * @param mavContainer current model/view container, if any
@@ -144,8 +148,8 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 	 *
 	 * <p>Unlike specification resolution, pageable handling does not consume
 	 * operator policies or AST settings, so this configuration contains only
-	 * the entity type, optional DTO type, and the declared field mappings
-	 * retained for entity-aware sort validation and remapping.</p>
+	 * the entity type, optional DTO type, and the declared field mappings used
+	 * for eager validation and entity-aware sort remapping.</p>
 	 *
 	 * @param parameter supported method parameter whose declaring method carries
 	 * {@link WebQuery}
@@ -157,6 +161,7 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 		// so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
 		WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
 
+		// Validate field mappings once so configuration issues fail before request parsing
 		List<FieldMapping> fieldMappings = Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings()));
 		fieldMappingsValidator.validate(fieldMappings);
 

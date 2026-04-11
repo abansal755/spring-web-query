@@ -26,14 +26,30 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
+/**
+ * Registers the merged WebQuery argument resolvers with Spring MVC.
+ */
 @AutoConfiguration
 @Slf4j
 @RequiredArgsConstructor
 public class ArgumentResolverRegistrationAutoConfig implements WebMvcConfigurer {
 
+	/**
+	 * Resolver for {@code Specification} parameters.
+	 */
 	private final WebQuerySpecificationArgumentResolver webQuerySpecificationArgumentResolver;
+
+	/**
+	 * Resolver for {@code Pageable} parameters.
+	 */
 	private final WebQueryPageableArgumentResolver webQueryPageableArgumentResolver;
 
+	/**
+	 * Adds the WebQuery resolvers ahead of Spring MVC's default pageable
+	 * resolver so merged query handling takes precedence.
+	 *
+	 * @param resolvers registered handler method argument resolvers
+	 */
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
 		resolvers.add(webQuerySpecificationArgumentResolver);

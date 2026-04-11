@@ -51,13 +51,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Base {@link HandlerMethodArgumentResolver} for resolving RSQL-based
+ * Unified {@link HandlerMethodArgumentResolver} for resolving RSQL-based
  * {@link org.springframework.data.jpa.domain.Specification} parameters.
  *
- * <p>This class merges {@link WebQuery} annotation settings with global
+ * <p>This resolver merges {@link WebQuery} annotation settings with global
  * defaults, reads the raw RSQL filter from the effective request parameter,
- * and delegates DTO-aware or entity-aware specification creation to
- * subclasses.</p>
+ * validates the parsed AST, and builds the final specification directly for
+ * either DTO-aware or entity-aware query contracts.</p>
  */
 @RequiredArgsConstructor
 public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResolver {
@@ -106,6 +106,10 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 	 */
 	private final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
 
+	/**
+	 * Validator used to fail fast on malformed declared field mappings before
+	 * the effective query mode is resolved.
+	 */
 	private final FieldMappingsValidator fieldMappingsValidator;
 
 	/**
@@ -204,8 +208,9 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 	 * settings with the configured global fallbacks.
 	 *
 	 * <p>A blank {@link WebQuery#filterParamName()} delegates to the resolver's
-	 * configured global default filter parameter name. Non-blank annotation
-	 * overrides are validated before they are used for request lookup.</p>
+	 * configured global default filter parameter name. Declared field mappings
+	 * are also validated eagerly so configuration errors are surfaced before
+	 * request parsing begins.</p>
 	 *
 	 * @param parameter supported method parameter whose declaring method carries
 	 * {@link WebQuery}
@@ -217,7 +222,7 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 		// so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
 		WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
 
-		// Field Mappings
+		// Field mappings are validated up front because they are part of the effective contract
 		List<FieldMapping> fieldMappings = Collections.unmodifiableList(
 				Arrays.asList(webQueryAnnotation.fieldMappings())
 		);

@@ -16,8 +16,20 @@
 
 package in.co.akshitbansal.springwebquery.enums;
 
+/**
+ * Selects whether request selectors are resolved against DTO metadata first
+ * or directly against entity metadata.
+ */
 public enum ResolutionMode {
 
+	/**
+	 * Resolve request selectors through the DTO contract and translate them to
+	 * entity paths.
+	 */
 	DTO_AWARE,
+
+	/**
+	 * Resolve request selectors directly against the entity model.
+	 */
 	ENTITY_AWARE
 }
