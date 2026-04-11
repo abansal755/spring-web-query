@@ -168,7 +168,7 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 		return new PageableArgumentResolverConfig(
 				webQueryAnnotation.entityClass(),
 				webQueryAnnotation.dtoClass(),
-				Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings()))
+				fieldMappings
 		);
 	}
 }
