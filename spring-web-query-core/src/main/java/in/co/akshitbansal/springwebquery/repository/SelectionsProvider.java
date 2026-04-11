@@ -23,9 +23,27 @@ import jakarta.persistence.criteria.Selection;
 
 import java.util.List;
 
+/**
+ * Callback for defining tuple selections for a {@link WebQueryRepository} query.
+ *
+ * <p>The provided {@code query} may be used to create correlated subqueries or inspect outer-query state. Callers
+ * should avoid mutating the outer query in ways that change row cardinality, such as enabling distinct results or
+ * adding grouping, because paged execution derives the total count from a separate count query.</p>
+ *
+ * @param <T> entity type backing the repository
+ */
 @FunctionalInterface
 public interface SelectionsProvider<T> {
 
+	/**
+	 * Defines the tuple selections to apply to the result query.
+	 *
+	 * @param root entity root for the result query
+	 * @param query result query being assembled
+	 * @param cb criteria builder for creating expressions
+	 *
+	 * @return selections to project into the tuple result
+	 */
 	List<Selection<?>> getSelections(
 			Root<T> root,
 			CriteriaQuery<?> query,

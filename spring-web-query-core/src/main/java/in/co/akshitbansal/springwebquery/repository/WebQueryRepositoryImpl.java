@@ -38,7 +38,9 @@ import java.util.List;
  * Spring Data fragment implementation for {@link WebQueryRepository}.
  *
  * <p>This implementation resolves the current repository domain type through
- * {@link RepositoryMethodContext} and uses the JPA Criteria API to execute tuple and count queries.</p>
+ * {@link RepositoryMethodContext} and uses the JPA Criteria API to execute tuple and count queries. Paged execution
+ * derives totals from a separate count query built from the {@link Specification}, so row-cardinality changes applied
+ * through {@link SelectionsProvider} only affect the result query.</p>
  *
  * @param <T> entity type backing the repository
  */
