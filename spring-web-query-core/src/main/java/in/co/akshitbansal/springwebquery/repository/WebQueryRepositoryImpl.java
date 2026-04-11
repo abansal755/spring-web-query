@@ -72,6 +72,10 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 		Predicate predicate = specification.toPredicate(root, query, cb);
 		if(predicate != null) query.where(predicate);
 
+		// select clause
+		if(query.isDistinct()) query.select(cb.countDistinct(root));
+		else query.select(cb.count(root));
+
 		return entityManager.createQuery(query);
 	}
 
