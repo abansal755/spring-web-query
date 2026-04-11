@@ -17,6 +17,7 @@
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParser;
+import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
@@ -27,6 +28,7 @@ import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
@@ -185,6 +187,9 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 				);
 				return rootNode.accept(converterVisitor, root);
 			};
+		}
+		catch (RSQLParserException ex) {
+			throw new QueryValidationException("Unable to parse RSQL query param", ex);
 		}
 		catch (QueryException ex) {
 			throw ex;
