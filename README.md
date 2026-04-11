@@ -308,7 +308,7 @@ public interface UserRepository extends
 Page<Tuple> page = userRepository.findAllPaged(
         spec,
         pageable,
-        (root, cb) -> List.of(
+        (root, query, cb) -> List.of(
                 root.get("id").alias("id"),
                 root.get("username").alias("username"),
                 root.get("profile").get("city").alias("city")
@@ -327,6 +327,10 @@ In both cases, the fragment:
 - applies sort information from `Pageable`
 - applies page size and offset when the request is paged
 - leaves the selected columns under your control via the selection callback
+- passes the live `CriteriaQuery<?>` into the selection callback so you can build correlated subqueries when needed
+
+For paged queries, avoid mutating the outer query in ways that change row cardinality, such as enabling `distinct`
+or adding `groupBy`, because total counts are computed from a separate count query.
 
 ## Entity-aware mode
 
