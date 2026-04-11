@@ -33,6 +33,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
+/**
+ * Spring Data fragment implementation for {@link WebQueryRepository}.
+ *
+ * <p>This implementation resolves the current repository domain type through
+ * {@link RepositoryMethodContext} and uses the JPA Criteria API to execute tuple and count queries.</p>
+ *
+ * @param <T> entity type backing the repository
+ */
 @RequiredArgsConstructor
 public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, RepositoryMetadataAccess {
 
@@ -70,10 +78,10 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 
 		// where clause
 		Predicate predicate = specification.toPredicate(root, query, cb);
-		if(predicate != null) query.where(predicate);
+		if (predicate != null) query.where(predicate);
 
 		// select clause
-		if(query.isDistinct()) query.select(cb.countDistinct(root));
+		if (query.isDistinct()) query.select(cb.countDistinct(root));
 		else query.select(cb.count(root));
 
 		return entityManager.createQuery(query);

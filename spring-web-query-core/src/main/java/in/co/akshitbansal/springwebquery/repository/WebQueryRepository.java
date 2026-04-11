@@ -27,14 +27,40 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 import java.util.function.BiFunction;
 
+/**
+ * Repository fragment for executing {@link Specification}-based tuple selections.
+ *
+ * @param <T> entity type backing the repository
+ */
 public interface WebQueryRepository<T> {
 
+	/**
+	 * Executes a tuple query for the given specification, sort/page request, and selection definition.
+	 *
+	 * @param specification filtering criteria to apply
+	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
+	 * @param selectionsProvider callback that defines the tuple selections for the query
+	 *
+	 * @return tuples matching the requested filter, sort, and selection set
+	 */
 	List<Tuple> findAll(
 			Specification<T> specification,
 			Pageable pageable,
 			BiFunction<Root<T>, CriteriaBuilder, List<Selection<?>>> selectionsProvider
 	);
 
+	/**
+	 * Executes a tuple query and wraps the results in a page.
+	 *
+	 * <p>When {@code pageable} is unpaged, the returned page contains all matching tuples without issuing a separate
+	 * count query.</p>
+	 *
+	 * @param specification filtering criteria to apply
+	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
+	 * @param selectionsProvider callback that defines the tuple selections for the query
+	 *
+	 * @return a page of tuples matching the requested filter, sort, and selection set
+	 */
 	Page<Tuple> findAllPaged(
 			Specification<T> specification,
 			Pageable pageable,
