@@ -17,15 +17,11 @@
 package in.co.akshitbansal.springwebquery.repository;
 
 import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Selection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
-import java.util.function.BiFunction;
 
 /**
  * Repository fragment for executing {@link Specification}-based tuple selections.
@@ -46,7 +42,7 @@ public interface WebQueryRepository<T> {
 	List<Tuple> findAll(
 			Specification<T> specification,
 			Pageable pageable,
-			BiFunction<Root<T>, CriteriaBuilder, List<Selection<?>>> selectionsProvider
+			SelectionsProvider<T> selectionsProvider
 	);
 
 	/**
@@ -64,6 +60,6 @@ public interface WebQueryRepository<T> {
 	Page<Tuple> findAllPaged(
 			Specification<T> specification,
 			Pageable pageable,
-			BiFunction<Root<T>, CriteriaBuilder, List<Selection<?>>> selectionsProvider
+			SelectionsProvider<T> selectionsProvider
 	);
 }
