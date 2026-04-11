@@ -40,6 +40,7 @@ It also supports nested JPA relationship paths (join-style queries), for example
 - [Project modules](#project-modules)
 - [Installation](#installation)
 - [Quick start (DTO-aware, recommended)](#quick-start-dto-aware-recommended)
+- [Tuple projections with `WebQueryRepository`](#tuple-projections-with-webqueryrepository)
 - [Entity-aware mode](#entity-aware-mode)
 - [RSQL guide](#rsql-guide)
 - [Annotation reference](#annotation-reference)
@@ -288,6 +289,44 @@ GET /users?filter=joinedAt=ge=2025-01-01T00:00:00Z;joinedAt=lt=2026-01-01T00:00:
 GET /users?filter=(status==ACTIVE,status==PENDING);profile.city==London  // requires allowOrOperator = WebQuery.OperatorPolicy.ALLOW
 GET /users?sort=joinedAt,desc&sort=username,asc&page=0&size=20
 ```
+
+## Tuple projections with `WebQueryRepository`
+
+When you want validated filtering and sorting from `Specification<T>` + `Pageable`, but do not want to load full entities, extend `WebQueryRepository<T>` in your Spring Data repository.
+
+This repository fragment lets you define a tuple-based select clause while still reusing the same query contract already enforced by `@WebQuery`.
+
+```java
+public interface UserRepository extends
+        JpaRepository<User, Long>,
+        JpaSpecificationExecutor<User>,
+        WebQueryRepository<User> {
+}
+```
+
+```java
+Page<Tuple> page = userRepository.findAllPaged(
+        spec,
+        pageable,
+        (root, cb) -> List.of(
+                root.get("id").alias("id"),
+                root.get("username").alias("username"),
+                root.get("profile").get("city").alias("city")
+        )
+);
+```
+
+Use:
+
+- `findAll(...)` when you want a plain `List<Tuple>`
+- `findAllPaged(...)` when you want a `Page<Tuple>` and need paging metadata
+
+In both cases, the fragment:
+
+- applies the incoming `Specification<T>` as the filter
+- applies sort information from `Pageable`
+- applies page size and offset when the request is paged
+- leaves the selected columns under your control via the selection callback
 
 ## Entity-aware mode
 
