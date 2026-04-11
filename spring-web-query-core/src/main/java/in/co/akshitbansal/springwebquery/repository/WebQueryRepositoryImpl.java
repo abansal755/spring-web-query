@@ -33,13 +33,14 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
 
 /**
  * Spring Data fragment implementation for {@link WebQueryRepository}.
  *
  * <p>This implementation resolves the current repository domain type through
- * {@link RepositoryMethodContext} and uses the JPA Criteria API to execute tuple and count queries.</p>
+ * {@link RepositoryMethodContext} and uses the JPA Criteria API to execute tuple and count queries. Paged execution
+ * derives totals from a separate count query built from the {@link Specification}, so row-cardinality changes applied
+ * through {@link SelectionsProvider} only affect the result query.</p>
  *
  * @param <T> entity type backing the repository
  */
@@ -52,7 +53,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 	public List<Tuple> findAll(
 			Specification<T> specification,
 			Pageable pageable,
-			BiFunction<Root<T>, CriteriaBuilder, List<Selection<?>>> selectionsProvider
+			SelectionsProvider<T> selectionsProvider
 	) {
 		return createResultsQuery(specification, pageable, selectionsProvider).getResultList();
 	}
@@ -61,7 +62,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 	public Page<Tuple> findAllPaged(
 			Specification<T> specification,
 			Pageable pageable,
-			BiFunction<Root<T>, CriteriaBuilder, List<Selection<?>>> selectionsProvider
+			SelectionsProvider<T> selectionsProvider
 	) {
 		if (pageable.isUnpaged()) {
 			// If unpaged, there is no need to issue another query for count
@@ -93,7 +94,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 	private TypedQuery<Tuple> createResultsQuery(
 			Specification<T> specification,
 			Pageable pageable,
-			BiFunction<Root<T>, CriteriaBuilder, List<Selection<?>>> selectionsProvider
+			SelectionsProvider<T> selectionsProvider
 	) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Tuple> query = cb.createTupleQuery();
@@ -101,7 +102,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 		Root<T> root = query.from(entityClass);
 
 		// select columns
-		List<Selection<?>> selections = selectionsProvider.apply(root, cb);
+		List<Selection<?>> selections = selectionsProvider.getSelections(root, query, cb);
 		Selection<?>[] selectionsArray = selections.toArray(new Selection<?>[0]);
 		query.select(cb.tuple(selectionsArray));
 

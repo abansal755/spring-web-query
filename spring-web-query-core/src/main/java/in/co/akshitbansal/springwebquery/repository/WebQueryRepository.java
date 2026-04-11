@@ -17,15 +17,11 @@
 package in.co.akshitbansal.springwebquery.repository;
 
 import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Selection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
-import java.util.function.BiFunction;
 
 /**
  * Repository fragment for executing {@link Specification}-based tuple selections.
@@ -37,6 +33,9 @@ public interface WebQueryRepository<T> {
 	/**
 	 * Executes a tuple query for the given specification, sort/page request, and selection definition.
 	 *
+	 * <p>The selection callback receives the live result {@code CriteriaQuery} so it can build correlated subqueries or
+	 * inspect query state while defining projected columns.</p>
+	 *
 	 * @param specification filtering criteria to apply
 	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
 	 * @param selectionsProvider callback that defines the tuple selections for the query
@@ -46,7 +45,7 @@ public interface WebQueryRepository<T> {
 	List<Tuple> findAll(
 			Specification<T> specification,
 			Pageable pageable,
-			BiFunction<Root<T>, CriteriaBuilder, List<Selection<?>>> selectionsProvider
+			SelectionsProvider<T> selectionsProvider
 	);
 
 	/**
@@ -54,6 +53,10 @@ public interface WebQueryRepository<T> {
 	 *
 	 * <p>When {@code pageable} is unpaged, the returned page contains all matching tuples without issuing a separate
 	 * count query.</p>
+	 *
+	 * <p>The selection callback receives the live result {@code CriteriaQuery}. For paged execution, avoid mutating the
+	 * outer query in ways that change row cardinality, such as enabling distinct results or adding grouping, because
+	 * the total count is derived from a separate count query built from the {@link Specification}.</p>
 	 *
 	 * @param specification filtering criteria to apply
 	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
@@ -64,6 +67,6 @@ public interface WebQueryRepository<T> {
 	Page<Tuple> findAllPaged(
 			Specification<T> specification,
 			Pageable pageable,
-			BiFunction<Root<T>, CriteriaBuilder, List<Selection<?>>> selectionsProvider
+			SelectionsProvider<T> selectionsProvider
 	);
 }
