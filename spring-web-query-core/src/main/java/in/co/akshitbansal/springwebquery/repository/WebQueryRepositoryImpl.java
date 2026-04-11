@@ -29,7 +29,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.core.RepositoryMethodContext;
 import org.springframework.data.repository.core.support.RepositoryMetadataAccess;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -67,6 +69,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 		}
 		// paged, issue a separate query for count
 		long count = createCountQuery(specification).getSingleResult();
+		if (count == 0) return new PageImpl<>(Collections.emptyList(), pageable, 0);
 		return new PageImpl<>(findAll(specification, pageable, selectionsProvider), pageable, count);
 	}
 
@@ -125,6 +128,13 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 		// limit clause
 		if (pageable.isPaged()) {
 			typedQuery.setMaxResults(pageable.getPageSize());
+			long offset = pageable.getOffset();
+			if (offset > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(MessageFormat.format(
+						"Pageable offset {0} exceeds maximum allowed value of {1}",
+						offset, Integer.MAX_VALUE
+				));
+			}
 			typedQuery.setFirstResult((int) pageable.getOffset());
 		}
 
