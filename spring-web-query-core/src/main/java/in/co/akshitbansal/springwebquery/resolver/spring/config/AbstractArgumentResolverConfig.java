@@ -18,6 +18,7 @@ package in.co.akshitbansal.springwebquery.resolver.spring.config;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
 import lombok.*;
 
 import java.util.List;
@@ -54,4 +55,9 @@ public abstract class AbstractArgumentResolverConfig {
 	 * entity model.
 	 */
 	private final List<FieldMapping> fieldMappings;
+
+	public ResolutionMode getResolutionMode() {
+		if (dtoClass != void.class) return ResolutionMode.DTO_AWARE;
+		return ResolutionMode.ENTITY_AWARE;
+	}
 }

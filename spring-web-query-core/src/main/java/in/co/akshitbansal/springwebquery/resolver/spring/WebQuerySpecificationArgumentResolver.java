@@ -17,14 +17,22 @@
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import cz.jirutka.rsql.parser.RSQLParser;
+import cz.jirutka.rsql.parser.ast.Node;
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.ast.AbstractValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.ast.DTOValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.ast.NodeMetadata;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
+import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
-import lombok.AccessLevel;
+import io.github.perplexhub.rsql.RSQLJPAPredicateConverter;
+import io.github.perplexhub.rsql.jsonb.JsonbConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -37,6 +45,8 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Base {@link HandlerMethodArgumentResolver} for resolving RSQL-based
@@ -47,8 +57,8 @@ import java.util.List;
  * and delegates DTO-aware or entity-aware specification creation to
  * subclasses.</p>
  */
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class AbstractWebQuerySpecificationArgumentResolver extends AbstractWebQueryResolver {
+@RequiredArgsConstructor
+public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResolver {
 
 	/**
 	 * Global default request parameter name used when {@link WebQuery#filterParamName()}
@@ -76,12 +86,12 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	/**
 	 * Parser configured with the allowed default and custom comparison operators.
 	 */
-	protected final RSQLParser rsqlParser;
+	private final RSQLParser rsqlParser;
 
 	/**
 	 * Custom predicates adapted for {@code rsql-jpa} specification conversion.
 	 */
-	protected final List<RSQLCustomPredicate<?>> customPredicates;
+	private final List<RSQLCustomPredicate<?>> customPredicates;
 
 	/**
 	 * Validator used to enforce the supported query-parameter naming contract
@@ -92,7 +102,9 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 	/**
 	 * Factory used to create validation visitors matching the active query contract.
 	 */
-	protected final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
+	private final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
+
+	private final FieldMappingsValidator fieldMappingsValidator;
 
 	/**
 	 * Determines whether the supplied parameter should be resolved as a
@@ -139,8 +151,40 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 			String filter = webRequest.getParameter(queryConfig.getFilterParamName());
 			if (filter == null || filter.isBlank()) return Specification.unrestricted();
 
-			// Delegate to subclass implementation for actual specification resolution, passing the query configuration and raw filter string
-			return resolveSpecification(queryConfig, filter);
+			// Parse the RSQL query into an Abstract Syntax Tree (AST)
+			Node rootNode = rsqlParser.parse(filter);
+
+			// Validate the parsed AST
+			AbstractValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newValidationRSQLVisitor(queryConfig);
+			rootNode.accept(visitor, NodeMetadata.of(0));
+
+			// Evaluate property path mapper based on resolution mode
+			Map<String, String> propertyPathMapper;
+			if (queryConfig.getResolutionMode() == ResolutionMode.DTO_AWARE) {
+				// DTO Aware Mode
+				propertyPathMapper = ((DTOValidationRSQLVisitor) visitor).getFieldMappings();
+			}
+			else {
+				// Entity Aware Mode
+				propertyPathMapper = queryConfig
+						.getFieldMappings()
+						.stream()
+						.collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
+			}
+			return (root, query, criteriaBuilder) -> {
+				RSQLJPAPredicateConverter converterVisitor = new RSQLJPAPredicateConverter(
+						criteriaBuilder,
+						propertyPathMapper,
+						customPredicates,
+						null,
+						null,
+						null,
+						true,
+						null,
+						JsonbConfiguration.DEFAULT
+				);
+				return rootNode.accept(converterVisitor, root);
+			};
 		}
 		catch (QueryException ex) {
 			throw ex;
@@ -149,17 +193,6 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 			throw new QueryConfigurationException("Failed to resolve RSQL Specification argument", ex);
 		}
 	}
-
-	/**
-	 * Resolves a validated specification for the supplied raw filter value and
-	 * effective query configuration.
-	 *
-	 * @param queryConfig effective query configuration derived from {@link WebQuery}
-	 * @param filter raw RSQL filter expression from the request
-	 *
-	 * @return resolved specification
-	 */
-	protected abstract Specification<?> resolveSpecification(SpecificationArgumentResolverConfig queryConfig, String filter);
 
 	/**
 	 * Resolves the effective query configuration by combining method-level {@link WebQuery}
@@ -178,6 +211,12 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 		// Only runs successfully if supportsParameter has already returned true
 		// so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
 		WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
+
+		// Field Mappings
+		List<FieldMapping> fieldMappings = Collections.unmodifiableList(
+				Arrays.asList(webQueryAnnotation.fieldMappings())
+		);
+		fieldMappingsValidator.validate(fieldMappings);
 
 		// Filter Parameter Name
 		String filterParamName = webQueryAnnotation.filterParamName();
@@ -204,7 +243,7 @@ public abstract class AbstractWebQuerySpecificationArgumentResolver extends Abst
 		return new SpecificationArgumentResolverConfig(
 				webQueryAnnotation.entityClass(),
 				webQueryAnnotation.dtoClass(),
-				Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings())),
+				fieldMappings,
 				filterParamName,
 				andNodeAllowed,
 				orNodeAllowed,

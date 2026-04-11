@@ -16,24 +16,30 @@
 
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.PageableArgumentResolverConfig;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Base resolver for {@link Pageable} parameters participating in
@@ -43,23 +49,25 @@ import java.util.Collections;
  * {@link PageableHandlerMethodArgumentResolver} and lets subclasses validate
  * and remap sort properties against either entity or DTO metadata.</p>
  */
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
+@RequiredArgsConstructor
+public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 
 	/**
 	 * Delegate used to parse raw pageable parameters from the request.
 	 */
-	protected final PageableHandlerMethodArgumentResolver delegate;
+	private final PageableHandlerMethodArgumentResolver delegate;
 
 	/**
 	 * Validator used to enforce {@code @Sortable} constraints on resolved sort fields.
 	 */
-	protected final SortableFieldValidator sortableFieldValidator;
+	private final SortableFieldValidator sortableFieldValidator;
 
 	/**
 	 * Factory used to create entity-aware or DTO-aware field resolvers for sort paths.
 	 */
-	protected final FieldResolverFactory fieldResolverFactory;
+	private final FieldResolverFactory fieldResolverFactory;
+
+	private final FieldMappingsValidator fieldMappingsValidator;
 
 	/**
 	 * Determines whether the supplied parameter should be resolved as a
@@ -102,8 +110,25 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 			Pageable pageable = delegate.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
 			// Resolve effective endpoint settings from the current method parameter
 			PageableArgumentResolverConfig queryConfig = getQueryConfiguration(parameter);
-			// Perform pageable resolution and validation based on the extracted configuration
-			return resolvePageable(pageable, queryConfig);
+			// Get field resolver based on current config
+			FieldResolver fieldResolver = fieldResolverFactory.newFieldResolver(queryConfig);
+
+			// Iterate over sort orders and build new sort orders with mapped field paths
+			List<Sort.Order> newOrders = new ArrayList<>();
+			for (Sort.Order order: pageable.getSort()) {
+				String reqFieldPath = order.getProperty();
+				// Build the corresponding entity field path
+				String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
+						reqFieldPath,
+						terminalField -> sortableFieldValidator.validate(terminalField, reqFieldPath)
+				);
+				newOrders.add(new Sort.Order(order.getDirection(), entityPath));
+			}
+
+			Sort sort = Sort.by(newOrders);
+			// Reconstruct pageable with mapped sort orders
+			if (pageable.isUnpaged()) return Pageable.unpaged(sort);
+			return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 		}
 		catch (QueryException ex) {
 			throw ex;
@@ -112,16 +137,6 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 			throw new QueryConfigurationException("Failed to resolve pageable argument", ex);
 		}
 	}
-
-	/**
-	 * Validates and remaps pageable sorting according to the effective query configuration.
-	 *
-	 * @param pageable pageable parsed from the request
-	 * @param queryConfig effective query configuration derived from {@link WebQuery}
-	 *
-	 * @return pageable with validated and possibly remapped sort orders
-	 */
-	protected abstract Pageable resolvePageable(Pageable pageable, PageableArgumentResolverConfig queryConfig);
 
 	/**
 	 * Extracts pageable-specific query metadata directly from the
@@ -141,6 +156,10 @@ public abstract class AbstractWebQueryPageableArgumentResolver extends AbstractW
 		// Only runs successfully if supportsParameter has already returned true
 		// so we can safely assume the presence of a valid @WebQuery annotation here, thus no exception handling is necessary
 		WebQuery webQueryAnnotation = getWebQueryAnnotation(parameter);
+
+		List<FieldMapping> fieldMappings = Collections.unmodifiableList(Arrays.asList(webQueryAnnotation.fieldMappings()));
+		fieldMappingsValidator.validate(fieldMappings);
+
 		return new PageableArgumentResolverConfig(
 				webQueryAnnotation.entityClass(),
 				webQueryAnnotation.dtoClass(),
