@@ -135,7 +135,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 						offset, Integer.MAX_VALUE
 				));
 			}
-			typedQuery.setFirstResult((int) pageable.getOffset());
+			typedQuery.setFirstResult((int) offset);
 		}
 
 		return typedQuery;
