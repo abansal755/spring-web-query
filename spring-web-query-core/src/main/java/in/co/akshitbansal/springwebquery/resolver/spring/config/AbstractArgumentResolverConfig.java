@@ -18,6 +18,7 @@ package in.co.akshitbansal.springwebquery.resolver.spring.config;
 
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
 import lombok.*;
 
 import java.util.List;
@@ -49,9 +50,14 @@ public abstract class AbstractArgumentResolverConfig {
 	private final Class<?> dtoClass;
 
 	/**
-	 * Explicit field aliases declared on {@link WebQuery}, used by entity-aware
-	 * resolver flows when request selectors are validated directly against the
-	 * entity model.
+	 * Explicit field aliases declared on {@link WebQuery}. The mappings are
+	 * validated eagerly and then used by entity-aware resolver flows when
+	 * request selectors are validated directly against the entity model.
 	 */
 	private final List<FieldMapping> fieldMappings;
+
+	public ResolutionMode getResolutionMode() {
+		if (dtoClass != void.class) return ResolutionMode.DTO_AWARE;
+		return ResolutionMode.ENTITY_AWARE;
+	}
 }

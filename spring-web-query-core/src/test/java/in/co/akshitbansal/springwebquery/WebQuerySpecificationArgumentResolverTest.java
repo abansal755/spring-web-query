@@ -19,14 +19,16 @@ package in.co.akshitbansal.springwebquery;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
+import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
-import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQuerySpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
@@ -52,9 +54,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class WebQueryEntityAwareSpecificationArgumentResolverTest {
+class WebQuerySpecificationArgumentResolverTest {
 
-	private final WebQueryEntityAwareSpecificationArgumentResolver resolver = new WebQueryEntityAwareSpecificationArgumentResolver(
+	private final WebQuerySpecificationArgumentResolver resolver = new WebQuerySpecificationArgumentResolver(
 			"filter",
 			true,
 			false,
@@ -71,14 +73,14 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
 	@Test
 	void supportsParameter_returnsTrueForEntityAwareMethod() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("search", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("entitySearch", Specification.class);
 		assertTrue(resolver.supportsParameter(new MethodParameter(method, 0)));
 	}
 
 	@Test
-	void supportsParameter_returnsFalseForDtoAwareMethod() throws Exception {
+	void supportsParameter_returnsTrueForDtoAwareMethod() throws Exception {
 		Method method = TestController.class.getDeclaredMethod("dtoSearch", Specification.class);
-		assertFalse(resolver.supportsParameter(new MethodParameter(method, 0)));
+		assertTrue(resolver.supportsParameter(new MethodParameter(method, 0)));
 	}
 
 	@Test
@@ -89,20 +91,20 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
 	@Test
 	void resolveArgument_returnsUnrestrictedWhenFilterMissing() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("search", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("entitySearch", Specification.class);
 		Object spec = resolver.resolveArgument(new MethodParameter(method, 0), null, new ServletWebRequest(new MockHttpServletRequest()), null);
 		assertNotNull(spec);
 	}
 
 	@Test
 	void resolveArgument_acceptsAliasField() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("searchWithMapping", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("entitySearchWithMapping", Specification.class);
 		resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("filter", "displayName==john"), null);
 	}
 
 	@Test
 	void resolveArgument_rejectsOriginalMappedFieldWhenNotAllowed() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("searchWithMapping", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("entitySearchWithMapping", Specification.class);
 		assertThrows(
 				QueryValidationException.class, () -> resolver.resolveArgument(
 						new MethodParameter(method, 0),
@@ -115,19 +117,19 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
 	@Test
 	void resolveArgument_allowsCustomOperator() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("searchWithCustom", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("entitySearchWithCustom", Specification.class);
 		resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("filter", "name=mock=value"), null);
 	}
 
 	@Test
 	void resolveArgument_usesWebQueryFilterParamName() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("searchWithCustomParam", Specification.class);
-		resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("q", "name==john"), null);
+		Method method = TestController.class.getDeclaredMethod("dtoSearchWithCustomParam", Specification.class);
+		resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("q", "joinedAt==x"), null);
 	}
 
 	@Test
 	void resolveArgument_rejectsMalformedFilter() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("search", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("entitySearch", Specification.class);
 		assertThrows(
 				QueryValidationException.class, () -> resolver.resolveArgument(
 						new MethodParameter(method, 0),
@@ -140,19 +142,19 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
 	@Test
 	void resolveArgument_returnsUnrestrictedWhenFilterBlank() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("search", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("entitySearch", Specification.class);
 		Object spec = resolver.resolveArgument(new MethodParameter(method, 0), null, requestWith("filter", "   "), null);
 		assertNotNull(spec);
 	}
 
 	@Test
 	void resolveArgument_rejectsOrWhenEndpointDisallowsIt() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("searchOrDenied", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("dtoSearchOrDenied", Specification.class);
 		assertThrows(
 				QueryValidationException.class, () -> resolver.resolveArgument(
 						new MethodParameter(method, 0),
 						null,
-						requestWith("filter", "name==john,name==doe"),
+						requestWith("filter", "joinedAt==x,joinedAt==y"),
 						null
 				)
 		);
@@ -160,12 +162,25 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
 	@Test
 	void resolveArgument_rejectsWhenEndpointAstDepthExceeded() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("searchDepthZero", Specification.class);
+		Method method = TestController.class.getDeclaredMethod("dtoSearchDepthZero", Specification.class);
 		assertThrows(
 				QueryValidationException.class, () -> resolver.resolveArgument(
 						new MethodParameter(method, 0),
 						null,
-						requestWith("filter", "name==john;name==doe"),
+						requestWith("filter", "joinedAt==x;joinedAt==y"),
+						null
+				)
+		);
+	}
+
+	@Test
+	void resolveArgument_rejectsWhenMappedEntityFieldMissing() throws Exception {
+		Method method = TestController.class.getDeclaredMethod("invalidMapping", Specification.class);
+		assertThrows(
+				QueryConfigurationException.class, () -> resolver.resolveArgument(
+						new MethodParameter(method, 0),
+						null,
+						requestWith("filter", "joinedAt==x"),
 						null
 				)
 		);
@@ -213,37 +228,42 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 	private static class TestController {
 
 		@WebQuery(entityClass = Entity.class)
-		void search(Specification<Entity> spec) {
+		void entitySearch(Specification<Entity> spec) {
 		}
 
-		@WebQuery(entityClass = Entity.class, dtoClass = Object.class)
+		@WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class)
 		void dtoSearch(Specification<Entity> spec) {
 		}
 
 		@WebQuery(entityClass = Entity.class, fieldMappings = {
 				@FieldMapping(name = "displayName", field = "name", allowOriginalFieldName = false)
 		})
-		void searchWithMapping(Specification<Entity> spec) {
+		void entitySearchWithMapping(Specification<Entity> spec) {
 		}
 
 		@WebQuery(entityClass = EntityWithCustom.class)
-		void searchWithCustom(Specification<EntityWithCustom> spec) {
+		void entitySearchWithCustom(Specification<EntityWithCustom> spec) {
 		}
 
-		@WebQuery(entityClass = Entity.class, filterParamName = "q")
-		void searchWithCustomParam(Specification<Entity> spec) {
+		@WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class, filterParamName = "q")
+		void dtoSearchWithCustomParam(Specification<Entity> spec) {
 		}
 
 		@WebQuery(
 				entityClass = Entity.class,
+				dtoClass = QueryDto.class,
 				allowOrOperator = WebQuery.OperatorPolicy.DENY,
 				allowAndOperator = WebQuery.OperatorPolicy.ALLOW
 		)
-		void searchOrDenied(Specification<Entity> spec) {
+		void dtoSearchOrDenied(Specification<Entity> spec) {
 		}
 
-		@WebQuery(entityClass = Entity.class, maxASTDepth = 0)
-		void searchDepthZero(Specification<Entity> spec) {
+		@WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class, maxASTDepth = 0)
+		void dtoSearchDepthZero(Specification<Entity> spec) {
+		}
+
+		@WebQuery(entityClass = Entity.class, dtoClass = InvalidMappingDto.class)
+		void invalidMapping(Specification<Entity> spec) {
 		}
 
 		void missingWebQuery(Specification<Entity> spec) {
@@ -254,12 +274,29 @@ class WebQueryEntityAwareSpecificationArgumentResolverTest {
 
 		@RSQLFilterable({RSQLDefaultOperator.EQUAL})
 		private String name;
+
+		@SuppressWarnings("unused")
+		private String createdAt;
 	}
 
 	private static class EntityWithCustom {
 
 		@RSQLFilterable(value = {RSQLDefaultOperator.EQUAL}, customOperators = {MockCustomOperator.class})
 		private String name;
+	}
+
+	private static class QueryDto {
+
+		@RSQLFilterable({RSQLDefaultOperator.EQUAL})
+		@MapsTo("createdAt")
+		private String joinedAt;
+	}
+
+	private static class InvalidMappingDto {
+
+		@RSQLFilterable({RSQLDefaultOperator.EQUAL})
+		@MapsTo("missing")
+		private String joinedAt;
 	}
 
 	private static RSQLParser parserFor(Set<? extends RSQLCustomOperator<?>> customOperators) {

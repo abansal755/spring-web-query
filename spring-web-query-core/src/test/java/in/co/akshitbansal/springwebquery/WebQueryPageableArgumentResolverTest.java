@@ -16,13 +16,15 @@
 
 package in.co.akshitbansal.springwebquery;
 
+import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
-import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
@@ -39,24 +41,25 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class WebQueryDTOAwarePageableArgumentResolverTest {
+class WebQueryPageableArgumentResolverTest {
 
-	private final WebQueryDTOAwarePageableArgumentResolver resolver = new WebQueryDTOAwarePageableArgumentResolver(
+	private final WebQueryPageableArgumentResolver resolver = new WebQueryPageableArgumentResolver(
 			new PageableHandlerMethodArgumentResolver(),
 			new SortableFieldValidator(),
-			new FieldResolverFactory()
+			new FieldResolverFactory(),
+			new FieldMappingsValidator()
 	);
 
 	@Test
-	void supportsParameter_returnsTrueForDtoAwarePageable() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
+	void supportsParameter_returnsTrueForEntityAwarePageable() throws Exception {
+		Method method = TestController.class.getDeclaredMethod("entitySearch", Pageable.class);
 		assertTrue(resolver.supportsParameter(new MethodParameter(method, 0)));
 	}
 
 	@Test
-	void supportsParameter_returnsFalseForEntityAwarePageable() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("entityAware", Pageable.class);
-		assertFalse(resolver.supportsParameter(new MethodParameter(method, 0)));
+	void supportsParameter_returnsTrueForDtoAwarePageable() throws Exception {
+		Method method = TestController.class.getDeclaredMethod("dtoSearch", Pageable.class);
+		assertTrue(resolver.supportsParameter(new MethodParameter(method, 0)));
 	}
 
 	@Test
@@ -66,15 +69,42 @@ class WebQueryDTOAwarePageableArgumentResolverTest {
 	}
 
 	@Test
+	void resolveArgument_allowsSortableField() throws Exception {
+		Method method = TestController.class.getDeclaredMethod("entitySearch", Pageable.class);
+		Pageable pageable = (Pageable) resolver.resolveArgument(new MethodParameter(method, 0), null, requestWithSort("name,asc"), null);
+		assertEquals("name", pageable.getSort().iterator().next().getProperty());
+	}
+
+	@Test
+	void resolveArgument_mapsAliasToEntityField() throws Exception {
+		Method method = TestController.class.getDeclaredMethod("entitySearchWithMapping", Pageable.class);
+		Pageable pageable = (Pageable) resolver.resolveArgument(new MethodParameter(method, 0), null, requestWithSort("displayName,asc"), null);
+		assertEquals("name", pageable.getSort().iterator().next().getProperty());
+	}
+
+	@Test
+	void resolveArgument_rejectsOriginalMappedFieldWhenDisallowed() throws Exception {
+		Method method = TestController.class.getDeclaredMethod("entitySearchWithMapping", Pageable.class);
+		assertThrows(
+				QueryValidationException.class, () -> resolver.resolveArgument(
+						new MethodParameter(method, 0),
+						null,
+						requestWithSort("name,asc"),
+						null
+				)
+		);
+	}
+
+	@Test
 	void resolveArgument_mapsDtoSortToEntityPath() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
+		Method method = TestController.class.getDeclaredMethod("dtoSearch", Pageable.class);
 		Pageable pageable = (Pageable) resolver.resolveArgument(new MethodParameter(method, 0), null, requestWithSort("joinedAt,desc"), null);
 		assertEquals("createdAt", pageable.getSort().iterator().next().getProperty());
 	}
 
 	@Test
 	void resolveArgument_rejectsUnknownDtoField() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
+		Method method = TestController.class.getDeclaredMethod("dtoSearch", Pageable.class);
 		assertThrows(
 				QueryValidationException.class, () -> resolver.resolveArgument(
 						new MethodParameter(method, 0),
@@ -99,8 +129,21 @@ class WebQueryDTOAwarePageableArgumentResolverTest {
 	}
 
 	@Test
+	void resolveArgument_rejectsNonSortableField() throws Exception {
+		Method method = TestController.class.getDeclaredMethod("entitySearch", Pageable.class);
+		assertThrows(
+				QueryValidationException.class, () -> resolver.resolveArgument(
+						new MethodParameter(method, 0),
+						null,
+						requestWithSort("secret,asc"),
+						null
+				)
+		);
+	}
+
+	@Test
 	void resolveArgument_returnsUnsortedPageableWhenSortMissing() throws Exception {
-		Method method = TestController.class.getDeclaredMethod("search", Pageable.class);
+		Method method = TestController.class.getDeclaredMethod("entitySearch", Pageable.class);
 		Pageable pageable = (Pageable) resolver.resolveArgument(
 				new MethodParameter(method, 0),
 				null,
@@ -120,12 +163,18 @@ class WebQueryDTOAwarePageableArgumentResolverTest {
 	@SuppressWarnings("unused")
 	private static class TestController {
 
-		@WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class)
-		void search(Pageable pageable) {
+		@WebQuery(entityClass = Entity.class)
+		void entitySearch(Pageable pageable) {
 		}
 
-		@WebQuery(entityClass = Entity.class)
-		void entityAware(Pageable pageable) {
+		@WebQuery(entityClass = Entity.class, dtoClass = QueryDto.class)
+		void dtoSearch(Pageable pageable) {
+		}
+
+		@WebQuery(entityClass = Entity.class, fieldMappings = {
+				@FieldMapping(name = "displayName", field = "name", allowOriginalFieldName = false)
+		})
+		void entitySearchWithMapping(Pageable pageable) {
 		}
 
 		@WebQuery(entityClass = Entity.class, dtoClass = InvalidMappingDto.class)
@@ -138,8 +187,13 @@ class WebQueryDTOAwarePageableArgumentResolverTest {
 
 	private static class Entity {
 
+		@Sortable
+		private String name;
+
 		@SuppressWarnings("unused")
 		private String createdAt;
+
+		private String secret;
 	}
 
 	private static class QueryDto {

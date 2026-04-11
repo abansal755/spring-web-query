@@ -20,6 +20,7 @@ import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.EntityAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +56,7 @@ public class ValidationRSQLVisitorFactory {
 		FieldResolver fieldResolver = fieldResolverFactory.newFieldResolver(config);
 
 		// DTOValidationRSQLVisitor
-		if (config.getDtoClass() != void.class) {
+		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE) {
 			return new DTOValidationRSQLVisitor(
 					(DTOAwareFieldResolver) fieldResolver,
 					filterableFieldValidator,

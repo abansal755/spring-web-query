@@ -16,15 +16,12 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.config.pageable.PageableArgumentResolverRegistrationAutoConfig;
-import in.co.akshitbansal.springwebquery.config.specification.SpecificationArgumentResolverRegistrationAutoConfig;
+import in.co.akshitbansal.springwebquery.config.resolver.ArgumentResolverRegistrationAutoConfig;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
-import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwarePageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryDTOAwareSpecificationArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwarePageableArgumentResolver;
-import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryEntityAwareSpecificationArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQueryPageableArgumentResolver;
+import in.co.akshitbansal.springwebquery.resolver.spring.WebQuerySpecificationArgumentResolver;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,17 +44,12 @@ class AutoConfigIntegrationTest {
 	private ApplicationContext context;
 
 	@Autowired
-	private PageableArgumentResolverRegistrationAutoConfig pageableResolverConfig;
-
-	@Autowired
-	private SpecificationArgumentResolverRegistrationAutoConfig specificationResolverConfig;
+	private ArgumentResolverRegistrationAutoConfig argumentResolverRegistrationAutoConfig;
 
 	@Test
 	void beansAreRegistered() {
-		assertNotNull(context.getBean(WebQueryEntityAwarePageableArgumentResolver.class));
-		assertNotNull(context.getBean(WebQueryDTOAwarePageableArgumentResolver.class));
-		assertNotNull(context.getBean(WebQueryEntityAwareSpecificationArgumentResolver.class));
-		assertNotNull(context.getBean(WebQueryDTOAwareSpecificationArgumentResolver.class));
+		assertNotNull(context.getBean(WebQueryPageableArgumentResolver.class));
+		assertNotNull(context.getBean(WebQuerySpecificationArgumentResolver.class));
 		assertNotNull(context.getBean("defaultOperatorSet"));
 		assertNotNull(context.getBean("customOperatorSet"));
 	}
@@ -82,23 +74,13 @@ class AutoConfigIntegrationTest {
 	}
 
 	@Test
-	void pageableConfigAddsEntityThenDtoResolvers() {
+	void argumentResolverConfigAddsPageableThenSpecificationResolvers() {
 		List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>();
-		pageableResolverConfig.addArgumentResolvers(resolvers);
+		argumentResolverRegistrationAutoConfig.addArgumentResolvers(resolvers);
 
 		assertEquals(2, resolvers.size());
-		assertInstanceOf(WebQueryEntityAwarePageableArgumentResolver.class, resolvers.get(0));
-		assertInstanceOf(WebQueryDTOAwarePageableArgumentResolver.class, resolvers.get(1));
-	}
-
-	@Test
-	void specificationConfigAddsEntityThenDtoResolvers() {
-		List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>();
-		specificationResolverConfig.addArgumentResolvers(resolvers);
-
-		assertEquals(2, resolvers.size());
-		assertInstanceOf(WebQueryEntityAwareSpecificationArgumentResolver.class, resolvers.get(0));
-		assertInstanceOf(WebQueryDTOAwareSpecificationArgumentResolver.class, resolvers.get(1));
+		assertInstanceOf(WebQueryPageableArgumentResolver.class, resolvers.get(0));
+		assertInstanceOf(WebQuerySpecificationArgumentResolver.class, resolvers.get(1));
 	}
 
 	@Test
