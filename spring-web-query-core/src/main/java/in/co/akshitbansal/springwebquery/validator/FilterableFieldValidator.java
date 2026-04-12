@@ -24,6 +24,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.lang.annotation.Annotation;
@@ -47,6 +48,7 @@ public class FilterableFieldValidator {
 	/**
 	 * Registered custom operators keyed by their implementation class.
 	 */
+	@NonNull
 	private final Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap;
 
 	/**
@@ -60,7 +62,7 @@ public class FilterableFieldValidator {
 	 * @throws QueryFieldValidationException if the field is not filterable
 	 * @throws QueryForbiddenOperatorException if the operator is not allowed for the field
 	 */
-	public void validate(Field field, ComparisonOperator operator, String fieldPath) {
+	public void validate(@NonNull Field field, @NonNull ComparisonOperator operator, @NonNull String fieldPath) {
 		// Retrieve the RSQLFilterable annotations on the field (if present)
 		Set<RSQLFilterable> filterables = collectFilterables(field);
 		// Throw exception if the field is not annotated as filterable

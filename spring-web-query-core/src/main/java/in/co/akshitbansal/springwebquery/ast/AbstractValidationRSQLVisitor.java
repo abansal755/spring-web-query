@@ -21,6 +21,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
@@ -49,12 +50,14 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 * Resolver used by subclasses to translate selectors into entity-backed
 	 * paths and expose the terminal field for validation.
 	 */
+	@NonNull
 	protected final FieldResolver fieldResolver;
 
 	/**
 	 * Validator used by subclasses to enforce {@code @RSQLFilterable}
 	 * constraints on resolved terminal fields.
 	 */
+	@NonNull
 	protected final FilterableFieldValidator filterableFieldValidator;
 
 	/**
@@ -82,7 +85,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 */
 	@Override
 	@Nullable
-	public Void visit(AndNode node, NodeMetadata metadata) {
+	public Void visit(@NonNull AndNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
 		return null;
@@ -98,7 +101,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 */
 	@Override
 	@Nullable
-	public Void visit(OrNode node, NodeMetadata metadata) {
+	public Void visit(@NonNull OrNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
 		return null;
@@ -114,7 +117,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 */
 	@Override
 	@Nullable
-	public Void visit(ComparisonNode node, NodeMetadata metadata) {
+	public Void visit(@NonNull ComparisonNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		validateComparisonNode(node);
 		return null;

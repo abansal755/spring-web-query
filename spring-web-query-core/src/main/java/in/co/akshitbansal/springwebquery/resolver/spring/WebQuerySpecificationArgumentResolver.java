@@ -35,6 +35,7 @@ import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import io.github.perplexhub.rsql.RSQLJPAPredicateConverter;
 import io.github.perplexhub.rsql.jsonb.JsonbConfiguration;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -66,6 +67,7 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 	 * Global default request parameter name used when {@link WebQuery#filterParamName()}
 	 * is blank.
 	 */
+	@NonNull
 	private final String globalFilterParamName;
 
 	/**
@@ -88,28 +90,33 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 	/**
 	 * Parser configured with the allowed default and custom comparison operators.
 	 */
+	@NonNull
 	private final RSQLParser rsqlParser;
 
 	/**
 	 * Custom predicates adapted for {@code rsql-jpa} specification conversion.
 	 */
+	@NonNull
 	private final List<RSQLCustomPredicate<?>> customPredicates;
 
 	/**
 	 * Validator used to enforce the supported query-parameter naming contract
 	 * for resolved filter parameter names.
 	 */
+	@NonNull
 	private final QueryParamNameValidator queryParamNameValidator;
 
 	/**
 	 * Factory used to create validation visitors matching the active query contract.
 	 */
+	@NonNull
 	private final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
 
 	/**
 	 * Validator used to fail fast on malformed declared field mappings before
 	 * the effective query mode is resolved.
 	 */
+	@NonNull
 	private final FieldMappingsValidator fieldMappingsValidator;
 
 	/**
@@ -122,7 +129,7 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 	 * {@link Specification} and the declaring method is annotated with {@link WebQuery}
 	 */
 	@Override
-	public boolean supportsParameter(MethodParameter parameter) {
+	public boolean supportsParameter(@NonNull MethodParameter parameter) {
 		return Specification.class.isAssignableFrom(parameter.getParameterType())
 				&& super.supportsParameter(parameter);
 	}
@@ -144,9 +151,9 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 	 */
 	@Override
 	public Specification<?> resolveArgument(
-			MethodParameter parameter,
+			@NonNull MethodParameter parameter,
 			@Nullable ModelAndViewContainer mavContainer,
-			NativeWebRequest webRequest,
+			@NonNull NativeWebRequest webRequest,
 			@Nullable WebDataBinderFactory binderFactory
 	) {
 		try {

@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.resolver.field;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -65,7 +66,7 @@ public class EntityAwareFieldResolver implements FieldResolver {
 	 * @param entityClass entity type used for path resolution
 	 * @param fieldMappings declared alias mappings from the public API contract
 	 */
-	protected EntityAwareFieldResolver(Class<?> entityClass, List<FieldMapping> fieldMappings) {
+	protected EntityAwareFieldResolver(@NonNull Class<?> entityClass, @NonNull List<FieldMapping> fieldMappings) {
 		this.entityClass = entityClass;
 		// Map from name to FieldMapping
 		this.fieldMappingMap = Collections.unmodifiableMap(fieldMappings
@@ -105,7 +106,7 @@ public class EntityAwareFieldResolver implements FieldResolver {
 	 * resolved against the entity type
 	 */
 	@Override
-	public String resolvePathAndValidateTerminalField(String reqFieldPath, @Nullable Consumer<Field> terminalFieldValidator) {
+	public String resolvePathAndValidateTerminalField(@NonNull String reqFieldPath, @Nullable Consumer<Field> terminalFieldValidator) {
 		String fieldPath = reqFieldPath; // Actual entity path to validate against, may be rewritten if field mapping exists
 
 		// If the field name corresponds to an API alias that does not allow using the original field name, reject it

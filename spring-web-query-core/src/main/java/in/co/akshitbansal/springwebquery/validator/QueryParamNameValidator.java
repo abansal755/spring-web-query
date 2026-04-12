@@ -17,6 +17,7 @@
 package in.co.akshitbansal.springwebquery.validator;
 
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import lombok.NonNull;
 
 import java.text.MessageFormat;
 
@@ -43,7 +44,7 @@ public class QueryParamNameValidator {
 	 * @throws QueryConfigurationException if the parameter name contains
 	 * unsupported characters or is otherwise invalid
 	 */
-	public void validate(String paramName) {
+	public void validate(@NonNull String paramName) {
 		if (!paramName.matches(regex)) {
 			throw new QueryConfigurationException(MessageFormat.format(
 					"Invalid query parameter name: {0}. Must match regex: {1}", paramName, regex

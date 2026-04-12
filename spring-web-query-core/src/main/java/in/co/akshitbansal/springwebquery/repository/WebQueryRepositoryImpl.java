@@ -20,6 +20,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -51,18 +52,18 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 
 	@Override
 	public List<Tuple> findAll(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+			@NonNull Specification<T> specification,
+			@NonNull Pageable pageable,
+			@NonNull SelectionsProvider<T> selectionsProvider
 	) {
 		return createResultsQuery(specification, pageable, selectionsProvider).getResultList();
 	}
 
 	@Override
 	public Page<Tuple> findAllPaged(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+			@NonNull Specification<T> specification,
+			@NonNull Pageable pageable,
+			@NonNull SelectionsProvider<T> selectionsProvider
 	) {
 		if (pageable.isUnpaged()) {
 			// If unpaged, there is no need to issue another query for count

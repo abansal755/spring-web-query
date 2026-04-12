@@ -17,6 +17,7 @@
 package in.co.akshitbansal.springwebquery.resolver.spring;
 
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
+import lombok.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
@@ -47,7 +48,7 @@ public abstract class AbstractWebQueryResolver implements HandlerMethodArgumentR
 	 * otherwise {@code false}
 	 */
 	@Override
-	public boolean supportsParameter(MethodParameter parameter) {
+	public boolean supportsParameter(@NonNull MethodParameter parameter) {
 		try {
 			getWebQueryAnnotation(parameter);
 			return true;

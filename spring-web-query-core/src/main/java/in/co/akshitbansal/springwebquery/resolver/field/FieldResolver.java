@@ -16,6 +16,7 @@
 
 package in.co.akshitbansal.springwebquery.resolver.field;
 
+import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -52,7 +53,7 @@ public interface FieldResolver {
 	 *
 	 * @return resolved path suitable for entity-backed query execution
 	 */
-	default String resolvePath(String path) {
+	default String resolvePath(@NonNull String path) {
 		return resolvePathAndValidateTerminalField(path, null);
 	}
 }

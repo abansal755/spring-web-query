@@ -18,6 +18,7 @@ package in.co.akshitbansal.springwebquery.resolver.field;
 
 import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
+import lombok.NonNull;
 
 /**
  * Factory for creating field resolvers used by validation visitors and
@@ -33,7 +34,7 @@ public class FieldResolverFactory {
 	 *
 	 * @return entity-aware or DTO-aware field resolver
 	 */
-	public FieldResolver newFieldResolver(AbstractArgumentResolverConfig config) {
+	public FieldResolver newFieldResolver(@NonNull AbstractArgumentResolverConfig config) {
 		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE)
 			return new DTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());
 		return new EntityAwareFieldResolver(config.getEntityClass(), config.getFieldMappings());

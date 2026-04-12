@@ -21,6 +21,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
@@ -48,11 +49,13 @@ public class DTOAwareFieldResolver implements FieldResolver {
 	/**
 	 * Entity type used to validate the translated path.
 	 */
+	@NonNull
 	private final Class<?> entityClass;
 
 	/**
 	 * DTO type used as the external selector contract.
 	 */
+	@NonNull
 	private final Class<?> dtoClass;
 
 	/**
@@ -67,7 +70,7 @@ public class DTOAwareFieldResolver implements FieldResolver {
 	 * @return resolved entity path corresponding to the DTO selector
 	 */
 	@Override
-	public String resolvePathAndValidateTerminalField(String dtoPath, @Nullable Consumer<Field> terminalFieldValidator) {
+	public String resolvePathAndValidateTerminalField(@NonNull String dtoPath, @Nullable Consumer<Field> terminalFieldValidator) {
 		// Resolve the field path in the DTO class
 		List<Field> dtoFields;
 		try {
