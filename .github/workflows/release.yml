@@ -145,7 +145,7 @@ jobs:
               with:
                   commit-message: Changed versions to ${{ inputs.next-main-version }}
                   branch: version-bump-${{ inputs.next-main-version }}
-                  title: Changed versions to ${{ inputs.next-main-version }}
+                  title: Changed versions to ${{ inputs.next-main-version }} [SKIP CI]
                   body: Automated version changes to ${{ inputs.next-main-version }} post [${{ inputs.version }} release](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ inputs.version }})
                   labels: automated,post-release
                   author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
