@@ -25,7 +25,6 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.field.EntityAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
-import lombok.NonNull;
 
 /**
  * RSQL AST visitor that validates selectors directly against an entity model.
@@ -80,7 +79,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 * @throws QueryConfigurationException if the field mapping is misconfigured
 	 */
 	@Override
-	protected void validateComparisonNode(@NonNull ComparisonNode node) {
+	protected void validateComparisonNode(ComparisonNode node) {
 		// Extract the field name and operator from the RSQL node
 		String reqFieldName = node.getSelector();
 		ComparisonOperator operator = node.getOperator();

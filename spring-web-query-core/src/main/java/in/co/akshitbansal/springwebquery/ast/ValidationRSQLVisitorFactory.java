@@ -55,7 +55,7 @@ public class ValidationRSQLVisitorFactory {
 	 *
 	 * @return validation visitor aligned with the configured query model
 	 */
-	public AbstractValidationRSQLVisitor newValidationRSQLVisitor(SpecificationArgumentResolverConfig config) {
+	public AbstractValidationRSQLVisitor newValidationRSQLVisitor(@NonNull SpecificationArgumentResolverConfig config) {
 		FieldResolver fieldResolver = fieldResolverFactory.newFieldResolver(config);
 
 		// DTOValidationRSQLVisitor

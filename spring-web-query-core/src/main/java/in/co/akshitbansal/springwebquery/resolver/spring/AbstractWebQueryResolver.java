@@ -78,7 +78,7 @@ public abstract class AbstractWebQueryResolver implements HandlerMethodArgumentR
 	 * @throws IllegalStateException if the parameter has no declaring method or the
 	 * declaring method is not annotated with {@link WebQuery}
 	 */
-	protected WebQuery getWebQueryAnnotation(@NonNull MethodParameter parameter) {
+	protected WebQuery getWebQueryAnnotation(MethodParameter parameter) {
 		Method method = parameter.getMethod();
 		if (method == null) throw new IllegalStateException("MethodParameter does not have an associated method");
 		WebQuery webQueryAnnotation = method.getAnnotation(WebQuery.class);

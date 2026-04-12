@@ -52,18 +52,18 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 
 	@Override
 	public List<Tuple> findAll(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+			@NonNull Specification<T> specification,
+			@NonNull Pageable pageable,
+			@NonNull SelectionsProvider<T> selectionsProvider
 	) {
 		return createResultsQuery(specification, pageable, selectionsProvider).getResultList();
 	}
 
 	@Override
 	public Page<Tuple> findAllPaged(
-			Specification<T> specification,
+			@NonNull Specification<T> specification,
 			@NonNull Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+			@NonNull SelectionsProvider<T> selectionsProvider
 	) {
 		if (pageable.isUnpaged()) {
 			// If unpaged, there is no need to issue another query for count
@@ -75,7 +75,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 		return new PageImpl<>(findAll(specification, pageable, selectionsProvider), pageable, count);
 	}
 
-	private TypedQuery<Long> createCountQuery(@NonNull Specification<T> specification) {
+	private TypedQuery<Long> createCountQuery(Specification<T> specification) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> query = cb.createQuery(Long.class);
 		Class<T> entityClass = getEntityClass();
@@ -93,9 +93,9 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 	}
 
 	private TypedQuery<Tuple> createResultsQuery(
-			@NonNull Specification<T> specification,
-			@NonNull Pageable pageable,
-			@NonNull SelectionsProvider<T> selectionsProvider
+			Specification<T> specification,
+			Pageable pageable,
+			SelectionsProvider<T> selectionsProvider
 	) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Tuple> query = cb.createTupleQuery();

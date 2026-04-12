@@ -76,7 +76,7 @@ public final class ReflectionUtil {
 	 * @throws UnsupportedOperationException if an intermediate collection type
 	 * does not expose resolvable generic information
 	 */
-	public static Field resolveField(Class<?> type, String name) {
+	public static Field resolveField(@NonNull Class<?> type, @NonNull String name) {
 		List<Field> fields = resolveFieldPath(type, name);
 		return fields.get(fields.size() - 1);
 	}

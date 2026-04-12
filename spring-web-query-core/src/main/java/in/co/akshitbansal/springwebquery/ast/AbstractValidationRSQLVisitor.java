@@ -85,7 +85,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 */
 	@Override
 	@Nullable
-	public Void visit(AndNode node, NodeMetadata metadata) {
+	public Void visit(@NonNull AndNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
 		return null;
@@ -101,7 +101,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 */
 	@Override
 	@Nullable
-	public Void visit(OrNode node, NodeMetadata metadata) {
+	public Void visit(@NonNull OrNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
 		return null;
@@ -117,7 +117,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 */
 	@Override
 	@Nullable
-	public Void visit(ComparisonNode node, NodeMetadata metadata) {
+	public Void visit(@NonNull ComparisonNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		validateComparisonNode(node);
 		return null;
@@ -142,7 +142,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 *
 	 * @throws QueryValidationException if an operator is disallowed or the depth exceeds the limit
 	 */
-	protected void validateNode(@NonNull Node node, @NonNull NodeMetadata metadata) {
+	protected void validateNode(Node node, NodeMetadata metadata) {
 		if ((node instanceof AndNode) && !andNodeAllowed)
 			throw new QueryValidationException("Logical AND operator is not allowed");
 		if ((node instanceof OrNode) && !orNodeAllowed)

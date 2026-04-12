@@ -109,7 +109,7 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 	 */
 	@Override
 	public Pageable resolveArgument(
-			MethodParameter parameter,
+			@NonNull MethodParameter parameter,
 			@Nullable ModelAndViewContainer mavContainer,
 			@NonNull NativeWebRequest webRequest,
 			@Nullable WebDataBinderFactory binderFactory
