@@ -20,6 +20,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -61,7 +62,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 	@Override
 	public Page<Tuple> findAllPaged(
 			Specification<T> specification,
-			Pageable pageable,
+			@NonNull Pageable pageable,
 			SelectionsProvider<T> selectionsProvider
 	) {
 		if (pageable.isUnpaged()) {
@@ -74,7 +75,7 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 		return new PageImpl<>(findAll(specification, pageable, selectionsProvider), pageable, count);
 	}
 
-	private TypedQuery<Long> createCountQuery(Specification<T> specification) {
+	private TypedQuery<Long> createCountQuery(@NonNull Specification<T> specification) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> query = cb.createQuery(Long.class);
 		Class<T> entityClass = getEntityClass();
@@ -92,9 +93,9 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 	}
 
 	private TypedQuery<Tuple> createResultsQuery(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+			@NonNull Specification<T> specification,
+			@NonNull Pageable pageable,
+			@NonNull SelectionsProvider<T> selectionsProvider
 	) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Tuple> query = cb.createTupleQuery();

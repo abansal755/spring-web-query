@@ -17,6 +17,7 @@
 package in.co.akshitbansal.springwebquery.util;
 
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -96,7 +97,7 @@ public final class ReflectionUtil {
 	 * @throws RuntimeException if any segment cannot be resolved
 	 * @throws UnsupportedOperationException if intermediate collection generics cannot be resolved
 	 */
-	public static List<Field> resolveFieldPath(Class<?> type, String name) {
+	public static List<Field> resolveFieldPath(@NonNull Class<?> type, @NonNull String name) {
 		if (name.isEmpty()) throw new IllegalArgumentException("Field path cannot be empty");
 		String[] fieldNames = name.split("\\.");
 		if (fieldNames.length == 0) throw new IllegalArgumentException("Field path cannot be empty");

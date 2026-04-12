@@ -21,6 +21,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
@@ -49,12 +50,14 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 * Resolver used by subclasses to translate selectors into entity-backed
 	 * paths and expose the terminal field for validation.
 	 */
+	@NonNull
 	protected final FieldResolver fieldResolver;
 
 	/**
 	 * Validator used by subclasses to enforce {@code @RSQLFilterable}
 	 * constraints on resolved terminal fields.
 	 */
+	@NonNull
 	protected final FilterableFieldValidator filterableFieldValidator;
 
 	/**
@@ -139,7 +142,7 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 *
 	 * @throws QueryValidationException if an operator is disallowed or the depth exceeds the limit
 	 */
-	protected void validateNode(Node node, NodeMetadata metadata) {
+	protected void validateNode(@NonNull Node node, @NonNull NodeMetadata metadata) {
 		if ((node instanceof AndNode) && !andNodeAllowed)
 			throw new QueryValidationException("Logical AND operator is not allowed");
 		if ((node instanceof OrNode) && !orNodeAllowed)

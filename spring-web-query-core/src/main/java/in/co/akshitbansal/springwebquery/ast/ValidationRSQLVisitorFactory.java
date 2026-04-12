@@ -23,6 +23,7 @@ import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -35,11 +36,13 @@ public class ValidationRSQLVisitorFactory {
 	/**
 	 * Factory for creating the field resolver that matches the active query contract.
 	 */
+	@NonNull
 	private final FieldResolverFactory fieldResolverFactory;
 
 	/**
 	 * Validator shared by created visitors for terminal-field filterability checks.
 	 */
+	@NonNull
 	private final FilterableFieldValidator filterableFieldValidator;
 
 	/**

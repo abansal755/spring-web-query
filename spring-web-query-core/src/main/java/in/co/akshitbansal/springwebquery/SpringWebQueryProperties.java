@@ -16,10 +16,7 @@
 
 package in.co.akshitbansal.springwebquery;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * Immutable container for the resolved global filtering settings used by the
@@ -34,6 +31,7 @@ public class SpringWebQueryProperties {
 	/**
 	 * Global request parameter name used to read RSQL filter expressions.
 	 */
+	@NonNull
 	private final String globalFilterParamName;
 
 	/**

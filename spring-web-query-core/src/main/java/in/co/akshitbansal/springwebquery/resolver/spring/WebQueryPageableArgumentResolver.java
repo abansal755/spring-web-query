@@ -25,6 +25,7 @@ import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.PageableArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -55,22 +56,26 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 	/**
 	 * Delegate used to parse raw pageable parameters from the request.
 	 */
+	@NonNull
 	private final PageableHandlerMethodArgumentResolver delegate;
 
 	/**
 	 * Validator used to enforce {@code @Sortable} constraints on resolved sort fields.
 	 */
+	@NonNull
 	private final SortableFieldValidator sortableFieldValidator;
 
 	/**
 	 * Factory used to create entity-aware or DTO-aware field resolvers for sort paths.
 	 */
+	@NonNull
 	private final FieldResolverFactory fieldResolverFactory;
 
 	/**
 	 * Validator used to fail fast on malformed declared field mappings before
 	 * the effective query mode is resolved.
 	 */
+	@NonNull
 	private final FieldMappingsValidator fieldMappingsValidator;
 
 	/**
@@ -83,7 +88,7 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 	 * {@link Pageable} and the declaring method is annotated with {@link WebQuery}
 	 */
 	@Override
-	public boolean supportsParameter(MethodParameter parameter) {
+	public boolean supportsParameter(@NonNull MethodParameter parameter) {
 		return Pageable.class.isAssignableFrom(parameter.getParameterType())
 				&& super.supportsParameter(parameter);
 	}
@@ -106,7 +111,7 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 	public Pageable resolveArgument(
 			MethodParameter parameter,
 			@Nullable ModelAndViewContainer mavContainer,
-			NativeWebRequest webRequest,
+			@NonNull NativeWebRequest webRequest,
 			@Nullable WebDataBinderFactory binderFactory
 	) {
 		try {

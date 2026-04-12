@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.validator;
 import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.annotation.WebQuery;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import lombok.NonNull;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -44,7 +45,7 @@ public class FieldMappingsValidator {
 	 *
 	 * @throws QueryConfigurationException if duplicate aliases or duplicate target fields are found
 	 */
-	public void validate(List<FieldMapping> fieldMappings) {
+	public void validate(@NonNull List<FieldMapping> fieldMappings) {
 		Set<String> nameSet = new HashSet<>();
 		for (FieldMapping mapping: fieldMappings) {
 			if (!nameSet.add(mapping.name())) throw new QueryConfigurationException(MessageFormat.format(

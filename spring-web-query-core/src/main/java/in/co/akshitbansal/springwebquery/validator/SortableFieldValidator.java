@@ -18,6 +18,7 @@ package in.co.akshitbansal.springwebquery.validator;
 
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
+import lombok.NonNull;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -35,7 +36,7 @@ public class SortableFieldValidator {
 	 *
 	 * @throws QueryFieldValidationException if sorting is not allowed for the field
 	 */
-	public void validate(Field field, String fieldPath) {
+	public void validate(@NonNull Field field, @NonNull String fieldPath) {
 		if (!field.isAnnotationPresent(Sortable.class)) {
 			throw new QueryFieldValidationException(
 					MessageFormat.format(

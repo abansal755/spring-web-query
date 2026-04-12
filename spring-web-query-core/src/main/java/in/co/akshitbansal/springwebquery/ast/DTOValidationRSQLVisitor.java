@@ -22,6 +22,7 @@ import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
+import lombok.NonNull;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,7 +95,7 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 	 * @param node node to validate
 	 */
 	@Override
-	protected void validateComparisonNode(ComparisonNode node) {
+	protected void validateComparisonNode(@NonNull ComparisonNode node) {
 		// Extract the field name and operator from the RSQL node
 		String dtoPath = node.getSelector();
 		ComparisonOperator operator = node.getOperator();
