@@ -45,10 +45,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -179,10 +176,16 @@ public class WebQuerySpecificationArgumentResolver extends AbstractWebQueryResol
 			}
 			else {
 				// Entity Aware Mode
-				propertyPathMapper = queryConfig
+				propertyPathMapper = Collections.unmodifiableMap(queryConfig
 						.getFieldMappings()
 						.stream()
-						.collect(Collectors.toMap(FieldMapping::name, FieldMapping::field));
+						.collect(Collectors.toMap(
+								FieldMapping::name,
+								FieldMapping::field,
+								// Duplicate mappings would not be present since they are validated before
+								(existing, duplicate) -> existing,
+								HashMap::new
+						)));
 			}
 			return (root, query, criteriaBuilder) -> {
 				RSQLJPAPredicateConverter converterVisitor = new RSQLJPAPredicateConverter(
