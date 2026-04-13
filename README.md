@@ -294,7 +294,7 @@ GET /users?sort=joinedAt,desc&sort=username,asc&page=0&size=20
 
 When you want validated filtering and sorting from `Specification<T>` + `Pageable`, but do not want to load full entities, extend `WebQueryRepository<T>` in your Spring Data repository.
 
-This repository fragment lets you define a tuple-based select clause while still reusing the same query contract already enforced by `@WebQuery`.
+This repository fragment lets you define a custom select clause while still reusing the same query contract already enforced by `@WebQuery`.
 
 ```java
 public interface UserRepository extends
@@ -320,6 +320,8 @@ Use:
 
 - `findAll(...)` when you want a plain `List<Tuple>`
 - `findAllPaged(...)` when you want a `Page<Tuple>` and need paging metadata
+- `findAll(..., dtoClass)` when you want a plain `List<DTO>` backed by constructor projection
+- `findAllPaged(..., dtoClass)` when you want a `Page<DTO>` and need paging metadata
 
 In both cases, the fragment:
 
@@ -331,6 +333,88 @@ In both cases, the fragment:
 
 For paged queries, avoid mutating the outer query in ways that change row cardinality, such as enabling `distinct`
 or adding `groupBy`, because total counts are computed from a separate count query.
+
+### DTO projection from tuple selections
+
+If you want the fragment to return DTOs instead of raw `Tuple` objects, pass the DTO class to the overloaded methods.
+
+```java
+public record UserSummary(Long id, String username, String city) {
+}
+```
+
+```java
+Page<UserSummary> page = userRepository.findAllPaged(
+        spec,
+        pageable,
+        (root, query, cb) -> List.of(
+                root.get("id"),
+                root.get("username"),
+                root.get("profile").get("city")
+        ),
+        UserSummary.class
+);
+```
+
+The DTO conversion works as follows:
+
+- the `SelectionsProvider` still defines a tuple projection first
+- each tuple row is then converted into the requested DTO type
+- constructor arguments are bound by position, not by tuple alias or selection name
+- the number of selected expressions must match the number of constructor parameters
+- each constructor parameter type must be runtime-compatible with the corresponding tuple element type
+
+That means the order of your selections is part of the contract. For example, this constructor:
+
+```java
+public record UserSummary(Long id, String username, String city) {
+}
+```
+
+must be matched by selections in exactly that order:
+
+```java
+List.of(
+        root.get("id"),
+        root.get("username"),
+        root.get("profile").get("city")
+)
+```
+
+### How constructor selection works
+
+When converting tuple rows into DTO instances, the library inspects the DTO constructors and looks for a compatible match.
+
+A constructor is considered compatible when:
+
+- it has the same number of parameters as the tuple has selected elements
+- each parameter type is assignable from the corresponding tuple element Java type
+- primitive parameter types are compared using their wrapper equivalents
+
+If multiple constructors are compatible, a constructor annotated with `@PersistenceCreator` is preferred.
+
+```java
+public class UserSummary {
+
+    private final Long id;
+    private final String username;
+    private final String city;
+
+    @PersistenceCreator
+    public UserSummary(Long id, String username, String city) {
+        this.id = id;
+        this.username = username;
+        this.city = city;
+    }
+}
+```
+
+Recommendations:
+
+- define one clear constructor for projection DTOs whenever possible
+- if you use `@PersistenceCreator`, keep at most one constructor annotated with it
+
+If more than one constructor is annotated with `@PersistenceCreator`, or if multiple compatible constructors exist and no unique preference exists, behavior is unpredictable.
 
 ## Entity-aware mode
 

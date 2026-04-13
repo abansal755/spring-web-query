@@ -22,6 +22,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -73,6 +74,27 @@ public class WebQueryRepositoryImpl<T> implements WebQueryRepository<T>, Reposit
 		long count = createCountQuery(specification).getSingleResult();
 		if (count == 0) return new PageImpl<>(Collections.emptyList(), pageable, 0);
 		return new PageImpl<>(findAll(specification, pageable, selectionsProvider), pageable, count);
+	}
+
+	@Override
+	public <U> List<U> findAll(
+			@NonNull Specification<T> specification,
+			@NonNull Pageable pageable,
+			@NonNull SelectionsProvider<T> selectionsProvider,
+			@NonNull Class<U> dtoClass
+	) {
+		Converter<Tuple, U> converter = new TupleConverter<>(dtoClass);
+		return findAll(specification, pageable, selectionsProvider)
+				.stream()
+				.map(converter::convert)
+				.toList();
+	}
+
+	@Override
+	public <U> Page<U> findAllPaged(Specification<T> specification, Pageable pageable, SelectionsProvider<T> selectionsProvider, Class<U> dtoClass) {
+		Converter<Tuple, U> converter = new TupleConverter<>(dtoClass);
+		return findAllPaged(specification, pageable, selectionsProvider)
+				.map(converter::convert);
 	}
 
 	private TypedQuery<Long> createCountQuery(Specification<T> specification) {
