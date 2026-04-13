@@ -69,4 +69,18 @@ public interface WebQueryRepository<T> {
 			Pageable pageable,
 			SelectionsProvider<T> selectionsProvider
 	);
+
+	<U> List<U> findAll(
+			Specification<T> specification,
+			Pageable pageable,
+			SelectionsProvider<T> selectionsProvider,
+			Class<U> dtoClass
+	);
+
+	<U> Page<U> findAllPaged(
+			Specification<T> specification,
+			Pageable pageable,
+			SelectionsProvider<T> selectionsProvider,
+			Class<U> dtoClass
+	);
 }
