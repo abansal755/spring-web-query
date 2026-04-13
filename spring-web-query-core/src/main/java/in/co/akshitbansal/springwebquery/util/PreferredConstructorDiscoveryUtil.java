@@ -27,8 +27,39 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Discovers the constructor that should be used to convert a projected JPA {@link Tuple} into a DTO instance.
+ *
+ * <p>Compatibility is determined by constructor parameter order, parameter count, and runtime type assignability for
+ * each tuple element. Primitive constructor parameter types are normalized to their wrapper types before
+ * compatibility checks are performed.</p>
+ *
+ * <p>When multiple constructors are compatible, a constructor annotated with
+ * {@link org.springframework.data.annotation.PersistenceCreator} is preferred. Callers should keep at most one such
+ * annotated constructor. If multiple annotated constructors are present, or if multiple non-annotated constructors
+ * are compatible, constructor selection is not guaranteed to be stable and behavior is unpredictable.</p>
+ */
 public class PreferredConstructorDiscoveryUtil {
 
+	/**
+	 * Finds a compatible constructor for the given tuple-backed DTO projection.
+	 *
+	 * <p>The selected constructor must declare the same number of parameters as the tuple contains elements, and each
+	 * parameter must be assignable from the corresponding tuple element runtime Java type after primitive-wrapper
+	 * normalization. Compatible constructors are evaluated in declared-constructor order, with a compatible constructor
+	 * annotated with {@link PersistenceCreator} taking precedence over any previously found compatible constructor.</p>
+	 *
+	 * <p>If no compatible constructor exists, this method throws an {@link IllegalArgumentException}. If multiple
+	 * compatible constructors exist without a uniquely determining preference, the returned constructor depends on the
+	 * current implementation details of discovery and should not be treated as stable API behavior.</p>
+	 *
+	 * @param clazz target DTO type whose constructors should be inspected
+	 * @param tuple tuple whose projected element count and runtime types drive compatibility checks
+	 *
+	 * @return the compatible constructor selected for tuple-backed instantiation
+	 *
+	 * @throws IllegalArgumentException if no suitable constructor can be found
+	 */
 	public static Constructor<?> discover(@NonNull Class<?> clazz, @NonNull Tuple tuple) {
 		Constructor<?>[] constructors = clazz.getDeclaredConstructors();
 		Constructor<?> bestMatch = null;

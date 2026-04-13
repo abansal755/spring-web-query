@@ -25,6 +25,19 @@ import org.springframework.core.convert.converter.Converter;
 import java.lang.reflect.Constructor;
 import java.text.MessageFormat;
 
+/**
+ * Converts JPA {@link Tuple} rows into constructor-backed DTO instances.
+ *
+ * <p>This converter delegates constructor discovery to
+ * {@link PreferredConstructorDiscoveryUtil}, then invokes the selected constructor reflectively using the tuple
+ * values in tuple order. Conversion is positional rather than alias-based, so the tuple projection order must match
+ * the target constructor signature.</p>
+ *
+ * <p>Any failure to discover a compatible constructor or instantiate the DTO is surfaced as a runtime exception while
+ * mapping rows.</p>
+ *
+ * @param <T> DTO type produced from tuple rows
+ */
 @RequiredArgsConstructor
 public class TupleConverter<T> implements Converter<Tuple, T> {
 

@@ -70,6 +70,34 @@ public interface WebQueryRepository<T> {
 			SelectionsProvider<T> selectionsProvider
 	);
 
+	/**
+	 * Executes a tuple query and converts each result row into an instance of the requested DTO type.
+	 *
+	 * <p>Use this overload when the caller wants constructor-backed DTO projection instead of working with raw
+	 * {@link Tuple} instances. The provided {@link SelectionsProvider} still defines the tuple projection, but each
+	 * resulting row is converted into {@code dtoClass} immediately before being returned to the caller.</p>
+	 *
+	 * <p>Conversion is positional. The selected tuple elements are passed to the DTO constructor in the same order as
+	 * they are returned by {@link SelectionsProvider#getSelections}. Tuple aliases or selection names are ignored.</p>
+	 *
+	 * <p>A constructor is considered compatible when it has the same number of parameters as projected tuple elements
+	 * and each parameter type is assignable from the corresponding tuple element runtime Java type after primitive
+	 * types are normalized to their wrapper equivalents. When multiple constructors are compatible, a constructor
+	 * annotated with {@link org.springframework.data.annotation.PersistenceCreator} is preferred. Callers should define
+	 * at most one such annotated constructor; if more than one constructor is annotated, or if multiple compatible
+	 * constructors exist and selection is not uniquely determined, behavior is unpredictable.</p>
+	 *
+	 * <p>If no compatible constructor can be found, or if reflective instantiation fails for any row, the conversion
+	 * fails at runtime.</p>
+	 *
+	 * @param specification filtering criteria to apply
+	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
+	 * @param selectionsProvider callback that defines the tuple selections for the query
+	 * @param dtoClass target DTO type to instantiate for each tuple row
+	 * @param <U> DTO projection type
+	 *
+	 * @return DTO instances matching the requested filter, sort, selection set, and constructor mapping rules
+	 */
 	<U> List<U> findAll(
 			Specification<T> specification,
 			Pageable pageable,
@@ -77,6 +105,41 @@ public interface WebQueryRepository<T> {
 			Class<U> dtoClass
 	);
 
+	/**
+	 * Executes a tuple query, converts each result row into an instance of the requested DTO type, and wraps the
+	 * converted results in a page.
+	 *
+	 * <p>Use this overload when the caller wants constructor-backed DTO projection together with Spring Data paging
+	 * metadata. The provided {@link SelectionsProvider} still defines the tuple projection, and each tuple row is
+	 * converted into {@code dtoClass} before being exposed in the returned page.</p>
+	 *
+	 * <p>Conversion is positional. The selected tuple elements are supplied to the DTO constructor in the same order as
+	 * they are returned by {@link SelectionsProvider#getSelections}. Tuple aliases or selection names do not
+	 * participate in constructor binding.</p>
+	 *
+	 * <p>A constructor is considered compatible when it has the same number of parameters as projected tuple elements
+	 * and each parameter type is assignable from the corresponding tuple element runtime Java type after primitive
+	 * types are normalized to their wrapper equivalents. When multiple constructors are compatible, a constructor
+	 * annotated with {@link org.springframework.data.annotation.PersistenceCreator} is preferred. Callers should define
+	 * at most one such annotated constructor; if more than one constructor is annotated, or if multiple compatible
+	 * constructors exist and selection is not uniquely determined, behavior is unpredictable.</p>
+	 *
+	 * <p>This method inherits the same count-query caveats as {@link #findAllPaged(Specification, Pageable,
+	 * SelectionsProvider)}. In particular, callers should avoid mutating the outer query in ways that change row
+	 * cardinality, because the total count is derived from a separate count query built from the
+	 * {@link Specification}.</p>
+	 *
+	 * <p>If no compatible constructor can be found, or if reflective instantiation fails for any row, the conversion
+	 * fails at runtime.</p>
+	 *
+	 * @param specification filtering criteria to apply
+	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
+	 * @param selectionsProvider callback that defines the tuple selections for the query
+	 * @param dtoClass target DTO type to instantiate for each tuple row
+	 * @param <U> DTO projection type
+	 *
+	 * @return a page of DTO instances matching the requested filter, sort, selection set, and constructor mapping rules
+	 */
 	<U> Page<U> findAllPaged(
 			Specification<T> specification,
 			Pageable pageable,
