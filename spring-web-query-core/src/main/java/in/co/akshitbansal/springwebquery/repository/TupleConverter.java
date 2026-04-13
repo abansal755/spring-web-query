@@ -18,6 +18,7 @@ package in.co.akshitbansal.springwebquery.repository;
 
 import in.co.akshitbansal.springwebquery.util.PreferredConstructorDiscoveryUtil;
 import jakarta.persistence.Tuple;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 
@@ -27,10 +28,11 @@ import java.text.MessageFormat;
 @RequiredArgsConstructor
 public class TupleConverter<T> implements Converter<Tuple, T> {
 
+	@NonNull
 	private final Class<T> targetType;
 
 	@Override
-	public T convert(Tuple tuple) {
+	public T convert(@NonNull Tuple tuple) {
 		try {
 			Constructor<?> constructor = PreferredConstructorDiscoveryUtil.discover(targetType, tuple);
 			return (T) constructor.newInstance(tuple.toArray());
