@@ -20,6 +20,7 @@ import in.co.akshitbansal.springwebquery.util.PreferredConstructorDiscoveryUtil;
 import jakarta.persistence.Tuple;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 
 import java.lang.reflect.Constructor;
@@ -44,11 +45,20 @@ public class TupleConverter<T> implements Converter<Tuple, T> {
 	@NonNull
 	private final Class<T> targetType;
 
+	@Nullable
+	private volatile Constructor<?> cachedConstructor;
+
 	@Override
 	public T convert(@NonNull Tuple tuple) {
 		try {
-			Constructor<?> constructor = PreferredConstructorDiscoveryUtil.discover(targetType, tuple);
-			return (T) constructor.newInstance(tuple.toArray());
+			// synchronization with double-checking
+			if(cachedConstructor == null) {
+				synchronized (this) {
+					if(cachedConstructor == null)
+						cachedConstructor = PreferredConstructorDiscoveryUtil.discover(targetType, tuple);
+				}
+			}
+			return (T) cachedConstructor.newInstance(tuple.toArray());
 		}
 		catch (Exception ex) {
 			throw new RuntimeException(MessageFormat.format(
