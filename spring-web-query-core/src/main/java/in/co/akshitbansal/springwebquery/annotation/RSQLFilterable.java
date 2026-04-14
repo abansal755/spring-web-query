@@ -61,7 +61,7 @@ public @interface RSQLFilterable {
 	 *
 	 * @return an array of allowed {@link RSQLDefaultOperator} values
 	 */
-	RSQLDefaultOperator[] value();
+	RSQLDefaultOperator[] value() default {};
 
 	/**
 	 * The set of custom RSQL operators that are allowed for filtering this field.
