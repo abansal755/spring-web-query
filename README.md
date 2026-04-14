@@ -670,14 +670,17 @@ spring-web-query.filtering.max-ast-depth=1
 
 ### `@RSQLFilterable`
 
-Marks field as filterable and declares allowed operators.
+Marks a field as filterable and declares which default and/or custom operators are allowed.
 
 ```java
 @RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.NOT_EQUAL})
 private String status;
+
+@RSQLFilterable(customOperators = {IsMondayOperator.class})
+private Long createdAt;
 ```
 
-Also supports custom operators via `customOperators`.
+`value` is optional, so custom-only declarations are supported when a field should expose only registered `customOperators`.
 
 ### `@Sortable`
 
