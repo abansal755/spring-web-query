@@ -46,7 +46,7 @@ public class TupleConverter<T> implements Converter<Tuple, T> {
 	private final Class<T> targetType;
 
 	@Nullable
-	private volatile Constructor<T> cachedConstructor;
+	private volatile Constructor<?> cachedConstructor;
 
 	@Override
 	public T convert(@NonNull Tuple tuple) {
@@ -58,9 +58,7 @@ public class TupleConverter<T> implements Converter<Tuple, T> {
 						cachedConstructor = PreferredConstructorDiscoveryUtil.discover(targetType, tuple);
 				}
 			}
-			// cachedConstructor will never be null here, so it is safe to invoke newInstance
-			//noinspection DataFlowIssue
-			return cachedConstructor.newInstance(tuple.toArray());
+			return (T) cachedConstructor.newInstance(tuple.toArray());
 		}
 		catch (Exception ex) {
 			throw new RuntimeException(MessageFormat.format(

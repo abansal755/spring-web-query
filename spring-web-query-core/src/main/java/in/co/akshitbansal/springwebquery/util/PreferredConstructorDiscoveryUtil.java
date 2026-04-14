@@ -18,9 +18,7 @@ package in.co.akshitbansal.springwebquery.util;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
-import lombok.AccessLevel;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.PersistenceCreator;
 
 import java.lang.reflect.Constructor;
@@ -41,7 +39,6 @@ import java.util.stream.Collectors;
  * annotated constructor. If multiple annotated constructors are present, or if multiple non-annotated constructors
  * are compatible, constructor selection is not guaranteed to be stable and behavior is unpredictable.</p>
  */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class PreferredConstructorDiscoveryUtil {
 
 	/**
@@ -63,14 +60,10 @@ public class PreferredConstructorDiscoveryUtil {
 	 *
 	 * @throws IllegalArgumentException if no suitable constructor can be found
 	 */
-	public static <T> Constructor<T> discover(@NonNull Class<T> clazz, @NonNull Tuple tuple) {
+	public static Constructor<?> discover(@NonNull Class<?> clazz, @NonNull Tuple tuple) {
 		Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-		Constructor<T> bestMatch = null;
-		for(Constructor<?> rawConstructor: constructors) {
-			// Constructors are of type Constructor<T> only, but the returned array is of type Constructor<?>[]
-			// So we can safely cast here
-			//noinspection unchecked
-			Constructor<T> constructor = (Constructor<T>) rawConstructor;
+		Constructor<?> bestMatch = null;
+		for(Constructor<?> constructor: constructors) {
 			if(constructor.isSynthetic()) continue;
 			if(!isConstructorMatchingTuple(constructor, tuple)) continue;
 			bestMatch = constructor;
