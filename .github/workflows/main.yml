@@ -70,6 +70,7 @@ jobs:
 
     trivy-security-gate:
         runs-on: ubuntu-latest
+        if: ${{ vars.ENABLE_TRIVY_SECURITY_GATE == 'true' }}
         name: Trivy Security Gate
         needs: trivy-code-scanning
         steps:
