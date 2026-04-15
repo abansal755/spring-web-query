@@ -4,10 +4,16 @@ scan:
         - secret
 dependency-tree: true
 exit-code: 1
-format: "table"
-table-mode:
-    - summary
-    - detailed
+
+# Sarif
+format: "sarif"
+output: "report.sarif"
+
+# Table
+# format: "table"
+# table-mode:
+#     - summary
+#     - detailed
 severity:
     - CRITICAL
     - HIGH
