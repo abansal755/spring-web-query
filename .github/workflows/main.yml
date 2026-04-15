@@ -45,15 +45,15 @@ jobs:
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: mvn -B -ntp clean verify -Dspring-boot.version=${{ matrix.spring-boot-version }}
 
-    trivy-scan:
+    trivy-code-scanning:
         runs-on: ubuntu-latest
-        name: Trivy Scan
+        name: Trivy Code Scanning
         needs: build-test
         steps:
             - name: Checkout
               uses: actions/checkout@v6
 
-            - name: Generate sarif output with trivy
+            - name: Run Trivy (generate SARIF)
               uses: aquasecurity/trivy-action@0.35.0
               with:
                 scan-type: 'fs'
@@ -62,13 +62,22 @@ jobs:
                 format: 'sarif'
                 output: 'report.sarif'
 
-            - name: Upload SARIF file
+            - name: Upload results to GitHub Code Scanning
               uses: github/codeql-action/upload-sarif@v4
               with:
                 sarif_file: report.sarif
                 category: trivy
 
-            - name: Generate table output with trivy
+    trivy-security-gate:
+        runs-on: ubuntu-latest
+        if: ${{ vars.ENABLE_TRIVY_SECURITY_GATE == 'true' }}
+        name: Trivy Security Gate
+        needs: trivy-code-scanning
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+            
+            - name: Run Trivy (enforce vulnerability policy)
               uses: aquasecurity/trivy-action@0.35.0
               with:
                 skip-setup-trivy: true
@@ -80,10 +89,9 @@ jobs:
               env:
                 TRIVY_TABLE_MODE: summary
 
-
     snapshot-release:
         name: Snapshot Release
-        needs: trivy-scan
+        needs: trivy-security-gate
         runs-on: ubuntu-latest
         if: >-
             ${{ github.event_name == 'push' && !(
