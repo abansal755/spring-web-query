@@ -80,7 +80,6 @@ jobs:
             - name: Run Trivy (enforce vulnerability policy)
               uses: aquasecurity/trivy-action@0.35.0
               with:
-                skip-setup-trivy: true
                 scan-type: 'fs'
                 scan-ref: '.'
                 trivy-config: trivy.yaml
@@ -94,9 +93,12 @@ jobs:
         needs: trivy-security-gate
         runs-on: ubuntu-latest
         if: >-
-            ${{ github.event_name == 'push' && !(
-              contains(github.event.head_commit.message, 'SKIP CI')
-            ) }}
+            ${{ 
+                always() &&
+                github.event_name == 'push' && 
+                !(contains(github.event.head_commit.message, 'SKIP CI')) &&
+                (needs.trivy-security-gate.result == 'success' || needs.trivy-security-gate.result == 'skipped')
+            }}
 
         steps:
             - name: Checkout
@@ -133,6 +135,11 @@ jobs:
     javadoc-deploy:
         name: Javadoc Deploy
         needs: snapshot-release
+        if: >-
+            ${{
+                always() &&
+                needs.snapshot-release.result == 'success'
+            }}
         runs-on: ubuntu-latest
         env:
             AWS_REGION: ${{ vars.AWS_REGION }}
