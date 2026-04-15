@@ -6,6 +6,9 @@ on:
             - main
     pull_request:
 
+permissions:
+    security-events: write
+
 jobs:
     build-test:
         runs-on: ubuntu-latest
@@ -42,9 +45,29 @@ jobs:
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: mvn -B -ntp clean verify -Dspring-boot.version=${{ matrix.spring-boot-version }}
 
+    trivy-scan:
+        runs-on: ubuntu-latest
+        name: Trivy Scan
+        needs: build-test
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@0.35.0
+              with:
+                scan-type: 'fs'
+                scan-ref: '.'
+                trivy-config: trivy.yaml
+            - name: Upload SARIF file
+              if: always()
+              uses: github/codeql-action/upload-sarif@v4
+              with:
+                sarif_file: report.sarif
+                category: trivy
+
     snapshot-release:
         name: Snapshot Release
-        needs: build-test
+        needs: trivy-scan
         runs-on: ubuntu-latest
         if: >-
             ${{ github.event_name == 'push' && !(

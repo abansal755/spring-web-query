@@ -1,0 +1,20 @@
+scan:
+    scanners:
+        - vuln
+        - secret
+dependency-tree: true
+exit-code: 1
+
+# Sarif
+format: "sarif"
+output: "report.sarif"
+
+# Table
+# format: "table"
+# table-mode:
+#     - summary
+#     - detailed
+severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
