@@ -1,9 +1,0 @@
-scan:
-    scanners:
-        - vuln
-        - secret
-dependency-tree: true
-severity:
-    - CRITICAL
-    - HIGH
-    - MEDIUM

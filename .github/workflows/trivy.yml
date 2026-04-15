@@ -25,12 +25,24 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v6
 
+            - name: Run Trivy (table output)
+              uses: aquasecurity/trivy-action@0.35.0
+              with:
+                scan-type: 'fs'
+                scan-ref: '.'
+                severity: CRITICAL,HIGH,MEDIUM
+                scanners: vuln,secret
+                format: 'table'
+              env:
+                TRIVY_TABLE_MODE: summary
+
             - name: Run Trivy (generate SARIF)
               uses: aquasecurity/trivy-action@0.35.0
               with:
                 scan-type: 'fs'
                 scan-ref: '.'
-                trivy-config: trivy.yaml
+                severity: CRITICAL,HIGH,MEDIUM
+                scanners: vuln,secret
                 format: 'sarif'
                 output: 'report.sarif'
 
