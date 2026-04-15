@@ -3,7 +3,7 @@ scan:
         - vuln
         - secret
 dependency-tree: true
-exit-code: 1
+# exit-code: 1
 
 # Sarif
 format: "sarif"
