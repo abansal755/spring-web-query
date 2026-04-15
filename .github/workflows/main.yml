@@ -52,18 +52,34 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v6
-            - name: Run Trivy vulnerability scanner
+
+            - name: Generate sarif output with trivy
               uses: aquasecurity/trivy-action@0.35.0
               with:
                 scan-type: 'fs'
                 scan-ref: '.'
                 trivy-config: trivy.yaml
+                format: 'sarif'
+                output: 'report.sarif'
+
             - name: Upload SARIF file
-              if: always()
               uses: github/codeql-action/upload-sarif@v4
               with:
                 sarif_file: report.sarif
                 category: trivy
+
+            - name: Generate table output with trivy
+              uses: aquasecurity/trivy-action@0.35.0
+              with:
+                skip-setup-trivy: true
+                scan-type: 'fs'
+                scan-ref: '.'
+                trivy-config: trivy.yaml
+                format: 'table'
+                exit-code: '1'
+              env:
+                TRIVY_TABLE_MODE: summary
+
 
     snapshot-release:
         name: Snapshot Release
