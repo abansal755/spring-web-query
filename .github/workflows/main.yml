@@ -6,6 +6,9 @@ on:
             - main
     pull_request:
 
+permissions:
+    security-events: write
+
 jobs:
     build-test:
         runs-on: ubuntu-latest
