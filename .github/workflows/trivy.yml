@@ -1,11 +1,7 @@
 name: Trivy Code Scanning
 
 on:
-    push:
-        branches:
-            - main
-            - release/**
-    pull_request:
+    workflow_call:
     schedule:
         - cron: '0 12 * * *'
 
