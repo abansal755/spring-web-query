@@ -105,3 +105,4 @@ jobs:
         name: Publish Javadoc
         needs: snapshot-release
         uses: ./.github/workflows/javadoc.yml
+        secrets: inherit

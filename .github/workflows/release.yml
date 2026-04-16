@@ -190,5 +190,6 @@ jobs:
         name: Javadoc Deploy
         needs: deploy-packages
         uses: ./.github/workflows/javadoc.yml
+        secrets: inherit
         with:
             payload: "{\"deploymentIds\": [\"${{ needs.deploy-packages.outputs.deployment_id1 }}\", \"${{ needs.deploy-packages.outputs.deployment_id2 }}\"]}"
