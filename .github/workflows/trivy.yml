@@ -6,6 +6,11 @@ on:
             target_branch:
                 required: true
                 type: string
+    workflow_dispatch:
+        inputs:
+            target_branch:
+                type: string
+                default: main
 
 permissions:
     security-events: write
