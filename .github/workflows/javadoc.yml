@@ -1,9 +1,19 @@
 name: Publish Javadoc
 on:
     workflow_dispatch:
+        inputs:
+            payload:
+                type: string
+                default: '{"deploymentIds": []}'
+    workflow_call:
+        inputs:
+            payload:
+                type: string
+                default: '{"deploymentIds": []}'
 
 jobs:
-    publish:
+    invoke-lambda:
+        name: Invoke AWS Lambda
         runs-on: ubuntu-latest
         env:
             AWS_REGION: ${{ vars.AWS_REGION }}
@@ -19,7 +29,7 @@ jobs:
                 aws lambda invoke \
                 --function-name cloudflare_javadoc_deploy_zip \
                 --log-type Tail \
-                --payload '{"deploymentIds": []}' \
+                --payload "${{ inputs.payload }}" \
                 out \
                 --cli-binary-format raw-in-base64-out \
                 --query 'LogResult' --output text \

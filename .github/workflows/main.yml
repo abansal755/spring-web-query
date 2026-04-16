@@ -103,26 +103,7 @@ jobs:
                   MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
                   MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
 
-    javadoc-deploy:
-        name: Javadoc Deploy
+    publish-javadoc:
+        name: Publish Javadoc
         needs: snapshot-release
-        runs-on: ubuntu-latest
-        env:
-            AWS_REGION: ${{ vars.AWS_REGION }}
-        steps:
-            - name: Setup AWS Credentials
-              run: |
-                  aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  aws configure set region $AWS_REGION
-
-            - name: Trigger Lambda Function
-              run: |
-                  aws lambda invoke \
-                  --function-name cloudflare_javadoc_deploy_zip \
-                  --log-type Tail \
-                  --payload '{"deploymentIds": []}' \
-                  out \
-                  --cli-binary-format raw-in-base64-out \
-                  --query 'LogResult' --output text \
-                  | base64 --decode
+        uses: ./.github/workflows/javadoc.yml
