@@ -61,9 +61,7 @@ jobs:
 
     snapshot-release:
         name: Snapshot Release
-        needs:
-            - trivy
-            - codeql
+        needs: build-test
         runs-on: ubuntu-latest
         if: >-
             ${{ 

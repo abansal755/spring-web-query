@@ -80,9 +80,7 @@ jobs:
 
     deploy-packages:
         name: Deploy Packages
-        needs:
-            - trivy
-            - codeql
+        needs: create-release-branch
         runs-on: ubuntu-latest
         outputs:
             deployment_id1: ${{ steps.release-core.outputs.deployment_id }}
