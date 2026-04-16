@@ -12,20 +12,17 @@ on:
 permissions:
     contents: write
     pull-requests: write
+    security-events: write
 
 jobs:
-    release:
-        name: Deploy Packages
+    create-release-branch:
+        name: Create Release Branch
         runs-on: ubuntu-latest
-        outputs:
-            deployment_id1: ${{ steps.release-core.outputs.deployment_id }}
-            deployment_id2: ${{ steps.release-starter.outputs.deployment_id }}
-
         steps:
             - name: Checkout
               uses: actions/checkout@v6
               with:
-                  ref: main
+                ref: main
 
             - name: Set up JDK 17
               uses: actions/setup-java@v5
@@ -33,11 +30,6 @@ jobs:
                   distribution: temurin
                   java-version: "17"
                   cache: maven
-                  server-id: central
-                  server-username: MAVEN_CENTRAL_USERNAME
-                  server-password: MAVEN_CENTRAL_PASSWORD
-                  gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-                  gpg-passphrase: GPG_PASSPHRASE
 
             - name: Configure git identity
               run: |
@@ -65,6 +57,52 @@ jobs:
               run: |
                   git add spring-web-query-core/pom.xml spring-boot-starter-web-query/pom.xml
                   git commit -m "Changed versions to ${{ inputs.version }}"
+
+            - name: Push commit and tag
+              run: |
+                  git push origin release/${{ inputs.version }}
+                  git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
+                  git push origin ${{ inputs.version }}
+
+    trivy:
+        uses: ./.github/workflows/trivy.yml
+        needs: create-release-branch
+        name: Trivy
+        with:
+            target_branch: release/${{ inputs.version }}
+
+    codeql:
+        uses: ./.github/workflows/codeql.yml
+        needs: create-release-branch
+        name: CodeQL
+        with:
+            target_branch: release/${{ inputs.version }}
+
+    deploy-packages:
+        name: Deploy Packages
+        needs: create-release-branch
+        runs-on: ubuntu-latest
+        outputs:
+            deployment_id1: ${{ steps.release-core.outputs.deployment_id }}
+            deployment_id2: ${{ steps.release-starter.outputs.deployment_id }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+              with:
+                  ref: release/${{ inputs.version }}
+
+            - name: Set up JDK 17
+              uses: actions/setup-java@v5
+              with:
+                  distribution: temurin
+                  java-version: "17"
+                  cache: maven
+                  server-id: central
+                  server-username: MAVEN_CENTRAL_USERNAME
+                  server-password: MAVEN_CENTRAL_PASSWORD
+                  gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+                  gpg-passphrase: GPG_PASSPHRASE
 
             - name: Release core package
               id: release-core
@@ -98,15 +136,9 @@ jobs:
                   MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
                   MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
 
-            - name: Push commit and tag
-              run: |
-                  git push origin release/${{ inputs.version }}
-                  git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
-                  git push origin ${{ inputs.version }}
-
     version-bump:
         name: Version Bump PR
-        needs: release
+        needs: deploy-packages
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -156,24 +188,7 @@ jobs:
 
     javadoc-deploy:
         name: Javadoc Deploy
-        needs: release
-        runs-on: ubuntu-latest
-        env:
-            AWS_REGION: ${{ vars.AWS_REGION }}
-        steps:
-            - name: Setup AWS Credentials
-              run: |
-                  aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  aws configure set region $AWS_REGION
-
-            - name: Trigger Lambda Function
-              run: |
-                  aws lambda invoke \
-                  --function-name cloudflare_javadoc_deploy_zip \
-                  --log-type Tail \
-                  --payload "{\"deploymentIds\": [\"${{ needs.release.outputs.deployment_id1 }}\", \"${{ needs.release.outputs.deployment_id2 }}\"]}" \
-                  out \
-                  --cli-binary-format raw-in-base64-out \
-                  --query 'LogResult' --output text \
-                  | base64 --decode
+        needs: deploy-packages
+        uses: ./.github/workflows/javadoc.yml
+        with:
+            payload: "{\"deploymentIds\": [\"${{ needs.deploy-packages.outputs.deployment_id1 }}\", \"${{ needs.deploy-packages.outputs.deployment_id2 }}\"]}"

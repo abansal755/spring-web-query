@@ -6,6 +6,9 @@ on:
             - main
     pull_request:
 
+permissions:
+    security-events: write
+
 jobs:
     build-test:
         runs-on: ubuntu-latest
@@ -41,6 +44,20 @@ jobs:
             - name: Build spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: mvn -B -ntp clean verify -Dspring-boot.version=${{ matrix.spring-boot-version }}
+
+    trivy:
+        uses: ./.github/workflows/trivy.yml
+        needs: build-test
+        name: Trivy
+        with:
+            target_branch: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+
+    codeql:
+        uses: ./.github/workflows/codeql.yml
+        needs: build-test
+        name: CodeQL
+        with:
+            target_branch: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
     snapshot-release:
         name: Snapshot Release
@@ -84,26 +101,7 @@ jobs:
                   MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
                   MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
 
-    javadoc-deploy:
-        name: Javadoc Deploy
+    publish-javadoc:
+        name: Publish Javadoc
         needs: snapshot-release
-        runs-on: ubuntu-latest
-        env:
-            AWS_REGION: ${{ vars.AWS_REGION }}
-        steps:
-            - name: Setup AWS Credentials
-              run: |
-                  aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  aws configure set region $AWS_REGION
-
-            - name: Trigger Lambda Function
-              run: |
-                  aws lambda invoke \
-                  --function-name cloudflare_javadoc_deploy_zip \
-                  --log-type Tail \
-                  --payload '{"deploymentIds": []}' \
-                  out \
-                  --cli-binary-format raw-in-base64-out \
-                  --query 'LogResult' --output text \
-                  | base64 --decode
+        uses: ./.github/workflows/javadoc.yml
