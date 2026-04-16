@@ -21,6 +21,13 @@ jobs:
               with:
                 ref: ${{ inputs.target_branch }}
 
+            - name: Resolve upload target
+              id: upload-target
+              shell: bash
+              run: |
+                echo "ref=refs/heads/${{ inputs.target_branch }}" >> "$GITHUB_OUTPUT"
+                echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
             - name: Set up JDK 17
               uses: actions/setup-java@v5
               with:
@@ -44,3 +51,6 @@ jobs:
 
             - name: Perform CodeQL Analysis
               uses: github/codeql-action/analyze@v4
+              with:
+                ref: ${{ steps.upload_target.outputs.ref }}
+                sha: ${{ steps.upload_target.outputs.sha }}

@@ -21,6 +21,12 @@ jobs:
               with:
                 ref: ${{ inputs.target_branch }}
 
+            - name: Resolve Upload Target
+              id: upload-target
+              run: |
+                echo "ref=refs/heads/${{ inputs.target_branch }}" >> "$GITHUB_OUTPUT"
+                echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
             - name: Run Trivy (table output)
               uses: aquasecurity/trivy-action@0.35.0
               with:
@@ -47,3 +53,5 @@ jobs:
               with:
                 sarif_file: report.sarif
                 category: trivy
+                ref: ${{ steps.upload-target.outputs.ref }}
+                sha: ${{ steps.upload-target.outputs.sha }}
