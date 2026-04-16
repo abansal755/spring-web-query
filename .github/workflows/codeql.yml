@@ -52,5 +52,5 @@ jobs:
             - name: Perform CodeQL Analysis
               uses: github/codeql-action/analyze@v4
               with:
-                ref: ${{ steps.upload_target.outputs.ref }}
-                sha: ${{ steps.upload_target.outputs.sha }}
+                ref: ${{ steps.upload-target.outputs.ref }}
+                sha: ${{ steps.upload-target.outputs.sha }}

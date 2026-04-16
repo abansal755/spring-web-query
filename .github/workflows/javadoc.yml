@@ -29,7 +29,7 @@ jobs:
                 aws lambda invoke \
                 --function-name cloudflare_javadoc_deploy_zip \
                 --log-type Tail \
-                --payload "${{ inputs.payload }}" \
+                --payload '${{ inputs.payload }}' \
                 out \
                 --cli-binary-format raw-in-base64-out \
                 --query 'LogResult' --output text \
