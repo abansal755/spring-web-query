@@ -2,8 +2,10 @@ name: Trivy Code Scanning
 
 on:
     workflow_call:
-    schedule:
-        - cron: '0 12 * * *'
+        inputs:
+            target_branch:
+                required: true
+                type: string
 
 permissions:
     security-events: write
@@ -12,14 +14,12 @@ jobs:
     trivy-code-scanning:
         runs-on: ubuntu-latest
         name: Trivy Code Scanning
-        if: >-
-            ${{ github.event_name != 'push' || !(
-              contains(github.event.head_commit.message, 'SKIP CI')
-            ) }}
 
         steps:
             - name: Checkout
               uses: actions/checkout@v6
+              with:
+                ref: ${{ inputs.target_branch }}
 
             - name: Run Trivy (table output)
               uses: aquasecurity/trivy-action@0.35.0

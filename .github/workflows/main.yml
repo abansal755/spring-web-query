@@ -48,10 +48,16 @@ jobs:
     trivy:
         uses: ./.github/workflows/trivy.yml
         needs: build-test
+        name: Trivy
+        with:
+            target_branch: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
     codeql:
         uses: ./.github/workflows/codeql.yml
         needs: build-test
+        name: CodeQL
+        with:
+            target_branch: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
     snapshot-release:
         name: Snapshot Release
