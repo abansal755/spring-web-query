@@ -21,6 +21,7 @@ import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 import java.util.Collections;
@@ -100,12 +101,10 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 		ComparisonOperator operator = node.getOperator();
 
 		// Build the corresponding entity field path from the DTO path and validate the terminal field for filterability
-		String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
-				dtoPath,
-				terminalField -> filterableFieldValidator.validate(terminalField, operator, dtoPath)
-		);
+		ResolutionResult result = fieldResolver.resolvePath(dtoPath);
+		filterableFieldValidator.validate(result.getTerminalField(), operator, dtoPath);
 
 		// Store the mapping from DTO path to entity path for later use during query construction
-		fieldMappings.put(dtoPath, entityPath);
+		fieldMappings.put(dtoPath, result.getFieldName());
 	}
 }

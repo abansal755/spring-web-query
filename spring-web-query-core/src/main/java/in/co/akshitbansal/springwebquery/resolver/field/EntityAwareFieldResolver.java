@@ -20,7 +20,6 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.NonNull;
-import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -28,7 +27,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -106,7 +104,7 @@ public class EntityAwareFieldResolver implements FieldResolver {
 	 * resolved against the entity type
 	 */
 	@Override
-	public String resolvePathAndValidateTerminalField(@NonNull String reqFieldPath, @Nullable Consumer<Field> terminalFieldValidator) {
+	public ResolutionResult resolvePath(@NonNull String reqFieldPath) {
 		String fieldPath = reqFieldPath; // Actual entity path to validate against, may be rewritten if field mapping exists
 
 		// If the field name corresponds to an API alias that does not allow using the original field name, reject it
@@ -136,8 +134,6 @@ public class EntityAwareFieldResolver implements FieldResolver {
 			);
 		}
 
-		if (terminalFieldValidator != null) terminalFieldValidator.accept(field);
-
-		return fieldPath;
+		return new ResolutionResult(fieldPath, field);
 	}
 }

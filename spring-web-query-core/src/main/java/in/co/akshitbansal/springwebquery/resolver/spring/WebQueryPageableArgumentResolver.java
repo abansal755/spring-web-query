@@ -22,6 +22,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryException;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.PageableArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
@@ -127,11 +128,9 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 			for (Sort.Order order: pageable.getSort()) {
 				String reqFieldPath = order.getProperty();
 				// Build the corresponding entity field path
-				String entityPath = fieldResolver.resolvePathAndValidateTerminalField(
-						reqFieldPath,
-						terminalField -> sortableFieldValidator.validate(terminalField, reqFieldPath)
-				);
-				newOrders.add(new Sort.Order(order.getDirection(), entityPath));
+				ResolutionResult result = fieldResolver.resolvePath(reqFieldPath);
+				sortableFieldValidator.validate(result.getTerminalField(), reqFieldPath);
+				newOrders.add(new Sort.Order(order.getDirection(), result.getFieldName()));
 			}
 
 			Sort sort = Sort.by(newOrders);

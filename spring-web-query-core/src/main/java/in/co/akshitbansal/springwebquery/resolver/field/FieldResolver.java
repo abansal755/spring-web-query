@@ -17,10 +17,6 @@
 package in.co.akshitbansal.springwebquery.resolver.field;
 
 import lombok.NonNull;
-import org.jspecify.annotations.Nullable;
-
-import java.lang.reflect.Field;
-import java.util.function.Consumer;
 
 /**
  * Strategy for resolving API-facing selector paths into concrete entity paths.
@@ -34,26 +30,11 @@ import java.util.function.Consumer;
 public interface FieldResolver {
 
 	/**
-	 * Resolves the supplied selector path, validates the resolved terminal field,
-	 * and returns the corresponding path understood by downstream query builders.
-	 *
-	 * @param path selector path from the incoming request
-	 * @param terminalFieldValidator callback used to validate the resolved
-	 * terminal field; when {@code null}, terminal
-	 * field validation is skipped
-	 *
-	 * @return resolved path suitable for entity-backed query execution
-	 */
-	String resolvePathAndValidateTerminalField(String path, @Nullable Consumer<Field> terminalFieldValidator);
-
-	/**
 	 * Resolves the supplied selector path without performing terminal-field validation.
 	 *
 	 * @param path selector path from the incoming request
 	 *
 	 * @return resolved path suitable for entity-backed query execution
 	 */
-	default String resolvePath(@NonNull String path) {
-		return resolvePathAndValidateTerminalField(path, null);
-	}
+	ResolutionResult resolvePath(@NonNull String path);
 }

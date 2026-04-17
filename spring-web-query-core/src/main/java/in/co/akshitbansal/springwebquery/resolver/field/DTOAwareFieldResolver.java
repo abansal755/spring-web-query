@@ -23,13 +23,11 @@ import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * {@link FieldResolver} implementation that treats a DTO type as the public
@@ -50,13 +48,13 @@ public class DTOAwareFieldResolver implements FieldResolver {
 	 * Entity type used to validate the translated path.
 	 */
 	@NonNull
-	private final Class<?> entityClass;
+	protected final Class<?> entityClass;
 
 	/**
 	 * DTO type used as the external selector contract.
 	 */
 	@NonNull
-	private final Class<?> dtoClass;
+	protected final Class<?> dtoClass;
 
 	/**
 	 * Resolves a DTO selector path, validates its terminal DTO field, and maps
@@ -70,7 +68,7 @@ public class DTOAwareFieldResolver implements FieldResolver {
 	 * @return resolved entity path corresponding to the DTO selector
 	 */
 	@Override
-	public String resolvePathAndValidateTerminalField(@NonNull String dtoPath, @Nullable Consumer<Field> terminalFieldValidator) {
+	public ResolutionResult resolvePath(@NonNull String dtoPath) {
 		// Resolve the field path in the DTO class
 		List<Field> dtoFields;
 		try {
@@ -83,10 +81,6 @@ public class DTOAwareFieldResolver implements FieldResolver {
 					), dtoPath, ex
 			);
 		}
-
-		// Validate the last field in the path using the provided terminal field validator
-		if (terminalFieldValidator != null)
-			terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
 
 		// Construct the corresponding entity field path using the @MapsTo annotation if present
 		List<String> entityPathSegments = new ArrayList<>();
@@ -111,6 +105,6 @@ public class DTOAwareFieldResolver implements FieldResolver {
 			);
 		}
 
-		return entityPath;
+		return new ResolutionResult(entityPath, dtoFields.get(dtoFields.size() - 1));
 	}
 }
