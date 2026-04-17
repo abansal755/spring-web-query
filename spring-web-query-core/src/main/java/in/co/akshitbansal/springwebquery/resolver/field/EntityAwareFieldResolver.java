@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  *
  * <p>This resolver can rewrite request selectors using declared aliases,
  * reject access to original field names when a mapping forbids them, and
- * validate the resolved terminal entity field via the supplied callback.</p>
+ * return the resolved terminal entity field for caller-side validation.</p>
  */
 public class EntityAwareFieldResolver implements FieldResolver {
 
@@ -89,15 +89,12 @@ public class EntityAwareFieldResolver implements FieldResolver {
 	}
 
 	/**
-	 * Resolves an entity-facing selector path, validates the resolved terminal
-	 * field, and returns the final entity path.
+	 * Resolves an entity-facing selector path.
 	 *
 	 * @param reqFieldPath selector path from the incoming request
-	 * @param terminalFieldValidator callback used to validate the resolved
-	 * terminal field; when {@code null},
-	 * terminal-field validation is skipped
 	 *
-	 * @return resolved entity path after alias translation
+	 * @return resolution result containing the resolved entity path after alias
+	 * translation and the terminal entity field
 	 *
 	 * @throws QueryFieldValidationException if the request path is blocked by
 	 * mapping rules or cannot be

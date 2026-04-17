@@ -36,9 +36,10 @@ import java.util.List;
  * <p>Resolution proceeds in three steps:</p>
  * <ul>
  *     <li>Resolve the incoming path against the DTO class structure.</li>
- *     <li>Validate the terminal DTO field via the supplied callback.</li>
  *     <li>Translate the DTO path to an entity path using {@link MapsTo}, then
  *     verify that the resulting entity path exists.</li>
+ *     <li>Return the mapped entity path together with the terminal DTO field so
+ *     callers can apply validation separately.</li>
  * </ul>
  */
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
@@ -57,15 +58,12 @@ public class DTOAwareFieldResolver implements FieldResolver {
 	protected final Class<?> dtoClass;
 
 	/**
-	 * Resolves a DTO selector path, validates its terminal DTO field, and maps
-	 * the selector to the corresponding entity path.
+	 * Resolves a DTO selector path and maps the selector to the corresponding
+	 * entity path.
 	 *
 	 * @param dtoPath selector path from the incoming request
-	 * @param terminalFieldValidator callback used to validate the terminal DTO
-	 * field; when {@code null}, terminal-field
-	 * validation is skipped
 	 *
-	 * @return resolved entity path corresponding to the DTO selector
+	 * @return resolution result containing the mapped entity path and terminal DTO field
 	 */
 	@Override
 	public ResolutionResult resolvePath(@NonNull String dtoPath) {

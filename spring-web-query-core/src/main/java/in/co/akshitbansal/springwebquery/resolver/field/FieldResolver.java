@@ -23,18 +23,18 @@ import lombok.NonNull;
  *
  * <p>Implementations encapsulate the path-resolution rules for a particular
  * query contract, such as direct entity-field access or DTO-to-entity mapping.
- * They also expose a hook for validating the resolved terminal field before the
- * final path is returned to the caller.</p>
+ * Resolution returns both the resolved entity path and the reflected terminal
+ * field so callers can apply validation policies after path resolution.</p>
  */
 @FunctionalInterface
 public interface FieldResolver {
 
 	/**
-	 * Resolves the supplied selector path without performing terminal-field validation.
+	 * Resolves the supplied selector path.
 	 *
 	 * @param path selector path from the incoming request
 	 *
-	 * @return resolved path suitable for entity-backed query execution
+	 * @return resolution result containing the entity-backed path and terminal field
 	 */
 	ResolutionResult resolvePath(@NonNull String path);
 }
