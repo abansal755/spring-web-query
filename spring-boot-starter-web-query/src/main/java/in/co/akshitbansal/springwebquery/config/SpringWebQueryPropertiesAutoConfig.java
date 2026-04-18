@@ -60,7 +60,6 @@ public class SpringWebQueryPropertiesAutoConfig {
 	 * positive power of two
 	 */
 	@Bean
-	@ConditionalOnMissingBean
 	public SpringWebQueryProperties springWebQueryProperties(
 			@Value("${spring-web-query.filtering.filter-param-name:filter}") String globalFilterParamName,
 			@Value("${spring-web-query.filtering.allow-and-operation:true}") boolean globalAllowAndOperation,
