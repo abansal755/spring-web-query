@@ -10,7 +10,7 @@ jobs:
         name: Run JMH Benchmarks
         runs-on: ubuntu-latest
         if: >-
-            ${{ contains(github.event.head_commit.message, 'BENCHMARK') }}
+            ${{ contains(github.event.head_commit.message, '[BENCHMARK]') }}
         
         steps:
             - name: Checkout
