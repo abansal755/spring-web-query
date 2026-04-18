@@ -82,17 +82,20 @@ public class SpringWebQueryPropertiesAutoConfig {
 			));
 		}
 
-		// Validating failedResolutionsMaxCapacity
-		if (failedDTOAwareResolutionCachingMaxCapacity <= 0) {
-			throw new QueryConfigurationException(MessageFormat.format(
-					"Value for spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity must be positive. Provided value: {0}",
-					failedDTOAwareResolutionCachingMaxCapacity
-			));
-		}
+		// Only validate the following properties if caching is enabled
+		if(dtoAwareFieldResolutionCachingEnabled) {
+			// Validating failedResolutionsMaxCapacity
+			if (failedDTOAwareResolutionCachingMaxCapacity <= 0) {
+				throw new QueryConfigurationException(MessageFormat.format(
+						"Value for spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity must be positive. Provided value: {0}",
+						failedDTOAwareResolutionCachingMaxCapacity
+				));
+			}
 
-		// Validating dtoAwareFieldResolutionCachingKeyLockPoolSize
-		KeyLockPoolSizeValidator keyLockPoolSizeValidator = new KeyLockPoolSizeValidator();
-		keyLockPoolSizeValidator.validate(dtoAwareFieldResolutionCachingKeyLockPoolSize);
+			// Validating dtoAwareFieldResolutionCachingKeyLockPoolSize
+			KeyLockPoolSizeValidator keyLockPoolSizeValidator = new KeyLockPoolSizeValidator();
+			keyLockPoolSizeValidator.validate(dtoAwareFieldResolutionCachingKeyLockPoolSize);
+		}
 
 		SpringWebQueryProperties properties = new SpringWebQueryProperties(
 				globalFilterParamName,

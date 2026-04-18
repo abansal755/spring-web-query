@@ -86,12 +86,12 @@ public class CachedDTOAwareFieldResolverBenchmark {
 	}
 
 	@Benchmark
-	public ResolutionResult resolvePathCacheMissTest(CacheMissResolverState resolverState, DTOAwareFieldResolverBenchmark.TestParams params) {
+	public ResolutionResult resolvePathCacheMissTest(CacheMissResolverState resolverState, TestParams params) {
 		return resolverState.fieldResolver.resolvePath(params.dtoPath);
 	}
 
 	@Benchmark
-	public ResolutionResult resolvePathCacheHitTest(CacheHitResolverState resolverState, DTOAwareFieldResolverBenchmark.TestParams params) {
+	public ResolutionResult resolvePathCacheHitTest(CacheHitResolverState resolverState, TestParams params) {
 		return resolverState.fieldResolver.resolvePath(params.dtoPath);
 	}
 }

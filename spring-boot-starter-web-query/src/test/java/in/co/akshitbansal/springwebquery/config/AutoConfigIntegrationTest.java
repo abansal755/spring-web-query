@@ -84,12 +84,12 @@ class AutoConfigIntegrationTest {
 	}
 
 	@Test
-		void specificationConfigRejectsNegativeMaxAstDepth() {
-			assertThrows(
-					QueryConfigurationException.class,
-					() -> new SpringWebQueryPropertiesAutoConfig()
-							.springWebQueryProperties("filter", true, false, -1, false, 1000, 128, new QueryParamNameValidator())
-			);
+	void specificationConfigRejectsNegativeMaxAstDepth() {
+		assertThrows(
+				QueryConfigurationException.class,
+				() -> new SpringWebQueryPropertiesAutoConfig()
+						.springWebQueryProperties("filter", true, false, -1, false, 1000, 128, new QueryParamNameValidator())
+		);
 	}
 
 	@SpringBootConfiguration
