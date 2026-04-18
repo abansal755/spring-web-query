@@ -45,27 +45,46 @@ jobs:
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: mvn -B -ntp clean verify -Dspring-boot.version=${{ matrix.spring-boot-version }}
 
+    jmh-build-test:
+        runs-on: ubuntu-latest
+        if: >-
+            ${{ github.event_name != 'push' || !(
+              contains(github.event.head_commit.message, 'SKIP CI')
+            ) }}
+        name: Build JMH Benchmarks
+
+        steps:
+            - name: Build core package
+              working-directory: ${{ github.workspace }}/spring-web-query-core
+              run: mvn -B -ntp clean install
+
             - name: Build jmh project
               working-directory: ${{ github.workspace }}/jmh-benchmarks
               run: mvn -B -ntp clean verify
 
     trivy:
         uses: ./.github/workflows/trivy.yml
-        needs: build-test
+        needs:
+            - build-test
+            - jmh-build-test
         name: Trivy
         with:
             target_branch: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
     codeql:
         uses: ./.github/workflows/codeql.yml
-        needs: build-test
+        needs:
+            - build-test
+            - jmh-build-test
         name: CodeQL
         with:
             target_branch: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
     snapshot-release:
         name: Snapshot Release
-        needs: build-test
+        needs:
+            - build-test
+            - jmh-build-test
         runs-on: ubuntu-latest
         if: >-
             ${{ 

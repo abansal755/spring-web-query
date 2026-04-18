@@ -64,7 +64,7 @@ jobs:
             - name: Commit changes
               run: |
                   git add spring-web-query-core/pom.xml \
-                  spring-boot-starter-web-query/pom.xml
+                  spring-boot-starter-web-query/pom.xml \
                   jmh-benchmarks/pom.xml
                   
                   git commit -m "Changed versions to ${{ inputs.version }}"

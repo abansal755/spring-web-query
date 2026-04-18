@@ -23,6 +23,10 @@ jobs:
                   java-version: "17"
                   cache: maven
 
+            - name: Build core package
+              working-directory: ${{ github.workspace }}/spring-web-query-core
+              run: mvn -B -ntp clean install
+
             - name: Build JMH Maven Project
               working-directory: ${{ github.workspace }}/jmh-benchmarks
               run: mvn -B -ntp clean verify
