@@ -43,7 +43,7 @@ jobs:
 
             - name: Run Benchmarks
               working-directory: ${{ github.workspace }}/jmh-benchmarks/target
-              run: java -jar benchmarks.jar ${{ matrix.className }} -rf csv -rff results-${{ matrix.className }}.csv
+              run: java -jar benchmarks.jar "^.*\.${{ matrix.className }}\..*$" -rf csv -rff results-${{ matrix.className }}.csv
 
             - name: Upload JMH Results
               uses: actions/upload-artifact@v7
