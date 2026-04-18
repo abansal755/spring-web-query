@@ -18,15 +18,14 @@ package in.co.akshitbansal.springwebquery.resolver.field.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.util.concurrent.Striped;
 import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
-import in.co.akshitbansal.springwebquery.validator.KeyLockPoolSizeValidator;
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Shared cache for DTO-aware field-resolution outcomes.
@@ -48,26 +47,26 @@ public class DTOAwareFieldResolutionCache {
 	private final Cache<CacheKey, RuntimeException> failedResolutions;
 
 	/**
-	 * Striped lock pool used to serialize cache population for hash-bucket
-	 * groups of cache keys.
+	 * Striped lock registry used to coordinate concurrent cache population.
 	 */
-	private final Lock[] keyLockPool;
+	private final Striped<Lock> stripedLock;
+
 
 	/**
 	 * Creates the shared cache used by cached DTO-aware field resolvers.
 	 *
 	 * @param failedResolutionsMaxCapacity maximum number of failed resolutions to
 	 * retain
-	 * @param keyLockPoolSize number of striped locks used to coordinate cache
+	 * @param lockStripeCount number of lock stripes used to coordinate cache
 	 * population for selector keys
+	 *
+	 * @throws IllegalArgumentException if the failed-resolution cache capacity
+	 * or lock stripe count is non-positive
 	 */
-	public DTOAwareFieldResolutionCache(int failedResolutionsMaxCapacity, int keyLockPoolSize) {
+	public DTOAwareFieldResolutionCache(int failedResolutionsMaxCapacity, int lockStripeCount) {
 		// Validate failed resolutions max capacity
 		if (failedResolutionsMaxCapacity <= 0)
 			throw new IllegalArgumentException("Failed resolutions max capacity must be a positive integer");
-		// Validate key lock pool size
-		KeyLockPoolSizeValidator keyLockPoolSizeValidator = new KeyLockPoolSizeValidator();
-		keyLockPoolSizeValidator.validate(keyLockPoolSize);
 
 		this.successfulResolutions = new ConcurrentHashMap<>();
 		this.failedResolutions = Caffeine
@@ -75,9 +74,7 @@ public class DTOAwareFieldResolutionCache {
 				.maximumSize(failedResolutionsMaxCapacity)
 				.build();
 
-		this.keyLockPool = new Lock[keyLockPoolSize];
-		for (int idx = 0; idx < keyLockPool.length; idx++)
-			keyLockPool[idx] = new ReentrantLock();
+		this.stripedLock = Striped.lock(lockStripeCount);
 	}
 
 	/**
@@ -122,7 +119,7 @@ public class DTOAwareFieldResolutionCache {
 	 * Returns the striped lock associated with the supplied cache key.
 	 *
 	 * <p>The returned lock is selected by hashing the key into the configured
-	 * lock pool so callers can coordinate cache population without allocating a
+	 * stripe set so callers can coordinate cache population without allocating a
 	 * dedicated lock per selector.</p>
 	 *
 	 * @param cacheKey composite key identifying the query contract and DTO path
@@ -130,7 +127,6 @@ public class DTOAwareFieldResolutionCache {
 	 * @return lock guarding cache population for the key's stripe
 	 */
 	public Lock getKeyLock(@NonNull CacheKey cacheKey) {
-		int idx = cacheKey.hashCode() & (keyLockPool.length - 1);
-		return keyLockPool[idx];
+		return stripedLock.get(cacheKey);
 	}
 }

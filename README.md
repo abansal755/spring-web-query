@@ -115,7 +115,7 @@ You keep endpoint code focused on business behavior, not query parsing.
 - Auto-configuration for resolvers, validators, and operator infrastructure
 - Optional custom operator registration hook
 - Configurable global filtering defaults via starter properties
-- DTO-aware field-resolution caching with configurable failed-resolution cache size and lock-pool size
+- DTO-aware field-resolution caching with configurable failed-resolution cache size and lock stripe count
 - built-in ISO-8601 `Timestamp` converter for RSQL values
 
 ## How it works
@@ -660,14 +660,14 @@ spring-web-query.filtering.allow-or-operation=false
 spring-web-query.filtering.max-ast-depth=1
 spring-web-query.field-resolution.dto-aware.caching.enabled=true
 spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity=1000
-spring-web-query.field-resolution.dto-aware.caching.key-lock-pool-size=128
+spring-web-query.field-resolution.dto-aware.caching.lock-stripe-count=32
 ```
 
 DTO-aware field-resolution caching is enabled by default in the starter.
 
 - `spring-web-query.field-resolution.dto-aware.caching.enabled` toggles caching for DTO-aware selector resolution used by filtering and sorting.
 - `spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity` controls the bounded cache size for failed DTO-path resolutions.
-- `spring-web-query.field-resolution.dto-aware.caching.key-lock-pool-size` configures the striped lock pool used while populating cache entries concurrently. The value must be a positive power of two.
+- `spring-web-query.field-resolution.dto-aware.caching.lock-stripe-count` configures the number of lock stripes used while populating cache entries concurrently.
 - Successful DTO-path resolutions are cached as well, so repeated requests avoid repeating the same reflective mapping work.
 - This cache applies only to DTO-aware resolution. Entity-aware alias resolution does not use this cache.
 
