@@ -16,7 +16,8 @@
 
 package in.co.akshitbansal.springwebquery.resolver.field.cache;
 
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
 import in.co.akshitbansal.springwebquery.validator.KeyLockPoolSizeValidator;
 import lombok.NonNull;
@@ -44,7 +45,7 @@ public class DTOAwareFieldResolutionCache {
 	/**
 	 * Bounded cache of failed resolution attempts keyed by query contract.
 	 */
-	private final ConcurrentMap<CacheKey, RuntimeException> failedResolutions;
+	private final Cache<CacheKey, RuntimeException> failedResolutions;
 
 	/**
 	 * Striped lock pool used to serialize cache population for hash-bucket
@@ -69,8 +70,9 @@ public class DTOAwareFieldResolutionCache {
 		keyLockPoolSizeValidator.validate(keyLockPoolSize);
 
 		this.successfulResolutions = new ConcurrentHashMap<>();
-		this.failedResolutions = new ConcurrentLinkedHashMap.Builder<CacheKey, RuntimeException>()
-				.maximumWeightedCapacity(failedResolutionsMaxCapacity)
+		this.failedResolutions = Caffeine
+				.newBuilder()
+				.maximumSize(failedResolutionsMaxCapacity)
 				.build();
 
 		this.keyLockPool = new Lock[keyLockPoolSize];
@@ -91,7 +93,7 @@ public class DTOAwareFieldResolutionCache {
 	public ResolutionResult resolveFromCache(@NonNull CacheKey cacheKey) {
 		ResolutionResult result = successfulResolutions.get(cacheKey);
 		if (result != null) return result;
-		RuntimeException ex = failedResolutions.get(cacheKey);
+		RuntimeException ex = failedResolutions.getIfPresent(cacheKey);
 		if (ex != null) throw ex;
 		return null;
 	}
