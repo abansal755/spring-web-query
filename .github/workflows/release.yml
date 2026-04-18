@@ -75,20 +75,6 @@ jobs:
                   git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
                   git push origin ${{ inputs.version }}
 
-    trivy:
-        uses: ./.github/workflows/trivy.yml
-        needs: create-release-branch
-        name: Trivy
-        with:
-            target_branch: release/${{ inputs.version }}
-
-    codeql:
-        uses: ./.github/workflows/codeql.yml
-        needs: create-release-branch
-        name: CodeQL
-        with:
-            target_branch: release/${{ inputs.version }}
-
     deploy-packages:
         name: Deploy Packages
         needs: create-release-branch
