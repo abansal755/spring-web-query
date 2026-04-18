@@ -18,6 +18,7 @@ package in.co.akshitbansal.springwebquery.resolver.field.cache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
+import in.co.akshitbansal.springwebquery.validator.KeyLockPoolSizeValidator;
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -45,10 +46,7 @@ public class DTOAwareFieldResolutionCache {
 	 */
 	private final ConcurrentMap<CacheKey, RuntimeException> failedResolutions;
 
-	/**
-	 * Per-key locks used to serialize cache population for the same selector.
-	 */
-	private final ConcurrentMap<CacheKey, Lock> keyLocks;
+	private final Lock[] keyLockPool;
 
 	/**
 	 * Creates the shared cache used by cached DTO-aware field resolvers.
@@ -56,15 +54,22 @@ public class DTOAwareFieldResolutionCache {
 	 * @param failedResolutionsMaxCapacity maximum number of failed resolutions to
 	 * retain
 	 */
-	public DTOAwareFieldResolutionCache(int failedResolutionsMaxCapacity) {
+	public DTOAwareFieldResolutionCache(int failedResolutionsMaxCapacity, int keyLockPoolSize) {
+		// Validate failed resolutions max capacity
 		if (failedResolutionsMaxCapacity <= 0)
 			throw new IllegalArgumentException("Failed resolutions max capacity must be a positive integer");
+		// Validate key lock pool size
+		KeyLockPoolSizeValidator keyLockPoolSizeValidator = new KeyLockPoolSizeValidator();
+		keyLockPoolSizeValidator.validate(keyLockPoolSize);
 
 		this.successfulResolutions = new ConcurrentHashMap<>();
 		this.failedResolutions = new ConcurrentLinkedHashMap.Builder<CacheKey, RuntimeException>()
 				.maximumWeightedCapacity(failedResolutionsMaxCapacity)
 				.build();
-		this.keyLocks = new ConcurrentHashMap<>();
+
+		this.keyLockPool = new Lock[keyLockPoolSize];
+		for (int idx = 0; idx < keyLockPool.length; idx++)
+			keyLockPool[idx] = new ReentrantLock();
 	}
 
 	/**
@@ -105,24 +110,8 @@ public class DTOAwareFieldResolutionCache {
 		failedResolutions.put(cacheKey, ex);
 	}
 
-	/**
-	 * Returns the lock used to coordinate cache population for the supplied key.
-	 *
-	 * @param cacheKey composite key identifying the query contract and DTO path
-	 *
-	 * @return per-key lock for cache population
-	 */
-	public Lock getLock(@NonNull CacheKey cacheKey) {
-		return keyLocks.computeIfAbsent(cacheKey, ignored -> new ReentrantLock());
-	}
-
-	/**
-	 * Removes the coordination lock for the supplied key after population has
-	 * completed.
-	 *
-	 * @param cacheKey composite key identifying the query contract and DTO path
-	 */
-	public void removeLock(@NonNull CacheKey cacheKey) {
-		keyLocks.remove(cacheKey);
+	public Lock getKeyLock(@NonNull CacheKey cacheKey) {
+		int idx = cacheKey.hashCode() & (keyLockPool.length - 1);
+		return keyLockPool[idx];
 	}
 }

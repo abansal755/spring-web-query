@@ -18,6 +18,7 @@ package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.SpringWebQueryProperties;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.validator.KeyLockPoolSizeValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,8 +59,9 @@ public class SpringWebQueryPropertiesAutoConfig {
 			@Value("${spring-web-query.filtering.allow-and-operation:true}") boolean globalAllowAndOperation,
 			@Value("${spring-web-query.filtering.allow-or-operation:false}") boolean globalAllowOrOperation,
 			@Value("${spring-web-query.filtering.max-ast-depth:1}") int globalMaxASTDepth,
-			@Value("${spring-web-query.field-resolution.dto-aware.caching.enabled:true}") boolean fieldResolutionCachingEnabled,
-			@Value("${spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity:1000}") int failedResolutionsMaxCapacity,
+			@Value("${spring-web-query.field-resolution.dto-aware.caching.enabled:true}") boolean dtoAwareFieldResolutionCachingEnabled,
+			@Value("${spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity:1000}") int failedDTOAwareResolutionCachingMaxCapacity,
+			@Value("${spring-web-query.field-resolution.dto-aware.caching.key-lock-pool-size:128}") int dtoAwareFieldResolutionCachingKeyLockPoolSize,
 			QueryParamNameValidator queryParamNameValidator
 	) {
 		// Validating globalFilterParamName
@@ -73,13 +75,26 @@ public class SpringWebQueryPropertiesAutoConfig {
 			));
 		}
 
+		// Validating failedResolutionsMaxCapacity
+		if (failedDTOAwareResolutionCachingMaxCapacity <= 0) {
+			throw new QueryConfigurationException(MessageFormat.format(
+					"Value for spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity must be positive. Provided value: {0}",
+					failedDTOAwareResolutionCachingMaxCapacity
+			));
+		}
+
+		// Validating dtoAwareFieldResolutionCachingKeyLockPoolSize
+		KeyLockPoolSizeValidator keyLockPoolSizeValidator = new KeyLockPoolSizeValidator();
+		keyLockPoolSizeValidator.validate(dtoAwareFieldResolutionCachingKeyLockPoolSize);
+
 		SpringWebQueryProperties properties = new SpringWebQueryProperties(
 				globalFilterParamName,
 				globalAllowAndOperation,
 				globalAllowOrOperation,
 				globalMaxASTDepth,
-				fieldResolutionCachingEnabled,
-				failedResolutionsMaxCapacity
+				dtoAwareFieldResolutionCachingEnabled,
+				failedDTOAwareResolutionCachingMaxCapacity,
+				dtoAwareFieldResolutionCachingKeyLockPoolSize
 		);
 		log.info("Global spring-web-query configuration: {}", properties);
 		return properties;

@@ -68,7 +68,7 @@ public class CachedDTOAwareFieldResolver extends DTOAwareFieldResolver {
 		ResolutionResult result = cache.resolveFromCache(cacheKey);
 		if (result != null) return result;
 
-		Lock lock = cache.getLock(cacheKey);
+		Lock lock = cache.getKeyLock(cacheKey);
 		lock.lock();
 		try {
 			result = cache.resolveFromCache(cacheKey);
@@ -86,7 +86,6 @@ public class CachedDTOAwareFieldResolver extends DTOAwareFieldResolver {
 		}
 		finally {
 			lock.unlock();
-			cache.removeLock(cacheKey);
 		}
 	}
 }

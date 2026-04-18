@@ -52,11 +52,13 @@ public class SpringWebQueryProperties {
 	/**
 	 * Whether starter-managed DTO-aware field-resolution caching is enabled.
 	 */
-	private final boolean fieldResolutionCachingEnabled;
+	private final boolean dtoAwareFieldResolutionCachingEnabled;
 
 	/**
 	 * Maximum number of failed DTO-aware resolution attempts retained in the
 	 * bounded cache.
 	 */
-	private final int failedResolutionsMaxCapacity;
+	private final int failedDTOAwareResolutionCachingMaxCapacity;
+
+	private final int dtoAwareFieldResolutionCachingKeyLockPoolSize;
 }

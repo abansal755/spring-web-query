@@ -53,9 +53,9 @@ public class FactoryAutoConfig {
 	public DTOAwareFieldResolutionCache dtoAwareFieldResolutionCache(SpringWebQueryProperties properties) {
 		log.info(
 				"Registered {} for caching DTO-aware field resolutions with max capacity for failed resolutions: {}",
-				DTOAwareFieldResolutionCache.class.getSimpleName(), properties.getFailedResolutionsMaxCapacity()
+				DTOAwareFieldResolutionCache.class.getSimpleName(), properties.getFailedDTOAwareResolutionCachingMaxCapacity()
 		);
-		return new DTOAwareFieldResolutionCache(properties.getFailedResolutionsMaxCapacity());
+		return new DTOAwareFieldResolutionCache(properties.getFailedDTOAwareResolutionCachingMaxCapacity(), properties.getDtoAwareFieldResolutionCachingKeyLockPoolSize());
 	}
 
 	/**
