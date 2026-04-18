@@ -57,7 +57,7 @@ public class SpringWebQueryPropertiesAutoConfig {
 			@Value("${spring-web-query.filtering.allow-or-operation:false}") boolean globalAllowOrOperation,
 			@Value("${spring-web-query.filtering.max-ast-depth:1}") int globalMaxASTDepth,
 			@Value("${spring-web-query.field-resolution.caching.enabled:false}") boolean fieldResolutionCachingEnabled,
-			@Value("${spring-web-query.field-resolution.caching.failed-resolutions-max-capacity}") int failedResolutionsMaxCapacity,
+			@Value("${spring-web-query.field-resolution.caching.failed-resolutions-max-capacity:1000}") int failedResolutionsMaxCapacity,
 			QueryParamNameValidator queryParamNameValidator
 	) {
 		// Validating globalFilterParamName
