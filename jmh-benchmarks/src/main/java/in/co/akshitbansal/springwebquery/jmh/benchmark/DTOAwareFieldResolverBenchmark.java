@@ -20,6 +20,7 @@ import in.co.akshitbansal.springwebquery.jmh.entity.UserEntity;
 import in.co.akshitbansal.springwebquery.jmh.model.User;
 import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
 import org.openjdk.jmh.annotations.*;
 
 import java.lang.reflect.Constructor;
@@ -64,7 +65,7 @@ public class DTOAwareFieldResolverBenchmark {
 	}
 
 	@Benchmark
-	public String resolvePathTest(ResolverState resolverState, TestParams params) {
+	public ResolutionResult resolvePathTest(ResolverState resolverState, TestParams params) {
 		return resolverState.fieldResolver.resolvePath(params.dtoPath);
 	}
 }
