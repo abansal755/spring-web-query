@@ -33,10 +33,10 @@ jobs:
 
             - name: Run Benchmarks
               working-directory: ${{ github.workspace }}/jmh-benchmarks/target
-              run: java -jar benchmarks.jar -rf json -rff results.json
+              run: java -jar benchmarks.jar -rf csv -rff results.csv
 
             - name: Upload JMH Results
               uses: actions/upload-artifact@v7
               with:
                   name: jmh-results
-                  path: jmh-benchmarks/target/results.json
+                  path: jmh-benchmarks/target/results.csv
