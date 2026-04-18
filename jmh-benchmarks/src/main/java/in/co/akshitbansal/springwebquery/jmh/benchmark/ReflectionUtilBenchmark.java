@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class ReflectionUtilBenchmark {
 
-	@State(Scope.Benchmark)
+	@State(Scope.Thread)
 	public static class TestParams {
 
 		@Param({
