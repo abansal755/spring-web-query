@@ -37,8 +37,6 @@ jobs:
               with:
                 scan-type: 'fs'
                 scan-ref: '.'
-                severity: CRITICAL,HIGH,MEDIUM
-                scanners: vuln,secret
                 format: 'table'
               env:
                 TRIVY_TABLE_MODE: summary
@@ -48,8 +46,6 @@ jobs:
               with:
                 scan-type: 'fs'
                 scan-ref: '.'
-                severity: CRITICAL,HIGH,MEDIUM
-                scanners: vuln,secret
                 format: 'sarif'
                 output: 'report.sarif'
 
