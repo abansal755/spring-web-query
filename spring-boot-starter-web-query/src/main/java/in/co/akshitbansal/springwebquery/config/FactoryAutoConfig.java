@@ -45,8 +45,9 @@ public class FactoryAutoConfig {
 	 */
 	@Bean
 	@ConditionalOnProperty(
-			name = "spring-web-query.field-resolution.caching.enabled",
-			havingValue = "true"
+			name = "spring-web-query.field-resolution.dto-aware.caching.enabled",
+			havingValue = "true",
+			matchIfMissing = true
 	)
 	@ConditionalOnMissingBean
 	public DTOAwareFieldResolutionCache dtoAwareFieldResolutionCache(SpringWebQueryProperties properties) {
