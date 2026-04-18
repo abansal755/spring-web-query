@@ -64,5 +64,5 @@ public class SpringWebQueryProperties {
 	 * Number of striped locks used to coordinate concurrent cache population for
 	 * DTO-aware selector paths.
 	 */
-	private final int dtoAwareFieldResolutionCachingKeyLockPoolSize;
+	private final int dtoAwareFieldResolutionCachingLockStripeCount;
 }

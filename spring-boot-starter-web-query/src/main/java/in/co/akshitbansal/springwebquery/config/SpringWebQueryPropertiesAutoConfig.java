@@ -18,7 +18,6 @@ package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.SpringWebQueryProperties;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.validator.KeyLockPoolSizeValidator;
 import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,7 +65,7 @@ public class SpringWebQueryPropertiesAutoConfig {
 			@Value("${spring-web-query.filtering.max-ast-depth:1}") int globalMaxASTDepth,
 			@Value("${spring-web-query.field-resolution.dto-aware.caching.enabled:true}") boolean dtoAwareFieldResolutionCachingEnabled,
 			@Value("${spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity:1000}") int failedDTOAwareResolutionCachingMaxCapacity,
-			@Value("${spring-web-query.field-resolution.dto-aware.caching.key-lock-pool-size:128}") int dtoAwareFieldResolutionCachingKeyLockPoolSize,
+			@Value("${spring-web-query.field-resolution.dto-aware.caching.lock-stripe-count:32}") int dtoAwareFieldResolutionCachingLockStripeCount,
 			QueryParamNameValidator queryParamNameValidator
 	) {
 		// Validating globalFilterParamName
@@ -89,10 +88,6 @@ public class SpringWebQueryPropertiesAutoConfig {
 						failedDTOAwareResolutionCachingMaxCapacity
 				));
 			}
-
-			// Validating dtoAwareFieldResolutionCachingKeyLockPoolSize
-			KeyLockPoolSizeValidator keyLockPoolSizeValidator = new KeyLockPoolSizeValidator();
-			keyLockPoolSizeValidator.validate(dtoAwareFieldResolutionCachingKeyLockPoolSize);
 		}
 
 		SpringWebQueryProperties properties = new SpringWebQueryProperties(
@@ -102,7 +97,7 @@ public class SpringWebQueryPropertiesAutoConfig {
 				globalMaxASTDepth,
 				dtoAwareFieldResolutionCachingEnabled,
 				failedDTOAwareResolutionCachingMaxCapacity,
-				dtoAwareFieldResolutionCachingKeyLockPoolSize
+				dtoAwareFieldResolutionCachingLockStripeCount
 		);
 		log.info("Global spring-web-query configuration: {}", properties);
 		return properties;
