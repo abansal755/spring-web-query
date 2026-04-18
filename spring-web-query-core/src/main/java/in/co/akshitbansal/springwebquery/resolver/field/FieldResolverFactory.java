@@ -16,11 +16,13 @@
 
 package in.co.akshitbansal.springwebquery.resolver.field;
 
-import in.co.akshitbansal.springwebquery.resolver.field.cache.CachedDTOAwareFieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
+import in.co.akshitbansal.springwebquery.resolver.field.cache.CachedDTOAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.cache.DTOAwareFieldResolutionCache;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgumentResolverConfig;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Factory for creating field resolvers used by validation visitors and
@@ -29,10 +31,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FieldResolverFactory {
 
-	private final boolean useCachedFieldResolvers;
+	@Nullable
+	private final DTOAwareFieldResolutionCache dtoAwareFieldResolutionCache;
 
 	public FieldResolverFactory() {
-		this(false);
+		this(null);
 	}
 
 	/**
@@ -45,8 +48,8 @@ public class FieldResolverFactory {
 	 */
 	public FieldResolver newFieldResolver(@NonNull AbstractArgumentResolverConfig config) {
 		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE) {
-			if (useCachedFieldResolvers)
-				return new CachedDTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());
+			if (dtoAwareFieldResolutionCache != null)
+				return new CachedDTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass(), dtoAwareFieldResolutionCache);
 			return new DTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());
 		}
 		return new EntityAwareFieldResolver(config.getEntityClass(), config.getFieldMappings());

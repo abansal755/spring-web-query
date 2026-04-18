@@ -4,7 +4,6 @@ in.co.akshitbansal.springwebquery.config.RSQLParserAutoConfig
 in.co.akshitbansal.springwebquery.config.ValidatorAutoConfig
 in.co.akshitbansal.springwebquery.config.FactoryAutoConfig
 in.co.akshitbansal.springwebquery.config.SpringWebQueryPropertiesAutoConfig
-in.co.akshitbansal.springwebquery.config.CacheInitAutoConfig
 
 in.co.akshitbansal.springwebquery.config.resolver.ArgumentResolverAutoConfig
 in.co.akshitbansal.springwebquery.config.resolver.ArgumentResolverRegistrationAutoConfig
