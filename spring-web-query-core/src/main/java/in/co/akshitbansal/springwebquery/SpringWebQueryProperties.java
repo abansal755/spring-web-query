@@ -60,5 +60,9 @@ public class SpringWebQueryProperties {
 	 */
 	private final int failedDTOAwareResolutionCachingMaxCapacity;
 
+	/**
+	 * Number of striped locks used to coordinate concurrent cache population for
+	 * DTO-aware selector paths.
+	 */
 	private final int dtoAwareFieldResolutionCachingKeyLockPoolSize;
 }

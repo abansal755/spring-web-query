@@ -100,7 +100,7 @@ public class DTOValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 		String dtoPath = node.getSelector();
 		ComparisonOperator operator = node.getOperator();
 
-		// Build the corresponding entity field path from the DTO path and validate the terminal field for filterability
+		// Resolve the DTO selector to an entity path and validate the resolved terminal DTO field
 		ResolutionResult result = fieldResolver.resolvePath(dtoPath);
 		filterableFieldValidator.validate(result.getTerminalField(), operator, dtoPath);
 

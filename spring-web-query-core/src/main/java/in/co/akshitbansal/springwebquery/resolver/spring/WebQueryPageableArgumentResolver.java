@@ -127,7 +127,7 @@ public class WebQueryPageableArgumentResolver extends AbstractWebQueryResolver {
 			List<Sort.Order> newOrders = new ArrayList<>();
 			for (Sort.Order order: pageable.getSort()) {
 				String reqFieldPath = order.getProperty();
-				// Build the corresponding entity field path
+				// Resolve the requested sort selector to the effective entity field path
 				ResolutionResult result = fieldResolver.resolvePath(reqFieldPath);
 				sortableFieldValidator.validate(result.getTerminalField(), reqFieldPath);
 				newOrders.add(new Sort.Order(order.getDirection(), result.getFieldName()));

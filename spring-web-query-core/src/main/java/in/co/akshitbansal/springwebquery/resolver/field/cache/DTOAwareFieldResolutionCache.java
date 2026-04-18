@@ -46,6 +46,10 @@ public class DTOAwareFieldResolutionCache {
 	 */
 	private final ConcurrentMap<CacheKey, RuntimeException> failedResolutions;
 
+	/**
+	 * Striped lock pool used to serialize cache population for hash-bucket
+	 * groups of cache keys.
+	 */
 	private final Lock[] keyLockPool;
 
 	/**
@@ -53,6 +57,8 @@ public class DTOAwareFieldResolutionCache {
 	 *
 	 * @param failedResolutionsMaxCapacity maximum number of failed resolutions to
 	 * retain
+	 * @param keyLockPoolSize number of striped locks used to coordinate cache
+	 * population for selector keys
 	 */
 	public DTOAwareFieldResolutionCache(int failedResolutionsMaxCapacity, int keyLockPoolSize) {
 		// Validate failed resolutions max capacity
@@ -110,6 +116,17 @@ public class DTOAwareFieldResolutionCache {
 		failedResolutions.put(cacheKey, ex);
 	}
 
+	/**
+	 * Returns the striped lock associated with the supplied cache key.
+	 *
+	 * <p>The returned lock is selected by hashing the key into the configured
+	 * lock pool so callers can coordinate cache population without allocating a
+	 * dedicated lock per selector.</p>
+	 *
+	 * @param cacheKey composite key identifying the query contract and DTO path
+	 *
+	 * @return lock guarding cache population for the key's stripe
+	 */
 	public Lock getKeyLock(@NonNull CacheKey cacheKey) {
 		int idx = cacheKey.hashCode() & (keyLockPool.length - 1);
 		return keyLockPool[idx];

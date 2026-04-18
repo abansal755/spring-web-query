@@ -16,8 +16,24 @@
 
 package in.co.akshitbansal.springwebquery.validator;
 
+/**
+ * Validator for the striped lock-pool size used by DTO-aware field-resolution
+ * caching.
+ *
+ * <p>The cache indexes locks by masking hash codes, so the pool size must be a
+ * positive power of two.</p>
+ */
 public class KeyLockPoolSizeValidator {
 
+	/**
+	 * Validates that the configured lock-pool size is positive and a power of
+	 * two.
+	 *
+	 * @param size configured lock-pool size
+	 *
+	 * @throws IllegalArgumentException when the size is non-positive or not a
+	 * power of two
+	 */
 	public void validate(int size) {
 		if(size <= 0)
 			throw new IllegalArgumentException("Key lock pool size must be a positive integer");

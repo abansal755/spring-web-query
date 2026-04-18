@@ -44,13 +44,20 @@ public class SpringWebQueryPropertiesAutoConfig {
 	 * @param globalAllowAndOperation whether logical AND nodes are allowed by default
 	 * @param globalAllowOrOperation whether logical OR nodes are allowed by default
 	 * @param globalMaxASTDepth configured maximum allowed depth for parsed RSQL ASTs
-	 * @param fieldResolutionCachingEnabled whether DTO-aware field-resolution caching is enabled
-	 * @param failedResolutionsMaxCapacity maximum number of failed DTO-aware resolutions to cache
+	 * @param dtoAwareFieldResolutionCachingEnabled whether DTO-aware
+	 * field-resolution caching is enabled
+	 * @param failedDTOAwareResolutionCachingMaxCapacity maximum number of failed
+	 * DTO-aware resolutions to cache
+	 * @param dtoAwareFieldResolutionCachingKeyLockPoolSize number of striped
+	 * locks used to coordinate cache population for selector keys
 	 * @param queryParamNameValidator validator used for configured filter parameter names
 	 *
 	 * @return validated global filtering properties
 	 *
-	 * @throws QueryConfigurationException if the configured maximum AST depth is negative
+	 * @throws QueryConfigurationException if the configured maximum AST depth is
+	 * negative or the failed-resolution cache capacity is non-positive
+	 * @throws IllegalArgumentException if the configured lock-pool size is not a
+	 * positive power of two
 	 */
 	@Bean
 	@ConditionalOnMissingBean

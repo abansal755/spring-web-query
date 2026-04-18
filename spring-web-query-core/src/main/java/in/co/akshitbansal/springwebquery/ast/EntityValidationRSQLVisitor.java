@@ -85,7 +85,7 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 		String reqFieldName = node.getSelector();
 		ComparisonOperator operator = node.getOperator();
 
-		// Resolve the field on the entity class using the requested field name and field mappings
+		// Resolve the request selector to the effective entity field and validate the terminal field
 		ResolutionResult result = fieldResolver.resolvePath(reqFieldName);
 		filterableFieldValidator.validate(result.getTerminalField(), operator, reqFieldName);
 	}
