@@ -18,18 +18,34 @@ package in.co.akshitbansal.springwebquery.resolver.field.cache;
 
 import lombok.*;
 
+/**
+ * Composite key used for caching DTO-aware field-resolution results.
+ *
+ * <p>The cache is scoped by the entity type, DTO type, and incoming DTO path so
+ * the same selector string can be resolved independently for different query
+ * contracts.</p>
+ */
 @RequiredArgsConstructor
 @Getter
 @EqualsAndHashCode
 @ToString
 public class CacheKey {
 
+	/**
+	 * Entity type that the DTO selector is ultimately mapped against.
+	 */
 	@NonNull
 	private final Class<?> entityClass;
 
+	/**
+	 * DTO type used as the external selector contract.
+	 */
 	@NonNull
 	private final Class<?> dtoClass;
 
+	/**
+	 * Incoming selector path expressed in DTO terms.
+	 */
 	@NonNull
 	private final String dtoPath;
 }

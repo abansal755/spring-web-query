@@ -35,6 +35,14 @@ import org.springframework.context.annotation.Bean;
 @Slf4j
 public class FactoryAutoConfig {
 
+	/**
+	 * Creates the shared cache used by DTO-aware field resolvers when caching is
+	 * enabled.
+	 *
+	 * @param properties validated global starter properties
+	 *
+	 * @return DTO-aware field-resolution cache
+	 */
 	@Bean
 	@ConditionalOnProperty(
 			name = "spring-web-query.field-resolution.caching.enabled",
@@ -49,6 +57,14 @@ public class FactoryAutoConfig {
 		return new DTOAwareFieldResolutionCache(properties.getFailedResolutionsMaxCapacity());
 	}
 
+	/**
+	 * Creates the shared field-resolver factory backed by the DTO-resolution
+	 * cache.
+	 *
+	 * @param cache cache for memoizing DTO-aware field-resolution results
+	 *
+	 * @return field-resolver factory that produces cached DTO-aware resolvers
+	 */
 	@Bean
 	@ConditionalOnBean(DTOAwareFieldResolutionCache.class)
 	@ConditionalOnMissingBean
@@ -57,7 +73,8 @@ public class FactoryAutoConfig {
 	}
 
 	/**
-	 * Creates the shared factory for field resolver instances.
+	 * Creates the shared factory for field resolver instances when caching is not
+	 * enabled.
 	 *
 	 * @return field resolver factory
 	 */

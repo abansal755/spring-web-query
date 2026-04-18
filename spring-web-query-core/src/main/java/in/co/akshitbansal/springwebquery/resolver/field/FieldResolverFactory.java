@@ -31,9 +31,16 @@ import org.jspecify.annotations.Nullable;
 @RequiredArgsConstructor
 public class FieldResolverFactory {
 
+	/**
+	 * Optional cache used to wrap DTO-aware resolvers with memoized path
+	 * resolution.
+	 */
 	@Nullable
 	private final DTOAwareFieldResolutionCache dtoAwareFieldResolutionCache;
 
+	/**
+	 * Creates a factory that always builds uncached field resolvers.
+	 */
 	public FieldResolverFactory() {
 		this(null);
 	}
@@ -44,7 +51,8 @@ public class FieldResolverFactory {
 	 *
 	 * @param config effective argument-resolver configuration
 	 *
-	 * @return entity-aware or DTO-aware field resolver
+	 * @return entity-aware resolver, uncached DTO-aware resolver, or cached
+	 * DTO-aware resolver depending on the active configuration
 	 */
 	public FieldResolver newFieldResolver(@NonNull AbstractArgumentResolverConfig config) {
 		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE) {

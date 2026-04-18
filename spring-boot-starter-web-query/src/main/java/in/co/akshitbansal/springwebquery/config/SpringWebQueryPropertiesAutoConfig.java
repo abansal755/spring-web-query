@@ -43,6 +43,8 @@ public class SpringWebQueryPropertiesAutoConfig {
 	 * @param globalAllowAndOperation whether logical AND nodes are allowed by default
 	 * @param globalAllowOrOperation whether logical OR nodes are allowed by default
 	 * @param globalMaxASTDepth configured maximum allowed depth for parsed RSQL ASTs
+	 * @param fieldResolutionCachingEnabled whether DTO-aware field-resolution caching is enabled
+	 * @param failedResolutionsMaxCapacity maximum number of failed DTO-aware resolutions to cache
 	 * @param queryParamNameValidator validator used for configured filter parameter names
 	 *
 	 * @return validated global filtering properties

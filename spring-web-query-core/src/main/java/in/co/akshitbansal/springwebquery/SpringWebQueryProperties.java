@@ -49,7 +49,14 @@ public class SpringWebQueryProperties {
 	 */
 	private final int globalMaxASTDepth;
 
+	/**
+	 * Whether starter-managed DTO-aware field-resolution caching is enabled.
+	 */
 	private final boolean fieldResolutionCachingEnabled;
 
+	/**
+	 * Maximum number of failed DTO-aware resolution attempts retained in the
+	 * bounded cache.
+	 */
 	private final int failedResolutionsMaxCapacity;
 }
