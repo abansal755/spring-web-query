@@ -53,7 +53,7 @@ public class CachedDTOAwareFieldResolverBenchmark {
 		@Setup(Level.Invocation)
 		public void setup() {
 			try {
-				DTOAwareFieldResolutionCache cache = new DTOAwareFieldResolutionCache(1000);
+				DTOAwareFieldResolutionCache cache = new DTOAwareFieldResolutionCache(1000, 128);
 				this.fieldResolver = new CachedDTOAwareFieldResolver(UserEntity.class, User.class, cache);
 			}
 			catch (Exception ex) {
@@ -70,7 +70,7 @@ public class CachedDTOAwareFieldResolverBenchmark {
 		@Setup(Level.Trial)
 		public void setup() {
 			try {
-				DTOAwareFieldResolutionCache cache = new DTOAwareFieldResolutionCache(1000);
+				DTOAwareFieldResolutionCache cache = new DTOAwareFieldResolutionCache(1000, 128);
 				this.fieldResolver = new CachedDTOAwareFieldResolver(UserEntity.class, User.class, cache);
 
 				// populate cache
