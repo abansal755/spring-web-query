@@ -18,12 +18,12 @@ package in.co.akshitbansal.springwebquery.jmh.benchmark;
 
 import in.co.akshitbansal.springwebquery.jmh.entity.UserEntity;
 import in.co.akshitbansal.springwebquery.jmh.model.User;
-import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
+import in.co.akshitbansal.springwebquery.resolver.field.cache.CachedDTOAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.cache.DTOAwareFieldResolutionCache;
 import org.openjdk.jmh.annotations.*;
 
-import java.lang.reflect.Constructor;
 import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.AverageTime)
@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class DTOAwareFieldResolverBenchmark {
+public class CachedDTOAwareFieldResolverBenchmark {
 
 	@State(Scope.Benchmark)
 	public static class TestParams {
@@ -45,18 +45,39 @@ public class DTOAwareFieldResolverBenchmark {
 		public String dtoPath;
 	}
 
+	@State(Scope.Thread)
+	public static class CacheMissResolverState {
+
+		public FieldResolver fieldResolver;
+
+		@Setup(Level.Invocation)
+		public void setup() {
+			try {
+				DTOAwareFieldResolutionCache cache = new DTOAwareFieldResolutionCache(1000, 128);
+				this.fieldResolver = new CachedDTOAwareFieldResolver(UserEntity.class, User.class, cache);
+			}
+			catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+		}
+	}
+
 	@State(Scope.Benchmark)
-	public static class ResolverState {
+	public static class CacheHitResolverState {
 
 		public FieldResolver fieldResolver;
 
 		@Setup(Level.Trial)
 		public void setup() {
 			try {
-				Class<DTOAwareFieldResolver> clazz = DTOAwareFieldResolver.class;
-				Constructor<DTOAwareFieldResolver> constructor = clazz.getDeclaredConstructor(Class.class, Class.class);
-				constructor.setAccessible(true);
-				this.fieldResolver = constructor.newInstance(UserEntity.class, User.class);
+				DTOAwareFieldResolutionCache cache = new DTOAwareFieldResolutionCache(1000, 128);
+				this.fieldResolver = new CachedDTOAwareFieldResolver(UserEntity.class, User.class, cache);
+
+				// populate cache
+				fieldResolver.resolvePath("userId");
+				fieldResolver.resolvePath("profile.primaryAddress.city");
+				fieldResolver.resolvePath("accounts.portfolios.positions.lots.serialNumber");
+				fieldResolver.resolvePath("accounts.portfolios.positions.security.issuer.compliance.marketRegion");
 			}
 			catch (Exception ex) {
 				throw new RuntimeException(ex);
@@ -65,7 +86,12 @@ public class DTOAwareFieldResolverBenchmark {
 	}
 
 	@Benchmark
-	public ResolutionResult resolvePathTest(ResolverState resolverState, TestParams params) {
+	public ResolutionResult resolvePathCacheMissTest(CacheMissResolverState resolverState, TestParams params) {
+		return resolverState.fieldResolver.resolvePath(params.dtoPath);
+	}
+
+	@Benchmark
+	public ResolutionResult resolvePathCacheHitTest(CacheHitResolverState resolverState, TestParams params) {
 		return resolverState.fieldResolver.resolvePath(params.dtoPath);
 	}
 }

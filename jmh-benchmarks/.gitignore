@@ -31,4 +31,6 @@ build/
 ### VS Code ###
 .vscode/
 
+# jmh output files
 results.json
+results.csv

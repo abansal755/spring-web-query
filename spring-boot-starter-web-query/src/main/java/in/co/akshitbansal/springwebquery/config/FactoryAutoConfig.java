@@ -16,27 +16,72 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
+import in.co.akshitbansal.springwebquery.SpringWebQueryProperties;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
+import in.co.akshitbansal.springwebquery.resolver.field.cache.DTOAwareFieldResolutionCache;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 /**
  * Publishes shared infrastructure beans used by the starter's query resolvers.
  */
 @AutoConfiguration
+@Slf4j
 public class FactoryAutoConfig {
 
 	/**
-	 * Creates the shared factory for field resolver instances.
+	 * Creates the shared cache used by DTO-aware field resolvers when caching is
+	 * enabled.
+	 *
+	 * @param properties validated global starter properties
+	 *
+	 * @return DTO-aware field-resolution cache
+	 */
+	@Bean
+	@ConditionalOnProperty(
+			name = "spring-web-query.field-resolution.dto-aware.caching.enabled",
+			havingValue = "true",
+			matchIfMissing = true
+	)
+	@ConditionalOnMissingBean
+	public DTOAwareFieldResolutionCache dtoAwareFieldResolutionCache(SpringWebQueryProperties properties) {
+		log.info(
+				"Registered {} for caching DTO-aware field resolutions with max capacity for failed resolutions: {}",
+				DTOAwareFieldResolutionCache.class.getSimpleName(), properties.getFailedDTOAwareResolutionCachingMaxCapacity()
+		);
+		return new DTOAwareFieldResolutionCache(properties.getFailedDTOAwareResolutionCachingMaxCapacity(), properties.getDtoAwareFieldResolutionCachingKeyLockPoolSize());
+	}
+
+	/**
+	 * Creates the shared field-resolver factory backed by the DTO-resolution
+	 * cache.
+	 *
+	 * @param cache cache for memoizing DTO-aware field-resolution results
+	 *
+	 * @return field-resolver factory that produces cached DTO-aware resolvers
+	 */
+	@Bean
+	@ConditionalOnBean(DTOAwareFieldResolutionCache.class)
+	@ConditionalOnMissingBean
+	public FieldResolverFactory fieldResolverFactoryWithDTOCache(DTOAwareFieldResolutionCache cache) {
+		return new FieldResolverFactory(cache);
+	}
+
+	/**
+	 * Creates the shared factory for field resolver instances when caching is not
+	 * enabled.
 	 *
 	 * @return field resolver factory
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	public FieldResolverFactory fieldResolverFactory() {
+	public FieldResolverFactory fieldResolverFactoryWithoutDTOCache() {
 		return new FieldResolverFactory();
 	}
 

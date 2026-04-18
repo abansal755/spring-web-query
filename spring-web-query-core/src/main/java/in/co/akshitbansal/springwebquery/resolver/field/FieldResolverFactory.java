@@ -16,15 +16,34 @@
 
 package in.co.akshitbansal.springwebquery.resolver.field;
 
-import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
+import in.co.akshitbansal.springwebquery.resolver.field.cache.CachedDTOAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.cache.DTOAwareFieldResolutionCache;
+import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgumentResolverConfig;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Factory for creating field resolvers used by validation visitors and
  * pageable/specification resolver flows.
  */
+@RequiredArgsConstructor
 public class FieldResolverFactory {
+
+	/**
+	 * Optional cache used to wrap DTO-aware resolvers with memoized path
+	 * resolution.
+	 */
+	@Nullable
+	private final DTOAwareFieldResolutionCache dtoAwareFieldResolutionCache;
+
+	/**
+	 * Creates a factory that always builds uncached field resolvers.
+	 */
+	public FieldResolverFactory() {
+		this(null);
+	}
 
 	/**
 	 * Creates the field resolver that matches the supplied effective query
@@ -32,11 +51,15 @@ public class FieldResolverFactory {
 	 *
 	 * @param config effective argument-resolver configuration
 	 *
-	 * @return entity-aware or DTO-aware field resolver
+	 * @return entity-aware resolver, uncached DTO-aware resolver, or cached
+	 * DTO-aware resolver depending on the active configuration
 	 */
 	public FieldResolver newFieldResolver(@NonNull AbstractArgumentResolverConfig config) {
-		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE)
+		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE) {
+			if (dtoAwareFieldResolutionCache != null)
+				return new CachedDTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass(), dtoAwareFieldResolutionCache);
 			return new DTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());
+		}
 		return new EntityAwareFieldResolver(config.getEntityClass(), config.getFieldMappings());
 	}
 }

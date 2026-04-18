@@ -4,13 +4,23 @@ on:
     push:
         branches:
             - main
+    pull_request:
 
 jobs:
     jmh:
         name: Run JMH Benchmarks
         runs-on: ubuntu-latest
         if: >-
-            ${{ contains(github.event.head_commit.message, '[BENCHMARK]') }}
+            ${{
+                (github.event_name == 'push' && contains(github.event.head_commit.message, '[BENCHMARK]')) ||
+                (github.event_name == 'pull_request' && contains(github.event.pull_request.title, '[BENCHMARK]'))
+            }}
+        strategy:
+            matrix:
+                className:
+                    - ReflectionUtilBenchmark
+                    - DTOAwareFieldResolverBenchmark
+                    - CachedDTOAwareFieldResolverBenchmark
         
         steps:
             - name: Checkout
@@ -33,10 +43,10 @@ jobs:
 
             - name: Run Benchmarks
               working-directory: ${{ github.workspace }}/jmh-benchmarks/target
-              run: java -jar benchmarks.jar -rf csv -rff results.csv
+              run: java -jar benchmarks.jar ${{ matrix.className }} -rf csv -rff results-${{ matrix.className }}.csv
 
             - name: Upload JMH Results
               uses: actions/upload-artifact@v7
               with:
-                  name: jmh-results
-                  path: jmh-benchmarks/target/results.csv
+                  name: jmh-results-${{ matrix.className }}
+                  path: jmh-benchmarks/target/results-${{ matrix.className }}.csv

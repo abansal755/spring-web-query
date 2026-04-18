@@ -24,6 +24,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.resolver.field.EntityAwareFieldResolver;
+import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 
 /**
@@ -84,10 +85,8 @@ public class EntityValidationRSQLVisitor extends AbstractValidationRSQLVisitor {
 		String reqFieldName = node.getSelector();
 		ComparisonOperator operator = node.getOperator();
 
-		// Resolve the field on the entity class using the requested field name and field mappings
-		fieldResolver.resolvePathAndValidateTerminalField(
-				reqFieldName,
-				terminalField -> filterableFieldValidator.validate(terminalField, operator, reqFieldName)
-		);
+		// Resolve the request selector to the effective entity field and validate the terminal field
+		ResolutionResult result = fieldResolver.resolvePath(reqFieldName);
+		filterableFieldValidator.validate(result.getTerminalField(), operator, reqFieldName);
 	}
 }

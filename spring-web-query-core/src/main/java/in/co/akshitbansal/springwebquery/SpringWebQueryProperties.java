@@ -48,4 +48,21 @@ public class SpringWebQueryProperties {
 	 * Global default maximum allowed depth for parsed RSQL ASTs.
 	 */
 	private final int globalMaxASTDepth;
+
+	/**
+	 * Whether starter-managed DTO-aware field-resolution caching is enabled.
+	 */
+	private final boolean dtoAwareFieldResolutionCachingEnabled;
+
+	/**
+	 * Maximum number of failed DTO-aware resolution attempts retained in the
+	 * bounded cache.
+	 */
+	private final int failedDTOAwareResolutionCachingMaxCapacity;
+
+	/**
+	 * Number of striped locks used to coordinate concurrent cache population for
+	 * DTO-aware selector paths.
+	 */
+	private final int dtoAwareFieldResolutionCachingKeyLockPoolSize;
 }

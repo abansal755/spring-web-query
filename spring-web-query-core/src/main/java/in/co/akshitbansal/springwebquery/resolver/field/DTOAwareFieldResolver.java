@@ -23,13 +23,11 @@ import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * {@link FieldResolver} implementation that treats a DTO type as the public
@@ -38,9 +36,10 @@ import java.util.function.Consumer;
  * <p>Resolution proceeds in three steps:</p>
  * <ul>
  *     <li>Resolve the incoming path against the DTO class structure.</li>
- *     <li>Validate the terminal DTO field via the supplied callback.</li>
  *     <li>Translate the DTO path to an entity path using {@link MapsTo}, then
  *     verify that the resulting entity path exists.</li>
+ *     <li>Return the mapped entity path together with the terminal DTO field so
+ *     callers can apply validation separately.</li>
  * </ul>
  */
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
@@ -50,27 +49,24 @@ public class DTOAwareFieldResolver implements FieldResolver {
 	 * Entity type used to validate the translated path.
 	 */
 	@NonNull
-	private final Class<?> entityClass;
+	protected final Class<?> entityClass;
 
 	/**
 	 * DTO type used as the external selector contract.
 	 */
 	@NonNull
-	private final Class<?> dtoClass;
+	protected final Class<?> dtoClass;
 
 	/**
-	 * Resolves a DTO selector path, validates its terminal DTO field, and maps
-	 * the selector to the corresponding entity path.
+	 * Resolves a DTO selector path and maps the selector to the corresponding
+	 * entity path.
 	 *
 	 * @param dtoPath selector path from the incoming request
-	 * @param terminalFieldValidator callback used to validate the terminal DTO
-	 * field; when {@code null}, terminal-field
-	 * validation is skipped
 	 *
-	 * @return resolved entity path corresponding to the DTO selector
+	 * @return resolution result containing the mapped entity path and terminal DTO field
 	 */
 	@Override
-	public String resolvePathAndValidateTerminalField(@NonNull String dtoPath, @Nullable Consumer<Field> terminalFieldValidator) {
+	public ResolutionResult resolvePath(@NonNull String dtoPath) {
 		// Resolve the field path in the DTO class
 		List<Field> dtoFields;
 		try {
@@ -83,10 +79,6 @@ public class DTOAwareFieldResolver implements FieldResolver {
 					), dtoPath, ex
 			);
 		}
-
-		// Validate the last field in the path using the provided terminal field validator
-		if (terminalFieldValidator != null)
-			terminalFieldValidator.accept(dtoFields.get(dtoFields.size() - 1));
 
 		// Construct the corresponding entity field path using the @MapsTo annotation if present
 		List<String> entityPathSegments = new ArrayList<>();
@@ -111,6 +103,6 @@ public class DTOAwareFieldResolver implements FieldResolver {
 			);
 		}
 
-		return entityPath;
+		return new ResolutionResult(entityPath, dtoFields.get(dtoFields.size() - 1));
 	}
 }

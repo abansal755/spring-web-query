@@ -127,6 +127,9 @@ class DTOValidationRSQLVisitorTest {
 	private static class TestEntity {
 
 		private Profile profile;
+
+		@SuppressWarnings("unused")
+		private String unfilterable;
 	}
 
 	private static class Profile {

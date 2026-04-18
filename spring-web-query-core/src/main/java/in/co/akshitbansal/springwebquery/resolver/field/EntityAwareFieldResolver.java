@@ -20,7 +20,6 @@ import in.co.akshitbansal.springwebquery.annotation.FieldMapping;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
 import lombok.NonNull;
-import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -28,7 +27,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +35,7 @@ import java.util.stream.Collectors;
  *
  * <p>This resolver can rewrite request selectors using declared aliases,
  * reject access to original field names when a mapping forbids them, and
- * validate the resolved terminal entity field via the supplied callback.</p>
+ * return the resolved terminal entity field for caller-side validation.</p>
  */
 public class EntityAwareFieldResolver implements FieldResolver {
 
@@ -91,22 +89,19 @@ public class EntityAwareFieldResolver implements FieldResolver {
 	}
 
 	/**
-	 * Resolves an entity-facing selector path, validates the resolved terminal
-	 * field, and returns the final entity path.
+	 * Resolves an entity-facing selector path.
 	 *
 	 * @param reqFieldPath selector path from the incoming request
-	 * @param terminalFieldValidator callback used to validate the resolved
-	 * terminal field; when {@code null},
-	 * terminal-field validation is skipped
 	 *
-	 * @return resolved entity path after alias translation
+	 * @return resolution result containing the resolved entity path after alias
+	 * translation and the terminal entity field
 	 *
 	 * @throws QueryFieldValidationException if the request path is blocked by
 	 * mapping rules or cannot be
 	 * resolved against the entity type
 	 */
 	@Override
-	public String resolvePathAndValidateTerminalField(@NonNull String reqFieldPath, @Nullable Consumer<Field> terminalFieldValidator) {
+	public ResolutionResult resolvePath(@NonNull String reqFieldPath) {
 		String fieldPath = reqFieldPath; // Actual entity path to validate against, may be rewritten if field mapping exists
 
 		// If the field name corresponds to an API alias that does not allow using the original field name, reject it
@@ -136,8 +131,6 @@ public class EntityAwareFieldResolver implements FieldResolver {
 			);
 		}
 
-		if (terminalFieldValidator != null) terminalFieldValidator.accept(field);
-
-		return fieldPath;
+		return new ResolutionResult(fieldPath, field);
 	}
 }
