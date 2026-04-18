@@ -23,7 +23,7 @@ jobs:
                   java-version: "17"
                   cache: maven
 
-            - name: Buid JMH Maven Project
+            - name: Build JMH Maven Project
               working-directory: ${{ github.workspace }}/jmh-benchmarks
               run: mvn -B -ntp clean verify
 
