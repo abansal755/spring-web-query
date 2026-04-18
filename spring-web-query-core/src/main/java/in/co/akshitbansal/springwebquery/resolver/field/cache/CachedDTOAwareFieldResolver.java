@@ -20,6 +20,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +28,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+@Slf4j
 public class CachedDTOAwareFieldResolver extends DTOAwareFieldResolver {
 
 	@Nullable
@@ -41,8 +43,13 @@ public class CachedDTOAwareFieldResolver extends DTOAwareFieldResolver {
 	private static volatile boolean initialized = false;
 
 	public static synchronized void initCache(int failedResolutionsMaxCapacity) {
-		if (initialized)
-			throw new IllegalStateException("Cache already initialized");
+		if (initialized) {
+			log.warn(
+					"Cache has already been initialized earlier. Skipping initialization with max capacity for failed resolutions: {}",
+					failedResolutionsMaxCapacity
+			);
+			return;
+		}
 		if (failedResolutionsMaxCapacity <= 0)
 			throw new IllegalArgumentException("Failed resolutions max capacity must be a positive integer");
 
