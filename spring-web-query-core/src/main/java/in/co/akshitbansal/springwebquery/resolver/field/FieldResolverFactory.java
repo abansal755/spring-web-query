@@ -16,15 +16,24 @@
 
 package in.co.akshitbansal.springwebquery.resolver.field;
 
+import in.co.akshitbansal.springwebquery.resolver.field.cache.CachedDTOAwareFieldResolver;
 import in.co.akshitbansal.springwebquery.resolver.spring.config.AbstractArgumentResolverConfig;
 import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Factory for creating field resolvers used by validation visitors and
  * pageable/specification resolver flows.
  */
+@RequiredArgsConstructor
 public class FieldResolverFactory {
+
+	private final boolean useCachedFieldResolvers;
+
+	public FieldResolverFactory() {
+		this(false);
+	}
 
 	/**
 	 * Creates the field resolver that matches the supplied effective query
@@ -35,8 +44,11 @@ public class FieldResolverFactory {
 	 * @return entity-aware or DTO-aware field resolver
 	 */
 	public FieldResolver newFieldResolver(@NonNull AbstractArgumentResolverConfig config) {
-		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE)
+		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE) {
+			if (useCachedFieldResolvers)
+				return new CachedDTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());
 			return new DTOAwareFieldResolver(config.getEntityClass(), config.getDtoClass());
+		}
 		return new EntityAwareFieldResolver(config.getEntityClass(), config.getFieldMappings());
 	}
 }

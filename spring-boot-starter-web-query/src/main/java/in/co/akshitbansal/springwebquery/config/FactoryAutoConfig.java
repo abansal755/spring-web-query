@@ -16,6 +16,7 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
+import in.co.akshitbansal.springwebquery.SpringWebQueryProperties;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
@@ -36,8 +37,8 @@ public class FactoryAutoConfig {
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	public FieldResolverFactory fieldResolverFactory() {
-		return new FieldResolverFactory();
+	public FieldResolverFactory fieldResolverFactory(SpringWebQueryProperties properties) {
+		return new FieldResolverFactory(properties.isFieldResolutionCachingEnabled());
 	}
 
 	/**

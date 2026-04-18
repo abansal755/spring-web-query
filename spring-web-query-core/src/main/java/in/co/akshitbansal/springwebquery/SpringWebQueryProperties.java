@@ -48,4 +48,8 @@ public class SpringWebQueryProperties {
 	 * Global default maximum allowed depth for parsed RSQL ASTs.
 	 */
 	private final int globalMaxASTDepth;
+
+	private final boolean fieldResolutionCachingEnabled;
+
+	private final int failedResolutionsMaxCapacity;
 }
