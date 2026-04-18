@@ -178,6 +178,14 @@ jobs:
                   -DdepVersion=${{ inputs.next-main-version }} \
                   -DforceVersion=true -DgenerateBackupPoms=false
 
+            - name: Change version in jmh project
+              working-directory: ${{ github.workspace }}/jmh-benchmarks
+              run: |
+                  mvn -ntp versions:use-dep-version \
+                  -Dincludes=in.co.akshitbansal:spring-web-query-core \
+                  -DdepVersion=${{ inputs.next-main-version }} \
+                  -DforceVersion=true -DgenerateBackupPoms=false
+
             - name: Configure git identity
               run: |
                   git config user.name "github-actions[bot]"
@@ -196,6 +204,7 @@ jobs:
                   add-paths: |
                       spring-web-query-core/pom.xml
                       spring-boot-starter-web-query/pom.xml
+                      jmh-benchmarks/pom.xml
 
     javadoc-deploy:
         name: Javadoc Deploy
