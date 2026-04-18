@@ -32,7 +32,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Shared cache for DTO-aware field-resolution outcomes.
  *
  * <p>Successful resolutions are retained without eviction, while failed
- * resolutions are stored in a bounded LRU map to avoid unbounded memory growth
+ * resolutions are stored in a bounded cache to avoid unbounded memory growth
  * from repeated invalid selector lookups.</p>
  */
 public class DTOAwareFieldResolutionCache {
