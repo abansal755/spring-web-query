@@ -46,16 +46,14 @@ public class SpringWebQueryPropertiesAutoConfig {
 	 * field-resolution caching is enabled
 	 * @param failedDTOAwareResolutionCachingMaxCapacity maximum number of failed
 	 * DTO-aware resolutions to cache
-	 * @param dtoAwareFieldResolutionCachingKeyLockPoolSize number of striped
-	 * locks used to coordinate cache population for selector keys
+	 * @param dtoAwareFieldResolutionCachingLockStripeCount number of lock
+	 * stripes used to coordinate cache population for selector keys
 	 * @param queryParamNameValidator validator used for configured filter parameter names
 	 *
 	 * @return validated global filtering properties
 	 *
 	 * @throws QueryConfigurationException if the configured maximum AST depth is
 	 * negative or the failed-resolution cache capacity is non-positive
-	 * @throws IllegalArgumentException if the configured lock-pool size is not a
-	 * positive power of two
 	 */
 	@Bean
 	public SpringWebQueryProperties springWebQueryProperties(

@@ -46,6 +46,9 @@ public class DTOAwareFieldResolutionCache {
 	 */
 	private final Cache<CacheKey, RuntimeException> failedResolutions;
 
+	/**
+	 * Striped lock registry used to coordinate concurrent cache population.
+	 */
 	private final Striped<Lock> stripedLock;
 
 
@@ -54,8 +57,11 @@ public class DTOAwareFieldResolutionCache {
 	 *
 	 * @param failedResolutionsMaxCapacity maximum number of failed resolutions to
 	 * retain
-	 * @param keyLockPoolSize number of striped locks used to coordinate cache
+	 * @param lockStripeCount number of lock stripes used to coordinate cache
 	 * population for selector keys
+	 *
+	 * @throws IllegalArgumentException if the failed-resolution cache capacity
+	 * or lock stripe count is non-positive
 	 */
 	public DTOAwareFieldResolutionCache(int failedResolutionsMaxCapacity, int lockStripeCount) {
 		// Validate failed resolutions max capacity
@@ -113,7 +119,7 @@ public class DTOAwareFieldResolutionCache {
 	 * Returns the striped lock associated with the supplied cache key.
 	 *
 	 * <p>The returned lock is selected by hashing the key into the configured
-	 * lock pool so callers can coordinate cache population without allocating a
+	 * stripe set so callers can coordinate cache population without allocating a
 	 * dedicated lock per selector.</p>
 	 *
 	 * @param cacheKey composite key identifying the query contract and DTO path
