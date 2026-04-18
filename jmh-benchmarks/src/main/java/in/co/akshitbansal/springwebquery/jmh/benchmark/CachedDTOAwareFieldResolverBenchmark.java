@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class CachedDTOAwareFieldResolverBenchmark {
 
-	@State(Scope.Benchmark)
+	@State(Scope.Thread)
 	public static class TestParams {
 
 		@Param({
@@ -62,7 +62,7 @@ public class CachedDTOAwareFieldResolverBenchmark {
 		}
 	}
 
-	@State(Scope.Benchmark)
+	@State(Scope.Thread)
 	public static class CacheHitResolverState {
 
 		public FieldResolver fieldResolver;

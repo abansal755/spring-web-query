@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class DTOAwareFieldResolverBenchmark {
 
-	@State(Scope.Benchmark)
+	@State(Scope.Thread)
 	public static class TestParams {
 
 		@Param({
@@ -43,10 +43,6 @@ public class DTOAwareFieldResolverBenchmark {
 				"accounts.portfolios.positions.security.issuer.compliance.marketRegion"
 		})
 		public String dtoPath;
-	}
-
-	@State(Scope.Benchmark)
-	public static class ResolverState {
 
 		public FieldResolver fieldResolver;
 
@@ -65,7 +61,7 @@ public class DTOAwareFieldResolverBenchmark {
 	}
 
 	@Benchmark
-	public ResolutionResult resolvePathTest(ResolverState resolverState, TestParams params) {
-		return resolverState.fieldResolver.resolvePath(params.dtoPath);
+	public ResolutionResult resolvePathTest(TestParams params) {
+		return params.fieldResolver.resolvePath(params.dtoPath);
 	}
 }
