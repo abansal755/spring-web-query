@@ -34,7 +34,10 @@ import java.util.concurrent.locks.Lock;
  *
  * <p>Successful resolutions are retained without eviction, while failed
  * resolutions are stored in a bounded cache to avoid unbounded memory growth
- * from repeated invalid selector lookups.</p>
+ * from repeated invalid selector lookups. When the failed-resolution cache is
+ * configured with a capacity of {@code 0}, failed entries are evicted
+ * immediately after insertion, effectively disabling failed-resolution
+ * caching while leaving successful-resolution caching enabled.</p>
  */
 public class DTOAwareFieldResolutionCache {
 
@@ -58,12 +61,16 @@ public class DTOAwareFieldResolutionCache {
 	 * Creates the shared cache used by cached DTO-aware field resolvers.
 	 *
 	 * @param failedResolutionsMaxCapacity maximum number of failed resolutions to
-	 * retain
+	 * retain; a value of {@code 0} causes failed entries to be evicted
+	 * immediately after insertion, effectively disabling failed-resolution
+	 * caching
 	 * @param lockStripeCount number of lock stripes used to coordinate cache
-	 * population for selector keys
+	 * population for selector keys; must be positive
 	 *
-	 * @throws IllegalArgumentException if the failed-resolution cache capacity
-	 * or lock stripe count is non-positive
+	 * @throws QueryConfigurationException if cache initialization fails; this
+	 * can occur when {@code failedResolutionsMaxCapacity} is negative,
+	 * {@code lockStripeCount} is non-positive, or the underlying cache/lock
+	 * infrastructure rejects the supplied configuration
 	 */
 	public DTOAwareFieldResolutionCache(int failedResolutionsMaxCapacity, int lockStripeCount) {
 		try {
@@ -89,6 +96,9 @@ public class DTOAwareFieldResolutionCache {
 	 *
 	 * @return cached successful resolution, or {@code null} when the key is not
 	 * present
+	 *
+	 * @throws RuntimeException if a failed resolution was previously cached for
+	 * the supplied key; the cached exception instance is rethrown
 	 */
 	@Nullable
 	public ResolutionResult resolveFromCache(@NonNull CacheKey cacheKey) {
@@ -113,7 +123,9 @@ public class DTOAwareFieldResolutionCache {
 	 * Stores a failed DTO-aware path-resolution attempt.
 	 *
 	 * @param cacheKey composite key identifying the query contract and DTO path
-	 * @param ex exception raised while resolving the path
+	 * @param ex exception raised while resolving the path; the same exception
+	 * instance will be rethrown by {@link #resolveFromCache(CacheKey)} while it
+	 * remains cached
 	 */
 	public void putFailedResolution(@NonNull CacheKey cacheKey, @NonNull RuntimeException ex) {
 		failedResolutions.put(cacheKey, ex);
