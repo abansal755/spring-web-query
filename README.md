@@ -665,9 +665,9 @@ spring-web-query.field-resolution.dto-aware.caching.lock-stripe-count=32
 
 DTO-aware field-resolution caching is enabled by default in the starter.
 
-- `spring-web-query.field-resolution.dto-aware.caching.enabled` toggles caching for DTO-aware selector resolution used by filtering and sorting.
-- `spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity` controls the bounded cache size for failed DTO-path resolutions.
-- `spring-web-query.field-resolution.dto-aware.caching.lock-stripe-count` configures the number of lock stripes used while populating cache entries concurrently.
+- `spring-web-query.field-resolution.dto-aware.caching.enabled` toggles caching for DTO-aware selector resolution used by filtering and sorting. The following two properties apply only when caching is enabled.
+- `spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity` controls the bounded cache size for failed DTO-path resolutions. A value of `0` disables failed-resolution caching by evicting failed entries immediately after insertion, while negative values fail cache initialization.
+- `spring-web-query.field-resolution.dto-aware.caching.lock-stripe-count` configures the number of lock stripes used while populating cache entries concurrently and must be positive; non-positive values fail cache initialization.
 - Successful DTO-path resolutions are cached as well, so repeated requests avoid repeating the same reflective mapping work.
 - This cache applies only to DTO-aware resolution. Entity-aware alias resolution does not use this cache.
 

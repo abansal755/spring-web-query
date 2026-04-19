@@ -77,17 +77,6 @@ public class SpringWebQueryPropertiesAutoConfig {
 			));
 		}
 
-		// Only validate the following properties if caching is enabled
-		if(dtoAwareFieldResolutionCachingEnabled) {
-			// Validating failedResolutionsMaxCapacity
-			if (failedDTOAwareResolutionCachingMaxCapacity <= 0) {
-				throw new QueryConfigurationException(MessageFormat.format(
-						"Value for spring-web-query.field-resolution.dto-aware.caching.failed-resolutions-max-capacity must be positive. Provided value: {0}",
-						failedDTOAwareResolutionCachingMaxCapacity
-				));
-			}
-		}
-
 		SpringWebQueryProperties properties = new SpringWebQueryProperties(
 				globalFilterParamName,
 				globalAllowAndOperation,
