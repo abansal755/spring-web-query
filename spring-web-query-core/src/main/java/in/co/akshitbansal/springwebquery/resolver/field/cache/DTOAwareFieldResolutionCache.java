@@ -19,10 +19,12 @@ package in.co.akshitbansal.springwebquery.resolver.field.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.Striped;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
 import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.text.MessageFormat;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
@@ -64,17 +66,19 @@ public class DTOAwareFieldResolutionCache {
 	 * or lock stripe count is non-positive
 	 */
 	public DTOAwareFieldResolutionCache(int failedResolutionsMaxCapacity, int lockStripeCount) {
-		// Validate failed resolutions max capacity
-		if (failedResolutionsMaxCapacity <= 0)
-			throw new IllegalArgumentException("Failed resolutions max capacity must be a positive integer");
-
-		this.successfulResolutions = new ConcurrentHashMap<>();
-		this.failedResolutions = Caffeine
-				.newBuilder()
-				.maximumSize(failedResolutionsMaxCapacity)
-				.build();
-
-		this.stripedLock = Striped.lock(lockStripeCount);
+		try {
+			this.successfulResolutions = new ConcurrentHashMap<>();
+			this.failedResolutions = Caffeine
+					.newBuilder()
+					.maximumSize(failedResolutionsMaxCapacity)
+					.build();
+			this.stripedLock = Striped.lock(lockStripeCount);
+		}
+		catch (Exception ex) {
+			throw new QueryConfigurationException(MessageFormat.format(
+					"Failed to initialize DTO-aware field resolution cache: {0}", ex.getMessage()
+			), ex);
+		}
 	}
 
 	/**
