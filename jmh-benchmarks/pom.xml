@@ -61,7 +61,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
         <dependency>
             <groupId>in.co.akshitbansal</groupId>
             <artifactId>spring-web-query-core</artifactId>
-            <version>0.18.1-SNAPSHOT</version>
+            <version>0.18.1</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
