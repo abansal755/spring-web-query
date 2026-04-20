@@ -17,6 +17,8 @@
 package in.co.akshitbansal.springwebquery.ast;
 
 import cz.jirutka.rsql.parser.ast.*;
+import in.co.akshitbansal.springwebquery.exception.QueryForbiddenLogicalOperatorException;
+import in.co.akshitbansal.springwebquery.exception.QueryMaxASTDepthExceededException;
 import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
@@ -143,16 +145,16 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 * @throws QueryValidationException if an operator is disallowed or the depth exceeds the limit
 	 */
 	protected void validateNode(Node node, NodeMetadata metadata) {
-		if ((node instanceof AndNode) && !andNodeAllowed)
-			throw new QueryValidationException("Logical AND operator is not allowed");
-		if ((node instanceof OrNode) && !orNodeAllowed)
-			throw new QueryValidationException("Logical OR operator is not allowed");
+		if ((node instanceof AndNode andNode) && !andNodeAllowed)
+			throw new QueryForbiddenLogicalOperatorException("Logical AND operator is not allowed", andNode.getOperator());
+		if ((node instanceof OrNode orNode) && !orNodeAllowed)
+			throw new QueryForbiddenLogicalOperatorException("Logical OR operator is not allowed", orNode.getOperator());
 		int depth = metadata.getDepth();
 		if (depth > maxDepth) {
-			throw new QueryValidationException(MessageFormat.format(
+			throw new QueryMaxASTDepthExceededException(MessageFormat.format(
 					"Exceeded maximum allowed depth of RSQL Abstract Syntax Tree ({0}) at node: {1}",
 					maxDepth, node
-			));
+			), maxDepth);
 		}
 	}
 }
