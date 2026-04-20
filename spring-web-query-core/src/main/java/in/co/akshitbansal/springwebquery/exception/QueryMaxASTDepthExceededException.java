@@ -18,16 +18,35 @@ package in.co.akshitbansal.springwebquery.exception;
 
 import lombok.Getter;
 
+/**
+ * Indicates that a query exceeded the maximum allowed RSQL AST depth.
+ */
 @Getter
 public class QueryMaxASTDepthExceededException extends QueryValidationException {
 
+	/**
+	 * Maximum AST depth permitted by the active query configuration.
+	 */
 	private final int maxASTDepthAllowed;
 
+	/**
+	 * Creates a new max AST depth exceeded exception.
+	 *
+	 * @param message validation error details
+	 * @param maxASTDepthAllowed maximum AST depth permitted
+	 */
 	public QueryMaxASTDepthExceededException(String message, int maxASTDepthAllowed) {
 		super(message);
 		this.maxASTDepthAllowed = maxASTDepthAllowed;
 	}
 
+	/**
+	 * Creates a new max AST depth exceeded exception with an underlying cause.
+	 *
+	 * @param message validation error details
+	 * @param maxASTDepthAllowed maximum AST depth permitted
+	 * @param cause root cause of the validation failure
+	 */
 	public QueryMaxASTDepthExceededException(String message, int maxASTDepthAllowed, Throwable cause) {
 		super(message, cause);
 		this.maxASTDepthAllowed = maxASTDepthAllowed;

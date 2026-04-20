@@ -19,16 +19,36 @@ package in.co.akshitbansal.springwebquery.exception;
 import cz.jirutka.rsql.parser.ast.LogicalOperator;
 import lombok.Getter;
 
+/**
+ * Indicates that a query uses a logical operator that is not allowed by the
+ * active {@code @WebQuery} configuration.
+ */
 @Getter
 public class QueryForbiddenLogicalOperatorException extends QueryValidationException {
 
+	/**
+	 * Logical operator used in the query that failed validation.
+	 */
 	private final LogicalOperator logicalOperator;
 
+	/**
+	 * Creates a new forbidden logical-operator exception.
+	 *
+	 * @param message validation error details
+	 * @param logicalOperator logical operator used in the query
+	 */
 	public QueryForbiddenLogicalOperatorException(String message, LogicalOperator logicalOperator) {
 		super(message);
 		this.logicalOperator = logicalOperator;
 	}
 
+	/**
+	 * Creates a new forbidden logical-operator exception with an underlying cause.
+	 *
+	 * @param message validation error details
+	 * @param logicalOperator logical operator used in the query
+	 * @param cause root cause of the validation failure
+	 */
 	public QueryForbiddenLogicalOperatorException(String message, LogicalOperator logicalOperator, Throwable cause) {
 		super(message, cause);
 		this.logicalOperator = logicalOperator;

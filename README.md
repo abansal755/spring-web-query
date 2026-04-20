@@ -880,8 +880,10 @@ Exception hierarchy:
 ```text
 QueryException
 ├── QueryValidationException                        (client-side request issues, map to 4xx)
-│   └── QueryFieldValidationException              (field-specific validation issue)
-│       └── QueryForbiddenOperatorException        (operator not allowed for a field)
+│   ├── QueryFieldValidationException              (field-specific validation issue)
+│   │   └── QueryForbiddenOperatorException        (operator not allowed for a field)
+│   ├── QueryForbiddenLogicalOperatorException     (logical AND/OR operator not allowed)
+│   └── QueryMaxASTDepthExceededException          (AST depth exceeds configured limit)
 └── QueryConfigurationException                    (server/developer config issues, map to 5xx)
 ```
 
@@ -891,6 +893,8 @@ How to read this hierarchy:
 - `QueryValidationException` is raised when the incoming filter/sort expression is invalid.
 - `QueryFieldValidationException` narrows that to field-level issues (unknown field, non-filterable, non-sortable).
 - `QueryForbiddenOperatorException` is the most specific validation case: field exists, but the operator is not permitted for that field.
+- `QueryForbiddenLogicalOperatorException` indicates the query used a disallowed logical `AND`/`OR` operator.
+- `QueryMaxASTDepthExceededException` indicates the query nesting exceeded the configured AST depth limit.
 - `QueryConfigurationException` indicates a developer-side setup issue (for example, conflicting mappings or missing operator registration).
 
 ### Typical validation failures
@@ -899,6 +903,7 @@ How to read this hierarchy:
 - filtering on a field that is not annotated with `@RSQLFilterable`
 - sorting on a field that is not annotated with `@Sortable`
 - using an operator that is not allowed for the target field
+- using a logical `AND`/`OR` operator that is disabled for the endpoint
 - exceeding the configured `@WebQuery(maxASTDepth = ...)` limit
 - malformed RSQL expression syntax
 

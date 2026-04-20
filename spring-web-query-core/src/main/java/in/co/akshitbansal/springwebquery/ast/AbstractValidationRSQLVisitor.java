@@ -142,7 +142,8 @@ public abstract class AbstractValidationRSQLVisitor implements RSQLVisitor<Void,
 	 * @param node node to validate
 	 * @param metadata node metadata including current depth
 	 *
-	 * @throws QueryValidationException if an operator is disallowed or the depth exceeds the limit
+	 * @throws QueryForbiddenLogicalOperatorException if a logical AND/OR operator is disallowed
+	 * @throws QueryMaxASTDepthExceededException if the current node depth exceeds the configured maximum
 	 */
 	protected void validateNode(Node node, NodeMetadata metadata) {
 		if ((node instanceof AndNode andNode) && !andNodeAllowed)
