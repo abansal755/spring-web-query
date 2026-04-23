@@ -17,10 +17,48 @@
 package in.co.akshitbansal.springwebquery.operator;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import io.github.perplexhub.rsql.RSQLOperators;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Enumerates the built-in comparison operators exposed by the library.
+ *
+ * <p>This enum is the public, annotation-friendly view of the default operator
+ * set. Callers typically use these constants in {@link RSQLFilterable}
+ * declarations to describe which comparisons are allowed on a field, while the
+ * library internally uses the wrapped {@link ComparisonOperator} instances for
+ * parsing, validation, and predicate construction.</p>
+ *
+ * <p>The constants are grouped by the kinds of comparisons they enable:</p>
+ * <ul>
+ *   <li>equality: {@link #EQUAL}, {@link #NOT_EQUAL}</li>
+ *   <li>ordering: {@link #GREATER_THAN}, {@link #GREATER_THAN_OR_EQUAL},
+ *       {@link #LESS_THAN}, {@link #LESS_THAN_OR_EQUAL}</li>
+ *   <li>membership: {@link #IN}, {@link #NOT_IN}</li>
+ *   <li>null checks: {@link #IS_NULL}, {@link #NOT_NULL}</li>
+ *   <li>text: {@link #LIKE}, {@link #NOT_LIKE}, {@link #IGNORE_CASE},
+ *       {@link #IGNORE_CASE_LIKE}, {@link #IGNORE_CASE_NOT_LIKE}</li>
+ *   <li>range: {@link #BETWEEN}, {@link #NOT_BETWEEN}</li>
+ * </ul>
+ *
+ * <p><b>Example usage in a DTO or entity contract:</b></p>
+ * <pre>{@code @RSQLFilterable({
+ *     RSQLDefaultOperator.EQUAL,
+ *     RSQLDefaultOperator.NOT_EQUAL,
+ *     RSQLDefaultOperator.IN
+ * })
+ * private String status;}</pre>
+ *
+ * <p><b>Example request filters that such a declaration would allow:</b></p>
+ * <pre>{@code status==ACTIVE
+ * status!=DELETED
+ * status=in=(ACTIVE,PENDING)}</pre>
+ *
+ * <p>The individual enum constants document the accepted symbolic forms and
+ * show representative query examples.</p>
+ */
 @RequiredArgsConstructor
 @Getter
 public enum RSQLDefaultOperator {
@@ -144,6 +182,9 @@ public enum RSQLDefaultOperator {
 
 	/**
 	 * Underlying parser operator represented by this enum constant.
+	 *
+	 * <p>This is the {@link ComparisonOperator} instance registered with the
+	 * parser and later used by validation and predicate conversion.</p>
 	 */
 	private final ComparisonOperator operator;
 }

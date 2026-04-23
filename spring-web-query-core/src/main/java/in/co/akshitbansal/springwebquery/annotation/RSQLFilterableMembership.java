@@ -21,11 +21,13 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import java.lang.annotation.*;
 
 /**
- * Composed annotation that allows set-membership filtering on a field.
- * <p>
- * Equivalent to declaring {@link RSQLFilterable} with
- * {@link RSQLDefaultOperator#IN} and {@link RSQLDefaultOperator#NOT_IN}.
- * </p>
+ * Convenience annotation that allows membership filtering on a query contract
+ * field.
+ *
+ * <p>This annotation is equivalent to declaring {@link RSQLFilterable} with
+ * {@link RSQLDefaultOperator#IN} and {@link RSQLDefaultOperator#NOT_IN}. It is
+ * intended for fields that support list-based inclusion and exclusion
+ * comparisons.</p>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

@@ -52,19 +52,67 @@ import java.util.List;
 
 import static in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper.MappingResult;
 
+/**
+ * Default {@link WebQueryRepository} implementation backed by JPA Criteria
+ * queries and {@code rsql-jpa}.
+ *
+ * <p>The implementation validates incoming DTO-facing filters and sorts,
+ * translates them to entity paths, executes tuple-based projection queries,
+ * and converts the results into the requested DTO type.</p>
+ *
+ * @param <E> entity type handled by the repository
+ */
 public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, RepositoryMetadataAccess {
 
+	/**
+	 * Entity manager used to build and execute criteria queries.
+	 */
 	private final EntityManager entityManager;
+
+	/**
+	 * Shared RSQL parser configured with the allowed operator set.
+	 */
 	private final RSQLParser rsqlParser;
+
+	/**
+	 * Factory used to create validation visitors for parsed RSQL trees.
+	 */
 	private final ValidationRSQLVisitorFactory validationRSQLVisitorFactory;
+
+	/**
+	 * Custom predicates exposed to the underlying {@code rsql-jpa} converter.
+	 */
 	private final List<RSQLCustomPredicate<?>> customPredicates;
+
+	/**
+	 * Factory used to translate DTO selectors to entity paths.
+	 */
 	private final DTOToEntityPathMapperFactory pathMapperFactory;
+
+	/**
+	 * Validator used to enforce sorting permissions.
+	 */
 	private final SortableFieldValidator sortableFieldValidator;
 
+	/**
+	 * Default repository-wide setting for logical {@code AND} support.
+	 */
 	private final boolean globalAllowAndOperation;
+
+	/**
+	 * Default repository-wide setting for logical {@code OR} support.
+	 */
 	private final boolean globalAllowOrOperation;
+
+	/**
+	 * Default repository-wide setting for maximum RSQL AST depth.
+	 */
 	private final int globalMaxASTDepth;
 
+	/**
+	 * Creates the repository implementation with all collaborating components and
+	 * global validation defaults.
+	 */
 	public WebQueryRepositoryImpl(
 			@NonNull EntityManager entityManager,
 			@NonNull RSQLParser rsqlParser,
@@ -87,6 +135,9 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		this.globalMaxASTDepth = globalMaxASTDepth;
 	}
 
+	/**
+	 * Executes a projected result query using explicit validation settings.
+	 */
 	@Override
 	public <D> List<D> findAll(
 			@Nullable String rsqlQuery, @NonNull Pageable pageable,
@@ -141,6 +192,9 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 				.toList();
 	}
 
+	/**
+	 * Executes a projected result query using repository defaults.
+	 */
 	@Override
 	public <D> List<D> findAll(
 			@Nullable String rsqlQuery, @NonNull Pageable pageable,
@@ -154,6 +208,10 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		);
 	}
 
+	/**
+	 * Counts rows matching the supplied filter using explicit validation
+	 * settings.
+	 */
 	@Override
 	public long count(
 			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
@@ -181,6 +239,9 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 				.getSingleResult();
 	}
 
+	/**
+	 * Counts rows matching the supplied filter using repository defaults.
+	 */
 	@Override
 	public long count(@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer, @NonNull Class<?> dtoClass) {
 		return count(
@@ -189,6 +250,9 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		);
 	}
 
+	/**
+	 * Executes a paged projected query using repository defaults.
+	 */
 	@Override
 	public <D> Page<D> findAllPaged(
 			@Nullable String rsqlQuery, @NonNull Pageable pageable,
@@ -202,6 +266,10 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		);
 	}
 
+	/**
+	 * Applies the generated and customized filter specification to a criteria
+	 * query when filtering is present.
+	 */
 	private void applyWhereClause(
 			Root<E> root, CriteriaQuery<?> query, CriteriaBuilder cb,
 			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
@@ -219,6 +287,9 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		if (predicate != null) query.where(filterSpec.toPredicate(root, query, cb));
 	}
 
+	/**
+	 * Builds a JPA {@link Specification} from an optional RSQL expression.
+	 */
 	private Specification<E> createSpecification(
 			@Nullable String rsqlQuery,
 			Class<E> entityClass, Class<?> dtoClass,
@@ -276,6 +347,9 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		}
 	}
 
+	/**
+	 * Maps DTO-facing sort properties to JPA orders on entity paths.
+	 */
 	private List<Order> mapSortPathsToEntityPaths(Sort sort, Root<E> root, CriteriaBuilder cb, Class<E> entityClass, Class<?> dtoClass) {
 		DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(entityClass, dtoClass);
 		List<Order> orders = new ArrayList<>();
@@ -298,6 +372,9 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		return orders;
 	}
 
+	/**
+	 * Resolves a dotted entity path into a chained JPA {@link Path}.
+	 */
 	private Path<?> getJPAPathFromEntityPath(Root<E> root, String entityPath) {
 		Path<?> path = root;
 		for (String part: entityPath.split("\\."))
@@ -305,6 +382,10 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		return path;
 	}
 
+	/**
+	 * Retrieves the repository domain type from the current Spring Data
+	 * invocation context.
+	 */
 	private Class<E> getEntityClass() {
 		// noinspection unchecked
 		return (Class<E>) RepositoryMethodContext

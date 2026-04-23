@@ -26,15 +26,37 @@ import org.springframework.core.convert.converter.Converter;
 import java.lang.reflect.Constructor;
 import java.text.MessageFormat;
 
+/**
+ * Converts JPA {@link Tuple} results into DTO instances by invoking a matching
+ * constructor.
+ *
+ * @param <T> target DTO type
+ */
 @RequiredArgsConstructor(staticName = "of")
 public class TupleConverter<T> implements Converter<Tuple, T> {
 
+	/**
+	 * DTO type to instantiate for each tuple.
+	 */
 	@NonNull
 	private final Class<T> targetType;
 
+	/**
+	 * Lazily discovered constructor cached for repeated conversions.
+	 */
 	@Nullable
 	private volatile Constructor<T> cachedConstructor;
 
+	/**
+	 * Converts one tuple into the configured DTO type.
+	 *
+	 * @param tuple tuple to convert
+	 *
+	 * @return instantiated DTO
+	 *
+	 * @throws QueryConfigurationException if no suitable constructor can be
+	 * found or invocation fails
+	 */
 	@Override
 	public T convert(@NonNull Tuple tuple) {
 		try {

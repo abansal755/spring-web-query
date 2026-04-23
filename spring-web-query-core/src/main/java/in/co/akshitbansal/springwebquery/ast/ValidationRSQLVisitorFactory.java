@@ -21,12 +21,34 @@ import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapperFactory
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Creates fully configured {@link ValidationRSQLVisitor} instances for a
+ * specific entity/DTO pair.
+ */
 @RequiredArgsConstructor
 public class ValidationRSQLVisitorFactory {
 
+	/**
+	 * Factory used to create DTO-to-entity path mappers.
+	 */
 	private final DTOToEntityPathMapperFactory pathMapperFactory;
+
+	/**
+	 * Validator used to enforce field-level filterability rules.
+	 */
 	private final FilterableFieldValidator filterableFieldValidator;
 
+	/**
+	 * Creates a validation visitor for the supplied query contract.
+	 *
+	 * @param entityClass entity type that ultimately backs predicate creation
+	 * @param dtoClass DTO type exposed to callers for filtering
+	 * @param allowAndOperation whether logical {@code AND} is allowed
+	 * @param allowOrOperation whether logical {@code OR} is allowed
+	 * @param maxASTDepth maximum AST depth accepted during validation
+	 *
+	 * @return configured validation visitor
+	 */
 	public ValidationRSQLVisitor newValidationRSQLVisitor(
 			Class<?> entityClass,
 			Class<?> dtoClass,

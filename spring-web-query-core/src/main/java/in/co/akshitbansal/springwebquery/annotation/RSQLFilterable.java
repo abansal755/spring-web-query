@@ -22,30 +22,38 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import java.lang.annotation.*;
 
 /**
- * Marks a field as filterable via RSQL (RESTful Service Query Language) queries.
- * <p>
- * This annotation allows you to declare which RSQL operators (both default and custom)
- * are permitted on a specific field.
- * When used in combination with a RSQL-to-Spring-Data Specification resolver,
- * only the specified default and custom operators will be allowed for filtering on this field.
- * </p>
+ * Marks a field as filterable and declares which comparison operators are
+ * allowed when that field is the terminal field of an RSQL selector path.
  *
- * <p>The annotation is applied to whichever type is used as the filtering contract:
- * entity fields in entity-aware mode, or DTO fields in DTO-aware mode.</p>
+ * <p>During query validation, the incoming selector path is first resolved
+ * against the active query contract and then mapped to the underlying entity
+ * path if necessary. Operator validation is performed against the terminal
+ * field of that resolved selector path. In practice, this annotation belongs on
+ * the fields that make up the public filtering contract for the query.</p>
  *
- * <p>This annotation is {@linkplain Repeatable repeatable}; multiple declarations
- * can be used on the same field to compose the final set of allowed operators.</p>
+ * <p>The effective allowed operator set is the union of:</p>
+ * <ul>
+ *   <li>all {@link #value()} entries declared directly on the field</li>
+ *   <li>all {@link #customOperators()} entries declared directly on the
+ *       field</li>
+ *   <li>all repeated declarations collected through {@link RSQLFilterables}</li>
+ *   <li>all built-in composed annotations from this package, such as
+ *       {@link RSQLFilterableEquality} and {@link RSQLFilterableRange}</li>
+ * </ul>
+ *
+ * <p>Fields without any discovered {@code @RSQLFilterable} declaration are not
+ * filterable and cause validation to fail when targeted by a query.</p>
+ *
+ * <p>This annotation also targets annotation types so the library's composed
+ * annotations in this package can build on top of it.</p>
  *
  * <p><b>Example usage:</b></p>
- * <pre>{@code
- * @RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.IN})
- * private String status;
- * }</pre>
+ * <pre>{@code @RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.IN})
+ * private String status;}</pre>
  *
- * <p>Fields without this annotation are considered <em>not filterable</em> and attempts
- * to filter them via RSQL queries will result in an exception.</p>
- *
- * <p>This annotation is retained at runtime and can be inspected via reflection.</p>
+ * <p><b>Example queries allowed by that declaration:</b></p>
+ * <pre>{@code status==ACTIVE
+ * status=in=(ACTIVE,PENDING)}</pre>
  *
  * @see RSQLDefaultOperator
  * @see RSQLFilterables
@@ -57,15 +65,22 @@ import java.lang.annotation.*;
 public @interface RSQLFilterable {
 
 	/**
-	 * The set of default RSQL operators that are allowed for filtering this field.
+	 * Default built-in operators allowed for this field.
+	 *
+	 * <p>These operators are unioned with any operators contributed by
+	 * {@link #customOperators()} and by repeated declarations on the same
+	 * field.</p>
 	 *
 	 * @return an array of allowed {@link RSQLDefaultOperator} values
 	 */
 	RSQLDefaultOperator[] value() default {};
 
 	/**
-	 * The set of custom RSQL operators that are allowed for filtering this field.
-	 * Referenced operator classes must be registered in the query resolver configuration.
+	 * Custom operators allowed for this field.
+	 *
+	 * <p>Referenced operator classes are looked up by implementation class in the
+	 * configured custom-operator registry and are unioned with the operators from
+	 * {@link #value()}.</p>
 	 *
 	 * @return an array of custom operator classes
 	 */

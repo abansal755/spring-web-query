@@ -21,11 +21,17 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
+/**
+ * Carries traversal metadata while walking an RSQL abstract syntax tree.
+ */
 @RequiredArgsConstructor(staticName = "of")
 @Getter
 @EqualsAndHashCode
 @ToString
 public class NodeMetadata {
 
+	/**
+	 * Zero-based depth of the current AST node.
+	 */
 	private final int depth;
 }

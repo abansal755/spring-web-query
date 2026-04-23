@@ -26,10 +26,23 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
+/**
+ * Auto-configuration that wires the core factories used by query validation
+ * and DTO/entity path translation.
+ */
 @AutoConfiguration
 @Slf4j
 public class FactoryAutoConfig {
 
+	/**
+	 * Creates the mapper factory variant that shares resolution caches across
+	 * mapper instances.
+	 *
+	 * @param failedResolutionsMaxCapacity maximum cached failed resolutions
+	 * @param lockStripeCount number of striped locks used during cache fills
+	 *
+	 * @return cached mapper factory
+	 */
 	@Bean
 	@ConditionalOnProperty(
 			name = "spring-web-query.field-resolution.caching.enabled",
@@ -44,6 +57,11 @@ public class FactoryAutoConfig {
 		return new DTOToEntityPathMapperFactory(failedResolutionsMaxCapacity, lockStripeCount);
 	}
 
+	/**
+	 * Creates the mapper factory variant that performs no caching.
+	 *
+	 * @return uncached mapper factory
+	 */
 	@Bean
 	@ConditionalOnProperty(
 			name = "spring-web-query.field-resolution.caching.enabled",
@@ -54,6 +72,14 @@ public class FactoryAutoConfig {
 		return new DTOToEntityPathMapperFactory();
 	}
 
+	/**
+	 * Creates the validation visitor factory used during RSQL parsing.
+	 *
+	 * @param pathMapperFactory mapper factory used to resolve DTO selectors
+	 * @param filterableFieldValidator validator used for field-level filtering rules
+	 *
+	 * @return validation visitor factory
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public ValidationRSQLVisitorFactory validationRSQLVisitorFactory(

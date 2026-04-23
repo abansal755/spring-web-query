@@ -72,6 +72,15 @@ public class RSQLOperatorsAutoConfig {
 		return Collections.unmodifiableSet(defaultOperators);
 	}
 
+	/**
+	 * Collects user-defined custom operators and validates that none of their
+	 * symbols overlap with each other or the built-in set.
+	 *
+	 * @param customOperatorBeans custom operator beans discovered by Spring
+	 * @param defaultOperatorSet validated default operators
+	 *
+	 * @return immutable set of validated custom operators
+	 */
 	@Bean
 	public Set<? extends RSQLCustomOperator<?>> customOperatorSet(
 			List<RSQLCustomOperator<?>> customOperatorBeans,

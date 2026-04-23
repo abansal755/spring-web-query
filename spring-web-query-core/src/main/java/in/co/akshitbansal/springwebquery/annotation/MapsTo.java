@@ -19,25 +19,33 @@ package in.co.akshitbansal.springwebquery.annotation;
 import java.lang.annotation.*;
 
 /**
- * Declares the entity-side property segment that a DTO field maps to for
- * filtering and sorting path translation.
+ * Declares how a DTO field contributes to the entity path derived from a DTO
+ * selector.
  *
- * <p>When DTO-aware query resolution is enabled, each path segment is resolved
- * on the DTO class and then translated to an entity path using this annotation.
- * If absent, the DTO field name itself is used as the entity segment.</p>
+ * <p>This annotation is consulted only while mapping selector paths from the
+ * DTO query contract to the underlying entity model. For each field in the
+ * resolved DTO path, the mapper contributes either the DTO field name itself or
+ * the value declared here.</p>
  *
- * <p>Example:</p>
- * <pre>{@code
- * class UserDto {
- *   @MapsTo("profile")
- *   private ProfileDto details;
+ * <p>If {@code @MapsTo} is absent, the DTO field name is reused as the
+ * corresponding entity-side segment. If {@code @MapsTo} is present, its
+ * {@link #value()} is appended instead. When {@link #absolute()} is
+ * {@code true}, any previously accumulated parent segments are discarded before
+ * the mapped value is appended.</p>
  *
- *   class ProfileDto {
- *     @MapsTo("displayName")
- *     private String name;
- *   }
- * }
- * }</pre>
+ * <p><b>Example:</b></p>
+ * <pre>{@code class UserDto {
+ *     @MapsTo("profile")
+ *     private ProfileDto details;
+ *
+ *     class ProfileDto {
+ *         @MapsTo("displayName")
+ *         private String name;
+ *     }
+ * }}</pre>
+ *
+ * <p>With that contract, the DTO selector {@code details.name} maps to the
+ * entity path {@code profile.displayName}.</p>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -45,9 +53,12 @@ import java.lang.annotation.*;
 public @interface MapsTo {
 
 	/**
-	 * Entity-side field or path segment to use for this DTO field.
+	 * Entity-side field segment or dotted subpath to append for this DTO field.
 	 *
-	 * @return mapped entity path segment
+	 * <p>The declared value is inserted into the mapped entity path in place of
+	 * the DTO field name.</p>
+	 *
+	 * @return mapped entity field segment or subpath
 	 */
 	String value();
 
@@ -55,7 +66,7 @@ public @interface MapsTo {
 	 * Whether this mapping starts a new absolute path from the entity root.
 	 *
 	 * <p>When {@code true}, previously accumulated parent segments are discarded
-	 * before this segment is applied.</p>
+	 * before {@link #value()} is applied.</p>
 	 *
 	 * @return {@code true} to reset parent segments, otherwise {@code false}
 	 */

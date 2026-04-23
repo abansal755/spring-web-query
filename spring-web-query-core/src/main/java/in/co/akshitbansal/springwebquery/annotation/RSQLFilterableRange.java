@@ -21,16 +21,19 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import java.lang.annotation.*;
 
 /**
- * Composed annotation that allows range and comparison filtering on a field.
- * <p>
- * Equivalent to declaring {@link RSQLFilterable} with:
+ * Convenience annotation that allows ordering and range filtering on a query
+ * contract field.
+ *
+ * <p>This annotation is equivalent to declaring {@link RSQLFilterable} with
  * {@link RSQLDefaultOperator#GREATER_THAN},
  * {@link RSQLDefaultOperator#GREATER_THAN_OR_EQUAL},
  * {@link RSQLDefaultOperator#LESS_THAN},
  * {@link RSQLDefaultOperator#LESS_THAN_OR_EQUAL},
  * {@link RSQLDefaultOperator#BETWEEN}, and
- * {@link RSQLDefaultOperator#NOT_BETWEEN}.
- * </p>
+ * {@link RSQLDefaultOperator#NOT_BETWEEN}.</p>
+ *
+ * <p>It is typically used on fields whose values support ordering comparisons,
+ * such as numbers, dates, timestamps, or other comparable types.</p>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

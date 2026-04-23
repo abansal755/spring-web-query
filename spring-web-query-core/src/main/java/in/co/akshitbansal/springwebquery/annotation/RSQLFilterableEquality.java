@@ -21,11 +21,13 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import java.lang.annotation.*;
 
 /**
- * Composed annotation that allows equality-based filtering on a field.
- * <p>
- * Equivalent to declaring {@link RSQLFilterable} with
- * {@link RSQLDefaultOperator#EQUAL} and {@link RSQLDefaultOperator#NOT_EQUAL}.
- * </p>
+ * Convenience annotation that allows equality-style filtering on a query
+ * contract field.
+ *
+ * <p>This annotation is equivalent to declaring {@link RSQLFilterable} with
+ * {@link RSQLDefaultOperator#EQUAL} and
+ * {@link RSQLDefaultOperator#NOT_EQUAL}. The validator expands it into those
+ * underlying operator permissions during filter validation.</p>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

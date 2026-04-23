@@ -18,6 +18,20 @@ package in.co.akshitbansal.springwebquery.annotation;
 
 import java.lang.annotation.*;
 
+/**
+ * Marks a field as eligible for request-driven sorting.
+ *
+ * <p>Sortability is validated against the terminal field of the requested sort
+ * selector. In practice, this annotation belongs on the fields that make up
+ * the public sorting contract for the query.</p>
+ *
+ * <p>Fields without this annotation are rejected by the sorting validator even
+ * if the selector path itself is valid and the underlying entity path exists.</p>
+ *
+ * <p><b>Example:</b></p>
+ * <pre>{@code @Sortable
+ * private String displayName;}</pre>
+ */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

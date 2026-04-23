@@ -19,9 +19,23 @@ package in.co.akshitbansal.springwebquery.repository;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.domain.Specification;
 
+/**
+ * Callback that can amend or replace the generated filtering
+ * {@link Specification} before execution.
+ *
+ * @param <E> entity type targeted by the specification
+ */
 @FunctionalInterface
 public interface SpecificationCustomizer<E> {
 
+	/**
+	 * Applies additional specification logic to the generated filter.
+	 *
+	 * @param specification generated specification, which may already be
+	 * unrestricted
+	 *
+	 * @return specification to execute, or {@code null} to remove filtering
+	 */
 	@Nullable
 	Specification<E> apply(Specification<E> specification);
 }

@@ -16,6 +16,7 @@
 
 package in.co.akshitbansal.springwebquery.tupleconverter;
 
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 import lombok.NonNull;
@@ -28,12 +29,64 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Locates a constructor that can materialize a DTO from a JPA {@link Tuple}.
+ *
+ * <p>Constructor discovery is based entirely on the tuple's positional shape.
+ * Parameter names, tuple aliases, and property names are not consulted.</p>
+ *
+ * <p>A constructor is considered suitable when all of the following are true:</p>
+ * <ul>
+ *   <li>it is not synthetic</li>
+ *   <li>its parameter count exactly matches the tuple element count</li>
+ *   <li>for each position, the constructor parameter type is assignable from
+ *       the tuple element Java type after primitive types are boxed</li>
+ * </ul>
+ *
+ * <p>The implementation iterates over {@link Class#getDeclaredConstructors()},
+ * keeps track of the latest suitable constructor it has seen, and stops early
+ * if it encounters a suitable constructor annotated with
+ * {@link PersistenceCreator}. Because Java reflection does not guarantee a
+ * stable ordering for declared constructors, constructor selection is
+ * unpredictable when multiple suitable constructors are present.</p>
+ *
+ * <p>To keep selection deterministic, DTOs should ideally expose only one
+ * suitable constructor. If {@link PersistenceCreator} is used, it is strongly
+ * recommended that at most one suitable constructor be annotated with it.</p>
+ *
+ * @param <T> target DTO type
+ */
 @RequiredArgsConstructor(staticName = "of")
 class PreferredConstructorDiscoverer<T> {
 
+	/**
+	 * DTO type whose constructors are inspected.
+	 */
 	@NonNull
 	private final Class<T> clazz;
 
+	/**
+	 * Finds a constructor whose parameter list is compatible with the supplied
+	 * tuple and makes it accessible for later invocation.
+	 *
+	 * <p>Matching is performed position by position. For each tuple element, the
+	 * constructor parameter at the same index must be assignable from the tuple
+	 * element Java type, with primitive parameter types first converted to their
+	 * boxed equivalents. Tuple aliases are ignored.</p>
+	 *
+	 * <p>If several suitable constructors exist, the outcome depends on the
+	 * order returned by {@link Class#getDeclaredConstructors()}. A suitable
+	 * constructor annotated with {@link PersistenceCreator} wins immediately when
+	 * encountered. Otherwise, the last suitable constructor encountered is
+	 * selected.</p>
+	 *
+	 * @param tuple tuple whose values will be passed to the constructor
+	 *
+	 * @return matching constructor made accessible for invocation
+	 *
+	 * @throws QueryConfigurationException if no suitable constructor can be
+	 * found for the tuple shape
+	 */
 	public Constructor<T> discover(@NonNull Tuple tuple) {
 		Constructor<?>[] constructors = clazz.getDeclaredConstructors();
 		Constructor<T> bestMatch = null;
@@ -49,7 +102,7 @@ class PreferredConstructorDiscoverer<T> {
 				break;
 		}
 		if (bestMatch == null) {
-			throw new IllegalArgumentException(MessageFormat.format(
+			throw new QueryConfigurationException(MessageFormat.format(
 					"No suitable constructor found for tuple: {0}",
 					tupleToString(tuple)
 			));
@@ -58,6 +111,10 @@ class PreferredConstructorDiscoverer<T> {
 		return bestMatch;
 	}
 
+	/**
+	 * Checks whether a constructor matches the tuple by parameter count and
+	 * positionally aligned parameter types.
+	 */
 	private boolean isConstructorMatchingTuple(Constructor<?> constructor, Tuple tuple) {
 		Parameter[] parameters = constructor.getParameters();
 		List<TupleElement<?>> tupleElements = tuple.getElements();
@@ -69,12 +126,20 @@ class PreferredConstructorDiscoverer<T> {
 		return true;
 	}
 
+	/**
+	 * Checks whether one constructor parameter can accept the tuple element at
+	 * the same position after primitive boxing.
+	 */
 	private boolean isParameterMatchingTupleElement(Parameter parameter, TupleElement<?> tupleElement) {
 		Class<?> parameterType = wrap(parameter.getType());
 		Class<?> tupleElementType = wrap(tupleElement.getJavaType());
 		return parameterType.isAssignableFrom(tupleElementType);
 	}
 
+	/**
+	 * Converts primitive types to their boxed equivalents before assignability
+	 * checks are performed.
+	 */
 	private Class<?> wrap(Class<?> clazz) {
 		if (!clazz.isPrimitive()) return clazz;
 		if (clazz == int.class) return Integer.class;
@@ -88,6 +153,9 @@ class PreferredConstructorDiscoverer<T> {
 		throw new IllegalArgumentException("Unsupported primitive type: " + clazz);
 	}
 
+	/**
+	 * Renders tuple element types for error reporting.
+	 */
 	private String tupleToString(Tuple tuple) {
 		return tuple
 				.getElements()
