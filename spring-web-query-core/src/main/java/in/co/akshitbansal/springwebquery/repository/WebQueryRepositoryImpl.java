@@ -53,12 +53,26 @@ import java.util.List;
 import static in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper.MappingResult;
 
 /**
- * Default {@link WebQueryRepository} implementation backed by JPA Criteria
- * queries and {@code rsql-jpa}.
+ * JPA-based {@link WebQueryRepository} repository fragment implementation
+ * backed by Criteria queries and {@code rsql-jpa}.
  *
- * <p>The implementation validates incoming DTO-facing filters and sorts,
- * translates them to entity paths, executes tuple-based projection queries,
- * and converts the results into the requested DTO type.</p>
+ * <p>This implementation handles filtering, sorting, pagination, and
+ * projection for a repository method invocation. It builds tuple-based select
+ * queries through the supplied {@link SelectionsProvider}, validates and maps
+ * filter and sort paths against the supplied DTO type, delegates predicate
+ * creation to {@code rsql-jpa}, and converts the resulting tuples into the
+ * requested DTO type.</p>
+ *
+ * <p>When page metadata is needed, the same filter rules are reused for a
+ * separate count query. The interface Javadoc remains the main public API
+ * description; the helper methods in this class explain how the JPA-backed
+ * implementation realizes that behavior.</p>
+ *
+ * <p>The repository-wide defaults used by the overloads that do not accept
+ * explicit validation settings are sourced from the properties
+ * {@code spring-web-query.filtering.allow-and-operation},
+ * {@code spring-web-query.filtering.allow-or-operation}, and
+ * {@code spring-web-query.filtering.max-ast-depth}.</p>
  *
  * @param <E> entity type handled by the repository
  */
@@ -267,8 +281,33 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	}
 
 	/**
-	 * Applies the generated and customized filter specification to a criteria
-	 * query when filtering is present.
+	 * Applies the repository-generated filter specification, together with any
+	 * caller-supplied customization, to the provided criteria query.
+	 *
+	 * <p>The method first builds the base specification for the current request
+	 * by delegating to {@link #createSpecification(String, Class, Class, boolean, boolean, int)}.
+	 * If a {@link SpecificationCustomizer} is present, it is then given the base
+	 * specification and may augment it, replace it, or return {@code null} to
+	 * indicate that no {@code WHERE} clause should be applied.</p>
+	 *
+	 * <p>If the final specification is {@code null}, or if it yields a
+	 * {@code null} {@link Predicate} for the current criteria state, the query is
+	 * left without a {@code WHERE} clause. Otherwise the produced predicate is
+	 * applied to the supplied criteria query.</p>
+	 *
+	 * @param root root entity path for the query being constructed
+	 * @param query criteria query receiving the {@code WHERE} clause
+	 * @param cb criteria builder used to obtain predicates
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param specificationCustomizer optional hook that can amend or remove the
+	 * generated specification
+	 * @param entityClass backing entity type used for path resolution
+	 * @param dtoClass DTO type that defines the allowed selector contract
+	 * @param allowAndOperation whether logical {@code AND} nodes are allowed
+	 * during validation
+	 * @param allowOrOperation whether logical {@code OR} nodes are allowed during
+	 * validation
+	 * @param maxASTDepth maximum allowed RSQL AST depth during validation
 	 */
 	private void applyWhereClause(
 			Root<E> root, CriteriaQuery<?> query, CriteriaBuilder cb,
@@ -288,7 +327,47 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	}
 
 	/**
-	 * Builds a JPA {@link Specification} from an optional RSQL expression.
+	 * Builds the base JPA {@link Specification} for an optional RSQL expression.
+	 *
+	 * <p>If {@code rsqlQuery} is {@code null}, this method returns
+	 * {@link Specification#unrestricted()} so callers can continue through the
+	 * pipeline without branching. Otherwise the query string is parsed into an
+	 * RSQL AST, validated with a request-scoped {@link ValidationRSQLVisitor},
+	 * and converted into a {@link Specification} whose predicate is created on
+	 * demand when the specification is later applied.</p>
+	 *
+	 * <p>The validation pass collects selector-to-entity-path mappings while
+	 * enforcing the configured logical-operator and depth limits. Those collected
+	 * mappings are then reused by the {@link RSQLJPAPredicateConverter} so that
+	 * predicate construction follows the exact selector translation that was
+	 * validated earlier in the request.</p>
+	 *
+	 * <p>The predicate converter is intentionally configured to disable wildcard
+	 * interpretation for the string equality operator. As a result, an equality
+	 * expression such as {@code name==John*} is treated as an equality check
+	 * against the literal value {@code John*}, not as a prefix match.</p>
+	 *
+	 * <p>Exception handling is normalized as follows:</p>
+	 *
+	 * <p>{@link RSQLParserException} is wrapped in a
+	 * {@link QueryValidationException}. {@link QueryException} subclasses raised
+	 * by validation or downstream components are propagated unchanged. Any other
+	 * unexpected {@link RuntimeException} is wrapped in a
+	 * {@link QueryConfigurationException} because it indicates a failure while
+	 * turning an already parsed request into a JPA predicate.</p>
+	 *
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param entityClass backing entity type used for JPA predicate creation
+	 * @param dtoClass DTO type that defines the allowed selector contract
+	 * @param allowAndOperation whether logical {@code AND} nodes are allowed
+	 * during validation
+	 * @param allowOrOperation whether logical {@code OR} nodes are allowed during
+	 * validation
+	 * @param maxASTDepth maximum allowed RSQL AST depth during validation
+	 *
+	 * @return unrestricted specification when {@code rsqlQuery} is {@code null},
+	 * otherwise a lazily evaluated specification that recreates the validated
+	 * filter as a JPA predicate when invoked
 	 */
 	private Specification<E> createSpecification(
 			@Nullable String rsqlQuery,
@@ -348,7 +427,28 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	}
 
 	/**
-	 * Maps DTO-facing sort properties to JPA orders on entity paths.
+	 * Translates the requested sort orders from DTO selector paths into JPA
+	 * {@link Order} instances backed by entity paths.
+	 *
+	 * <p>Each {@link Sort.Order} is processed independently. The order property
+	 * is first mapped from the caller-visible DTO selector path to an entity
+	 * attribute path. The terminal DTO field referenced by that selector is then
+	 * validated with the {@link SortableFieldValidator}. Once validated, the
+	 * mapped entity path is resolved into a chained JPA {@link Path}, and either
+	 * an ascending or descending {@link Order} is created to match the original
+	 * sort direction.</p>
+	 *
+	 * <p>An empty {@link Sort} produces an empty order list. Mapping or
+	 * validation failures are surfaced to the caller through the exceptions
+	 * raised by the mapper or validator.</p>
+	 *
+	 * @param sort sort specification supplied through the current {@link Pageable}
+	 * @param root root entity path for the query being constructed
+	 * @param cb criteria builder used to create ascending and descending orders
+	 * @param entityClass backing entity type used for selector translation
+	 * @param dtoClass DTO type that defines the sortable selector contract
+	 *
+	 * @return JPA order list corresponding to the requested sort specification
 	 */
 	private List<Order> mapSortPathsToEntityPaths(Sort sort, Root<E> root, CriteriaBuilder cb, Class<E> entityClass, Class<?> dtoClass) {
 		DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(entityClass, dtoClass);
@@ -373,7 +473,22 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	}
 
 	/**
-	 * Resolves a dotted entity path into a chained JPA {@link Path}.
+	 * Resolves a dotted entity attribute path into a chained JPA {@link Path}.
+	 *
+	 * <p>The input is expected to already be a validated entity path produced by
+	 * the selector-mapping layer. Resolution is purely segment-by-segment through
+	 * repeated {@link Path#get(String)} calls starting from the supplied root,
+	 * for example turning {@code address.city.name} into
+	 * {@code root.get("address").get("city").get("name")}.</p>
+	 *
+	 * <p>This helper does not perform any additional validation, join creation,
+	 * or fallback lookup. It simply mirrors the previously resolved entity path
+	 * into the form required by the Criteria API.</p>
+	 *
+	 * @param root root entity path for the query being constructed
+	 * @param entityPath mapped entity attribute path expressed with dot notation
+	 *
+	 * @return Criteria API path representing the supplied entity path
 	 */
 	private Path<?> getJPAPathFromEntityPath(Root<E> root, String entityPath) {
 		Path<?> path = root;
@@ -385,6 +500,18 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	/**
 	 * Retrieves the repository domain type from the current Spring Data
 	 * invocation context.
+	 *
+	 * <p>The implementation is registered as a repository fragment and implements
+	 * {@link RepositoryMetadataAccess}, so Spring Data exposes the current method
+	 * invocation metadata through {@link RepositoryMethodContext}. This helper
+	 * reads the domain type from that context and casts it to the repository's
+	 * generic entity type.</p>
+	 *
+	 * <p>The returned type is the actual repository domain class currently
+	 * invoking this fragment, which allows a single generic implementation class
+	 * to serve multiple repository specializations.</p>
+	 *
+	 * @return runtime entity class for the current repository invocation
 	 */
 	private Class<E> getEntityClass() {
 		// noinspection unchecked
