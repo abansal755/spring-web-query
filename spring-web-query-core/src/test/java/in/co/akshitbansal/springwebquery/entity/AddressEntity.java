@@ -6,5 +6,5 @@ import lombok.Data;
 public class AddressEntity {
 
 	private Long id;
-	private String city;
+	private String userCity;
 }

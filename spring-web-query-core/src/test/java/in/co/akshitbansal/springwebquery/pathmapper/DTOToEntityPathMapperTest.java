@@ -1,6 +1,7 @@
 package in.co.akshitbansal.springwebquery.pathmapper;
 
 import in.co.akshitbansal.springwebquery.entity.UserEntity;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.model.Name;
 import in.co.akshitbansal.springwebquery.model.Phone;
@@ -32,9 +33,15 @@ class DTOToEntityPathMapperTest {
 	}
 
 	@Test
-	void testMapWithInvalidPath() {
+	void testMapWithInvalidDTOPath() {
 		QueryFieldValidationException ex = assertThrows(QueryFieldValidationException.class, () -> mapper.map("invalid.path"));
 		assertTrue(ex.getMessage().contains("Unknown field"));
+	}
+
+	@Test
+	void testMapWithInvalidEntityPath() {
+		QueryConfigurationException ex = assertThrows(QueryConfigurationException.class, () -> mapper.map("addresses.city"));
+		assertTrue(ex.getMessage().contains("Unable to resolve"));
 	}
 
 	@Test
