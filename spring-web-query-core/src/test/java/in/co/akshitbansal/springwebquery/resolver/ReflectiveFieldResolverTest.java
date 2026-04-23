@@ -1,6 +1,9 @@
 package in.co.akshitbansal.springwebquery.resolver;
 
-import lombok.Data;
+import in.co.akshitbansal.springwebquery.model.Address;
+import in.co.akshitbansal.springwebquery.model.Name;
+import in.co.akshitbansal.springwebquery.model.Phone;
+import in.co.akshitbansal.springwebquery.model.User;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -85,33 +88,5 @@ class ReflectiveFieldResolverTest {
 		// Assertions on the 2nd field
 		assertEquals("city", fields.get(1).getName());
 		assertEquals(Address.class, fields.get(1).getDeclaringClass());
-	}
-
-	@Data
-	private static class User {
-
-		private String email;
-		private Name name;
-		private Phone[] phones;
-		private List<Address> addresses;
-	}
-
-	@Data
-	private static class Name {
-
-		private String firstName;
-		private String lastName;
-	}
-
-	@Data
-	private static class Phone {
-
-		private final String number;
-	}
-
-	@Data
-	private static class Address {
-
-		private final String city;
 	}
 }
