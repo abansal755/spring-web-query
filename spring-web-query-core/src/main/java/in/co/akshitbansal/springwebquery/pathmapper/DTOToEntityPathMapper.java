@@ -14,63 +14,38 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.resolver.field;
+package in.co.akshitbansal.springwebquery.pathmapper;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
-import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import in.co.akshitbansal.springwebquery.resolver.ReflectiveFieldResolver;
+import lombok.*;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * {@link FieldResolver} implementation that treats a DTO type as the public
- * query contract and maps DTO selector paths to entity selector paths.
- *
- * <p>Resolution proceeds in three steps:</p>
- * <ul>
- *     <li>Resolve the incoming path against the DTO class structure.</li>
- *     <li>Translate the DTO path to an entity path using {@link MapsTo}, then
- *     verify that the resulting entity path exists.</li>
- *     <li>Return the mapped entity path together with the terminal DTO field so
- *     callers can apply validation separately.</li>
- * </ul>
- */
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-public class DTOAwareFieldResolver implements FieldResolver {
+public class DTOToEntityPathMapper {
 
-	/**
-	 * Entity type used to validate the translated path.
-	 */
-	@NonNull
 	protected final Class<?> entityClass;
-
-	/**
-	 * DTO type used as the external selector contract.
-	 */
-	@NonNull
 	protected final Class<?> dtoClass;
+	private final ReflectiveFieldResolver entityFieldResolver;
+	private final ReflectiveFieldResolver dtoFieldResolver;
 
-	/**
-	 * Resolves a DTO selector path and maps the selector to the corresponding
-	 * entity path.
-	 *
-	 * @param dtoPath selector path from the incoming request
-	 *
-	 * @return resolution result containing the mapped entity path and terminal DTO field
-	 */
-	@Override
-	public ResolutionResult resolvePath(@NonNull String dtoPath) {
+	DTOToEntityPathMapper(@NonNull Class<?> entityClass, @NonNull Class<?> dtoClass) {
+		this.entityClass = entityClass;
+		this.dtoClass = dtoClass;
+		this.entityFieldResolver = ReflectiveFieldResolver.of(entityClass);
+		this.dtoFieldResolver = ReflectiveFieldResolver.of(dtoClass);
+	}
+
+	public MappingResult map(String dtoPath) {
 		// Resolve the field path in the DTO class
 		List<Field> dtoFields;
 		try {
-			dtoFields = ReflectionUtil.resolveFieldPath(dtoClass, dtoPath);
+			dtoFields = dtoFieldResolver.resolveFieldPath(dtoPath);
 		}
 		catch (Exception ex) {
 			throw new QueryFieldValidationException(
@@ -91,9 +66,10 @@ public class DTOAwareFieldResolver implements FieldResolver {
 			}
 		}
 		String entityPath = String.join(".", entityPathSegments);
+
 		// Validate that the constructed entity field path is resolvable in the entity class
 		try {
-			ReflectionUtil.resolveField(entityClass, entityPath);
+			entityFieldResolver.resolveFieldPath(entityPath);
 		}
 		catch (Exception ex) {
 			throw new QueryConfigurationException(
@@ -103,6 +79,19 @@ public class DTOAwareFieldResolver implements FieldResolver {
 			);
 		}
 
-		return new ResolutionResult(entityPath, dtoFields.get(dtoFields.size() - 1));
+		return MappingResult.of(entityPath, dtoFields.get(dtoFields.size() - 1));
+	}
+
+	@RequiredArgsConstructor(staticName = "of")
+	@Getter
+	@EqualsAndHashCode
+	@ToString
+	public static class MappingResult {
+
+		@NonNull
+		private final String path;
+
+		@NonNull
+		private final Field terminalDTOField;
 	}
 }

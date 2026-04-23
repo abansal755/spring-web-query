@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.enums;
+package in.co.akshitbansal.springwebquery.repository;
 
-/**
- * Selects whether request selectors are resolved against DTO metadata first
- * or directly against entity metadata.
- */
-public enum ResolutionMode {
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.jpa.domain.Specification;
 
-	/**
-	 * Resolve request selectors through the DTO contract and translate them to
-	 * entity paths.
-	 */
-	DTO_AWARE,
+@FunctionalInterface
+public interface SpecificationCustomizer<E> {
 
-	/**
-	 * Resolve request selectors directly against the entity model.
-	 */
-	ENTITY_AWARE
+	@Nullable
+	Specification<E> apply(Specification<E> specification);
 }

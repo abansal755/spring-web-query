@@ -19,11 +19,11 @@ package in.co.akshitbansal.springwebquery.validator;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterables;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
-import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

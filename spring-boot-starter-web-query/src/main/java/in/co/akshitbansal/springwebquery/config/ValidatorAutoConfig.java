@@ -17,9 +17,7 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
-import in.co.akshitbansal.springwebquery.validator.FieldMappingsValidator;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
-import in.co.akshitbansal.springwebquery.validator.QueryParamNameValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -35,17 +33,6 @@ import java.util.Map;
 public class ValidatorAutoConfig {
 
 	/**
-	 * Registers the validator used for configured filter parameter names.
-	 *
-	 * @return query parameter name validator
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	public QueryParamNameValidator queryParamNameValidator() {
-		return new QueryParamNameValidator();
-	}
-
-	/**
 	 * Registers the validator used to enforce {@code @Sortable} constraints.
 	 *
 	 * @return sortable field validator
@@ -54,17 +41,6 @@ public class ValidatorAutoConfig {
 	@ConditionalOnMissingBean
 	public SortableFieldValidator sortableFieldValidator() {
 		return new SortableFieldValidator();
-	}
-
-	/**
-	 * Registers the validator used to check explicit entity field aliases.
-	 *
-	 * @return field-mappings validator
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	public FieldMappingsValidator fieldMappingsValidator() {
-		return new FieldMappingsValidator();
 	}
 
 	/**

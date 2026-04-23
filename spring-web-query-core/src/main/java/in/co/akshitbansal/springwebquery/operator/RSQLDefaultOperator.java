@@ -17,45 +17,10 @@
 package in.co.akshitbansal.springwebquery.operator;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
-import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import io.github.perplexhub.rsql.RSQLOperators;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Enumeration of supported RSQL comparison operators.
- * <p>
- * This enum provides a type-safe wrapper around the built-in
- * {@link cz.jirutka.rsql.parser.ast.RSQLOperators} supplied by the RSQL library.
- * Each enum constant maps directly to a corresponding {@link cz.jirutka.rsql.parser.ast.ComparisonOperator}
- * instance and represents a single logical comparison operation supported by RSQL.
- *
- * <p>
- * The primary purpose of this enum is to:
- * <ul>
- *     <li>Expose RSQL operators in a form that can be safely used in Java annotations</li>
- *     <li>Allow fine-grained control over which operators are permitted for a given entity field</li>
- *     <li>Decouple application code from direct usage of {@link RSQLOperators}</li>
- * </ul>
- *
- * <p>
- * {@link RSQLDefaultOperator} is typically used in conjunction with
- * {@link RSQLFilterable} to declare the set of allowed operators on an entity field,
- * and with {@link EntityValidationRSQLVisitor} to enforce these constraints at runtime.
- * </p>
- *
- * <p><b>Example usage:</b></p>
- * <pre>{@code
- * @RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.IN})
- * private String status;
- * }</pre>
- *
- * @see RSQLFilterable
- * @see EntityValidationRSQLVisitor
- * @see RSQLOperators
- * @see cz.jirutka.rsql.parser.ast.ComparisonOperator
- */
 @RequiredArgsConstructor
 @Getter
 public enum RSQLDefaultOperator {

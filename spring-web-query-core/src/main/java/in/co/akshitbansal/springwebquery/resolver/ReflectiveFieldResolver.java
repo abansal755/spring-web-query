@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.util;
+package in.co.akshitbansal.springwebquery.resolver;
 
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -29,86 +29,24 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Utility class for performing reflection-based operations on entity classes.
- * <p>
- * This class provides methods for resolving fields from dot-separated paths,
- * handling inheritance hierarchies, and unwrapping container types (arrays and collections).
- * </p>
- */
-// Private constructor to prevent instantiation
-@NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
-public final class ReflectionUtil {
+@RequiredArgsConstructor(staticName = "of")
+public class ReflectiveFieldResolver {
 
-	/**
-	 * Resolves a {@link Field} for the given dot-separated field path, starting from
-	 * the supplied root type and traversing the type hierarchy and container types
-	 * as needed.
-	 * <p>
-	 * The resolution rules are:
-	 * <ul>
-	 *   <li>Each path segment is resolved using {@code getDeclaredField} while
-	 *       walking up the superclass hierarchy.</li>
-	 *   <li>If a resolved field is an array, traversal continues with its component type.</li>
-	 *   <li>If a resolved field is a {@link Collection}, traversal continues with the
-	 *       collection's generic element type.</li>
-	 *   <li>Only the last field in the path is returned.</li>
-	 * </ul>
-	 *
-	 * <p>
-	 * Examples:
-	 * <pre>{@code
-	 * resolveField(User.class, "name.first");
-	 * resolveField(Order.class, "items.product.id");
-	 * resolveField(Foo.class, "values"); // List<List<String>> resolves to List
-	 * }</pre>
-	 *
-	 * <p>
-	 * This method performs <strong>structural type resolution only</strong>. It does not
-	 * access or inspect runtime values.
-	 *
-	 * @param type the root class from which resolution starts
-	 * @param name a dot-separated field path (e.g. {@code "a.b.c"})
-	 *
-	 * @return the {@link Field} corresponding to the last segment in the path
-	 *
-	 * @throws RuntimeException if any segment of the path cannot be resolved
-	 * @throws UnsupportedOperationException if an intermediate collection type
-	 * does not expose resolvable generic information
-	 */
-	public static Field resolveField(@NonNull Class<?> type, @NonNull String name) {
-		List<Field> fields = resolveFieldPath(type, name);
-		return fields.get(fields.size() - 1);
-	}
+	@NonNull
+	private final Class<?> clazz;
 
-	/**
-	 * Resolves all fields in a dot-separated path, preserving traversal order.
-	 *
-	 * <p>Unlike {@link #resolveField(Class, String)}, which returns only the
-	 * terminal field, this method returns the complete sequence of resolved
-	 * fields. It applies the same hierarchy lookup and container unwrapping
-	 * rules at each step.</p>
-	 *
-	 * @param type root class from which traversal starts
-	 * @param name dot-separated field path
-	 *
-	 * @return ordered list of fields from first segment to last segment
-	 *
-	 * @throws RuntimeException if any segment cannot be resolved
-	 * @throws UnsupportedOperationException if intermediate collection generics cannot be resolved
-	 */
-	public static List<Field> resolveFieldPath(@NonNull Class<?> type, @NonNull String name) {
-		if (name.isEmpty()) throw new IllegalArgumentException("Field path cannot be empty");
-		String[] fieldNames = name.split("\\.");
+	public List<Field> resolveFieldPath(String path) {
+		if (path.isEmpty()) throw new IllegalArgumentException("Field path cannot be empty");
+		String[] fieldNames = path.split("\\.");
 		if (fieldNames.length == 0) throw new IllegalArgumentException("Field path cannot be empty");
-		Class<?> current = type;
-		List<Field> path = new ArrayList<>();
+		Class<?> current = clazz;
+		List<Field> fieldPath = new ArrayList<>();
 		for (String fieldName: fieldNames) {
 			Field field = resolveFieldUpHierarchy(current, fieldName);
-			path.add(field);
+			fieldPath.add(field);
 			current = unwrapContainerType(field);
 		}
-		return Collections.unmodifiableList(path);
+		return Collections.unmodifiableList(fieldPath);
 	}
 
 	/**
@@ -127,7 +65,7 @@ public final class ReflectionUtil {
 	 * @throws RuntimeException if no field with the specified name exists in the class
 	 * or any of its superclasses
 	 */
-	private static Field resolveFieldUpHierarchy(Class<?> type, String name) {
+	private Field resolveFieldUpHierarchy(Class<?> type, String name) {
 		Class<?> current = type;
 		while (current != null) {
 			try {
@@ -161,7 +99,7 @@ public final class ReflectionUtil {
 	 * @throws UnsupportedOperationException if the collection element type
 	 * cannot be determined
 	 */
-	private static Class<?> unwrapContainerType(Field field) {
+	private Class<?> unwrapContainerType(Field field) {
 		Class<?> type = field.getType();
 		if (type.isArray()) return type.getComponentType();
 		if (Collection.class.isAssignableFrom(type)) return resolveGenericArgument(field, 0);
@@ -182,7 +120,7 @@ public final class ReflectionUtil {
 	 * @throws UnsupportedOperationException if the field does not declare
 	 * parameterized generic information
 	 */
-	private static Class<?> resolveGenericArgument(Field field, int index) {
+	private Class<?> resolveGenericArgument(Field field, int index) {
 		Type type = field.getGenericType();
 		if (!(type instanceof ParameterizedType parameterizedType))
 			throw new UnsupportedOperationException("Cannot resolve generic type for field: " + field.getName());
@@ -212,7 +150,7 @@ public final class ReflectionUtil {
 	 *
 	 * @throws UnsupportedOperationException if the type cannot be safely converted
 	 */
-	private static Class<?> toClass(Type type) {
+	private Class<?> toClass(Type type) {
 		if (type instanceof Class<?>) return (Class<?>) type;
 		if (type instanceof ParameterizedType parameterizedType) return (Class<?>) parameterizedType.getRawType();
 		if (type instanceof WildcardType wt) return toClass(wt.getUpperBounds()[0]);

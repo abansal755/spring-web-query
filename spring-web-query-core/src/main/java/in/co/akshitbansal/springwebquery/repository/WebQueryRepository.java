@@ -16,134 +16,92 @@
 
 package in.co.akshitbansal.springwebquery.repository;
 
-import jakarta.persistence.Tuple;
+import lombok.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Collections;
 import java.util.List;
 
-/**
- * Repository fragment for executing {@link Specification}-based tuple selections.
- *
- * @param <T> entity type backing the repository
- */
-public interface WebQueryRepository<T> {
+public interface WebQueryRepository<E> {
 
-	/**
-	 * Executes a tuple query for the given specification, sort/page request, and selection definition.
-	 *
-	 * <p>The selection callback receives the live result {@code CriteriaQuery} so it can build correlated subqueries or
-	 * inspect query state while defining projected columns.</p>
-	 *
-	 * @param specification filtering criteria to apply
-	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
-	 * @param selectionsProvider callback that defines the tuple selections for the query
-	 *
-	 * @return tuples matching the requested filter, sort, and selection set
-	 */
-	List<Tuple> findAll(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+	<D> List<D> findAll(
+			@Nullable String rsqlQuery, Pageable pageable,
+			SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			Class<D> dtoClass, boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
 	);
 
-	/**
-	 * Executes a tuple query and wraps the results in a page.
-	 *
-	 * <p>When {@code pageable} is unpaged, the returned page contains all matching tuples without issuing a separate
-	 * count query.</p>
-	 *
-	 * <p>The selection callback receives the live result {@code CriteriaQuery}. For paged execution, avoid mutating the
-	 * outer query in ways that change row cardinality, such as enabling distinct results or adding grouping, because
-	 * the total count is derived from a separate count query built from the {@link Specification}.</p>
-	 *
-	 * @param specification filtering criteria to apply
-	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
-	 * @param selectionsProvider callback that defines the tuple selections for the query
-	 *
-	 * @return a page of tuples matching the requested filter, sort, and selection set
-	 */
-	Page<Tuple> findAllPaged(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+	<D> List<D> findAll(
+			@Nullable String rsqlQuery, Pageable pageable,
+			SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			Class<D> dtoClass
 	);
 
-	/**
-	 * Executes a tuple query and converts each result row into an instance of the requested DTO type.
-	 *
-	 * <p>Use this overload when the caller wants constructor-backed DTO projection instead of working with raw
-	 * {@link Tuple} instances. The provided {@link SelectionsProvider} still defines the tuple projection, but each
-	 * resulting row is converted into {@code dtoClass} immediately before being returned to the caller.</p>
-	 *
-	 * <p>Conversion is positional. The selected tuple elements are passed to the DTO constructor in the same order as
-	 * they are returned by {@link SelectionsProvider#getSelections}. Tuple aliases or selection names are ignored.</p>
-	 *
-	 * <p>A constructor is considered compatible when it has the same number of parameters as projected tuple elements
-	 * and each parameter type is assignable from the corresponding tuple element runtime Java type after primitive
-	 * types are normalized to their wrapper equivalents. When multiple constructors are compatible, a constructor
-	 * annotated with {@link org.springframework.data.annotation.PersistenceCreator} is preferred. Callers should define
-	 * at most one such annotated constructor; if more than one constructor is annotated, or if multiple compatible
-	 * constructors exist and selection is not uniquely determined, behavior is unpredictable.</p>
-	 *
-	 * <p>If no compatible constructor can be found, or if reflective instantiation fails for any row, the conversion
-	 * fails at runtime.</p>
-	 *
-	 * @param specification filtering criteria to apply
-	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
-	 * @param selectionsProvider callback that defines the tuple selections for the query
-	 * @param dtoClass target DTO type to instantiate for each tuple row
-	 * @param <U> DTO projection type
-	 *
-	 * @return DTO instances matching the requested filter, sort, selection set, and constructor mapping rules
-	 */
-	<U> List<U> findAll(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider,
-			Class<U> dtoClass
+	default <D> List<D> findAll(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider, @NonNull Class<D> dtoClass
+	) {
+		return findAll(rsqlQuery, pageable, selectionsProvider, null, dtoClass);
+	}
+
+	long count(
+			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			Class<?> dtoClass, boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
 	);
 
-	/**
-	 * Executes a tuple query, converts each result row into an instance of the requested DTO type, and wraps the
-	 * converted results in a page.
-	 *
-	 * <p>Use this overload when the caller wants constructor-backed DTO projection together with Spring Data paging
-	 * metadata. The provided {@link SelectionsProvider} still defines the tuple projection, and each tuple row is
-	 * converted into {@code dtoClass} before being exposed in the returned page.</p>
-	 *
-	 * <p>Conversion is positional. The selected tuple elements are supplied to the DTO constructor in the same order as
-	 * they are returned by {@link SelectionsProvider#getSelections}. Tuple aliases or selection names do not
-	 * participate in constructor binding.</p>
-	 *
-	 * <p>A constructor is considered compatible when it has the same number of parameters as projected tuple elements
-	 * and each parameter type is assignable from the corresponding tuple element runtime Java type after primitive
-	 * types are normalized to their wrapper equivalents. When multiple constructors are compatible, a constructor
-	 * annotated with {@link org.springframework.data.annotation.PersistenceCreator} is preferred. Callers should define
-	 * at most one such annotated constructor; if more than one constructor is annotated, or if multiple compatible
-	 * constructors exist and selection is not uniquely determined, behavior is unpredictable.</p>
-	 *
-	 * <p>This method inherits the same count-query caveats as {@link #findAllPaged(Specification, Pageable,
-	 * SelectionsProvider)}. In particular, callers should avoid mutating the outer query in ways that change row
-	 * cardinality, because the total count is derived from a separate count query built from the
-	 * {@link Specification}.</p>
-	 *
-	 * <p>If no compatible constructor can be found, or if reflective instantiation fails for any row, the conversion
-	 * fails at runtime.</p>
-	 *
-	 * @param specification filtering criteria to apply
-	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
-	 * @param selectionsProvider callback that defines the tuple selections for the query
-	 * @param dtoClass target DTO type to instantiate for each tuple row
-	 * @param <U> DTO projection type
-	 *
-	 * @return a page of DTO instances matching the requested filter, sort, selection set, and constructor mapping rules
-	 */
-	<U> Page<U> findAllPaged(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider,
-			Class<U> dtoClass
+	long count(@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer, Class<?> dtoClass);
+
+	default long count(@Nullable String rsqlQuery, @NonNull Class<?> dtoClass) {
+		return count(rsqlQuery, null, dtoClass);
+	}
+
+	default <D> Page<D> findAllPaged(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			@NonNull Class<D> dtoClass, boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
+	) {
+		// If unpaged, there is no need to issue another query for count
+		if (pageable.isUnpaged()) {
+			return new PageImpl<>(findAll(
+					rsqlQuery, pageable,
+					selectionsProvider, specificationCustomizer,
+					dtoClass, andNodeAllowed, orNodeAllowed, maxASTDepth
+			));
+		}
+
+		// Paged, issue a separate query for count
+		long count = count(
+				rsqlQuery, specificationCustomizer,
+				dtoClass, andNodeAllowed, orNodeAllowed, maxASTDepth
+		);
+
+		// If no results, return an empty page
+		if (count == 0) return new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+		// Issue a results query to get the actual results
+		return new PageImpl<>(
+				findAll(
+						rsqlQuery, pageable,
+						selectionsProvider, specificationCustomizer,
+						dtoClass, andNodeAllowed, orNodeAllowed, maxASTDepth
+				),
+				pageable, count
+		);
+	}
+
+	<D> Page<D> findAllPaged(
+			@Nullable String rsqlQuery, Pageable pageable,
+			SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			Class<D> dtoClass
 	);
+
+	default <D> Page<D> findAllPaged(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider,
+			@NonNull Class<D> dtoClass
+	) {
+		return findAllPaged(rsqlQuery, pageable, selectionsProvider, null, dtoClass);
+	}
 }

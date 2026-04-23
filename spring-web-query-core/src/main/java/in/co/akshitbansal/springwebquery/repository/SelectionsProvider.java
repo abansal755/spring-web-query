@@ -30,10 +30,10 @@ import java.util.List;
  * should avoid mutating the outer query in ways that change row cardinality, such as enabling distinct results or
  * adding grouping, because paged execution derives the total count from a separate count query.</p>
  *
- * @param <T> entity type backing the repository
+ * @param <E> entity type backing the repository
  */
 @FunctionalInterface
-public interface SelectionsProvider<T> {
+public interface SelectionsProvider<E> {
 
 	/**
 	 * Defines the tuple selections to apply to the result query.
@@ -45,7 +45,7 @@ public interface SelectionsProvider<T> {
 	 * @return selections to project into the tuple result
 	 */
 	List<Selection<?>> getSelections(
-			Root<T> root,
+			Root<E> root,
 			CriteriaQuery<?> query,
 			CriteriaBuilder cb
 	);
