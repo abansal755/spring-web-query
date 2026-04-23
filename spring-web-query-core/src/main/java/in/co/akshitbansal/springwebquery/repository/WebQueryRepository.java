@@ -119,8 +119,9 @@ public interface WebQueryRepository<E> {
 	 * @throws QueryValidationException if the RSQL expression cannot be parsed
 	 * or violates the configured validation rules
 	 * @throws QueryConfigurationException if no selections are provided, selector
-	 * translation fails because of invalid configuration, or predicate creation
-	 * fails after parsing and validation
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
 	 * @throws QueryException if another Spring Web Query exception is raised
 	 * during processing
 	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
@@ -161,8 +162,9 @@ public interface WebQueryRepository<E> {
 	 * @throws QueryValidationException if the RSQL expression cannot be parsed
 	 * or violates the configured validation rules
 	 * @throws QueryConfigurationException if no selections are provided, selector
-	 * translation fails because of invalid configuration, or predicate creation
-	 * fails after parsing and validation
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
 	 * @throws QueryException if another Spring Web Query exception is raised
 	 * during processing
 	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
@@ -194,8 +196,9 @@ public interface WebQueryRepository<E> {
 	 * @throws QueryValidationException if the RSQL expression cannot be parsed
 	 * or violates the configured validation rules
 	 * @throws QueryConfigurationException if no selections are provided, selector
-	 * translation fails because of invalid configuration, or predicate creation
-	 * fails after parsing and validation
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
 	 * @throws QueryException if another Spring Web Query exception is raised
 	 * during processing
 	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
@@ -337,8 +340,9 @@ public interface WebQueryRepository<E> {
 	 * @throws QueryValidationException if the RSQL expression cannot be parsed
 	 * or violates the configured validation rules
 	 * @throws QueryConfigurationException if no selections are provided, selector
-	 * translation fails because of invalid configuration, or predicate creation
-	 * fails after parsing and validation
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
 	 * @throws QueryException if another Spring Web Query exception is raised
 	 * during processing
 	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
@@ -405,8 +409,9 @@ public interface WebQueryRepository<E> {
 	 * @throws QueryValidationException if the RSQL expression cannot be parsed
 	 * or violates the configured validation rules
 	 * @throws QueryConfigurationException if no selections are provided, selector
-	 * translation fails because of invalid configuration, or predicate creation
-	 * fails after parsing and validation
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
 	 * @throws QueryException if another Spring Web Query exception is raised
 	 * during processing
 	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
@@ -438,8 +443,9 @@ public interface WebQueryRepository<E> {
 	 * @throws QueryValidationException if the RSQL expression cannot be parsed
 	 * or violates the configured validation rules
 	 * @throws QueryConfigurationException if no selections are provided, selector
-	 * translation fails because of invalid configuration, or predicate creation
-	 * fails after parsing and validation
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
 	 * @throws QueryException if another Spring Web Query exception is raised
 	 * during processing
 	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds

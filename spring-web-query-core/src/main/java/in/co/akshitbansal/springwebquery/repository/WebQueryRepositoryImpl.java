@@ -178,7 +178,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		);
 
 		// ORDER BY clause
-		List<Order> orders = mapSortPathsToEntityPaths(pageable.getSort(), root, cb, entityClass, dtoClass);
+		List<Order> orders = mapSortToJpaOrders(pageable.getSort(), root, cb, entityClass, dtoClass);
 		query.orderBy(orders);
 
 		TypedQuery<Tuple> typedQuery = entityManager.createQuery(query);
@@ -438,9 +438,11 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	 * an ascending or descending {@link Order} is created to match the original
 	 * sort direction.</p>
 	 *
-	 * <p>An empty {@link Sort} produces an empty order list. Mapping or
-	 * validation failures are surfaced to the caller through the exceptions
-	 * raised by the mapper or validator.</p>
+	 * <p>An empty {@link Sort} produces an empty order list. Any
+	 * {@link QueryException} raised while mapping or validating sort paths is
+	 * propagated unchanged. Any other unexpected {@link RuntimeException}
+	 * encountered while translating paths or constructing {@link Order}
+	 * instances is wrapped in a {@link QueryConfigurationException}.</p>
 	 *
 	 * @param sort sort specification supplied through the current {@link Pageable}
 	 * @param root root entity path for the query being constructed
@@ -450,26 +452,36 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	 *
 	 * @return JPA order list corresponding to the requested sort specification
 	 */
-	private List<Order> mapSortPathsToEntityPaths(Sort sort, Root<E> root, CriteriaBuilder cb, Class<E> entityClass, Class<?> dtoClass) {
-		DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(entityClass, dtoClass);
-		List<Order> orders = new ArrayList<>();
-		for (Sort.Order order: sort) {
-			String dtoPath = order.getProperty();
+	private List<Order> mapSortToJpaOrders(Sort sort, Root<E> root, CriteriaBuilder cb, Class<E> entityClass, Class<?> dtoClass) {
+		try {
+			DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(entityClass, dtoClass);
+			List<Order> orders = new ArrayList<>();
+			for (Sort.Order order: sort) {
+				String dtoPath = order.getProperty();
 
-			// Convert the DTO path to an entity path
-			MappingResult mappingResult = pathMapper.map(dtoPath);
-			String entityPath = mappingResult.getPath();
+				// Convert the DTO path to an entity path
+				MappingResult mappingResult = pathMapper.map(dtoPath);
+				String entityPath = mappingResult.getPath();
 
-			// Validate the terminal field of the mapped entity path
-			sortableFieldValidator.validate(mappingResult.getTerminalDTOField(), dtoPath);
+				// Validate the terminal field of the mapped entity path
+				sortableFieldValidator.validate(mappingResult.getTerminalDTOField(), dtoPath);
 
-			Path<?> path = getJPAPathFromEntityPath(root, entityPath);
-			Order jpaOrder;
-			if (order.isAscending()) jpaOrder = cb.asc(path);
-			else jpaOrder = cb.desc(path);
-			orders.add(jpaOrder);
+				Path<?> path = getJPAPathFromEntityPath(root, entityPath);
+				Order jpaOrder;
+				if (order.isAscending()) jpaOrder = cb.asc(path);
+				else jpaOrder = cb.desc(path);
+				orders.add(jpaOrder);
+			}
+			return orders;
 		}
-		return orders;
+		catch (QueryException ex) {
+			throw ex;
+		}
+		catch (RuntimeException ex) {
+			throw new QueryConfigurationException(MessageFormat.format(
+					"Failed to construct JPA Orders from Sort: {0}", sort
+			));
+		}
 	}
 
 	/**
