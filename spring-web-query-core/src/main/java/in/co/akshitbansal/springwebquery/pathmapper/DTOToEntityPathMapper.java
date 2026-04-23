@@ -134,7 +134,7 @@ public class DTOToEntityPathMapper {
 	 * @throws QueryConfigurationException if the DTO path resolves but the
 	 * derived entity path is invalid for the configured entity type
 	 */
-	public MappingResult map(String dtoPath) {
+	public MappingResult map(@NonNull String dtoPath) {
 		// Resolve the field path in the DTO class
 		List<Field> dtoFields;
 		try {

@@ -92,7 +92,7 @@ public class ReflectiveFieldResolver {
 	 * @throws UnsupportedOperationException if traversal reaches a collection
 	 * whose element type cannot be resolved reflectively
 	 */
-	public List<Field> resolveFieldPath(String path) {
+	public List<Field> resolveFieldPath(@NonNull String path) {
 		if (path.isEmpty()) throw new IllegalArgumentException("Field path cannot be empty");
 		String[] fieldNames = path.split("\\.");
 		if (fieldNames.length == 0) throw new IllegalArgumentException("Field path cannot be empty");

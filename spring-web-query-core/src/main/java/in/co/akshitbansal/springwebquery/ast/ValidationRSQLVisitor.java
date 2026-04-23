@@ -111,8 +111,8 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 			boolean allowAndOperation,
 			boolean allowOrOperation,
 			int maxASTDepth,
-			DTOToEntityPathMapper pathMapper,
-			FilterableFieldValidator filterableFieldValidator
+			@NonNull DTOToEntityPathMapper pathMapper,
+			@NonNull FilterableFieldValidator filterableFieldValidator
 	) {
 		this.allowAndOperation = allowAndOperation;
 		this.allowOrOperation = allowOrOperation;

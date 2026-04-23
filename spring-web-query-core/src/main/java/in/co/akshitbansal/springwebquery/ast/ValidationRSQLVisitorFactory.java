@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.ast;
 import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper;
 import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapperFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -31,11 +32,13 @@ public class ValidationRSQLVisitorFactory {
 	/**
 	 * Factory used to create DTO-to-entity path mappers.
 	 */
+	@NonNull
 	private final DTOToEntityPathMapperFactory pathMapperFactory;
 
 	/**
 	 * Validator used to enforce field-level filterability rules.
 	 */
+	@NonNull
 	private final FilterableFieldValidator filterableFieldValidator;
 
 	/**
@@ -50,8 +53,8 @@ public class ValidationRSQLVisitorFactory {
 	 * @return configured validation visitor
 	 */
 	public ValidationRSQLVisitor newValidationRSQLVisitor(
-			Class<?> entityClass,
-			Class<?> dtoClass,
+			@NonNull Class<?> entityClass,
+			@NonNull Class<?> dtoClass,
 			boolean allowAndOperation,
 			boolean allowOrOperation,
 			int maxASTDepth
