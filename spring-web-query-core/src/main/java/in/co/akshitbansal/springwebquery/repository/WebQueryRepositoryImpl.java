@@ -91,7 +91,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	public <D> List<D> findAll(
 			@Nullable String rsqlQuery, @NonNull Pageable pageable,
 			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			@NonNull Class<D> dtoClass, boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
+			@NonNull Class<D> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Tuple> query = cb.createTupleQuery();
@@ -109,7 +109,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 				root, query, cb,
 				rsqlQuery, specificationCustomizer,
 				entityClass, dtoClass,
-				andNodeAllowed, orNodeAllowed, maxASTDepth
+				allowAndOperation, allowOrOperation, maxASTDepth
 		);
 
 		// ORDER BY clause
@@ -157,7 +157,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	@Override
 	public long count(
 			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			@NonNull Class<?> dtoClass, boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
+			@NonNull Class<?> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> query = cb.createQuery(Long.class);
@@ -169,7 +169,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 				root, query, cb,
 				rsqlQuery, specificationCustomizer,
 				entityClass, dtoClass,
-				andNodeAllowed, orNodeAllowed, maxASTDepth
+				allowAndOperation, allowOrOperation, maxASTDepth
 		);
 
 		// SELECT clause
@@ -206,12 +206,12 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 			Root<E> root, CriteriaQuery<?> query, CriteriaBuilder cb,
 			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
 			Class<E> entityClass, Class<?> dtoClass,
-			boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
+			boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
 		Specification<E> filterSpec = createSpecification(
 				rsqlQuery,
 				entityClass, dtoClass,
-				andNodeAllowed, orNodeAllowed, maxASTDepth
+				allowAndOperation, allowOrOperation, maxASTDepth
 		);
 		if (specificationCustomizer != null) filterSpec = specificationCustomizer.apply(filterSpec);
 		if (filterSpec == null) return;
@@ -222,7 +222,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	private Specification<E> createSpecification(
 			@Nullable String rsqlQuery,
 			Class<E> entityClass, Class<?> dtoClass,
-			boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
+			boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
 		if (rsqlQuery == null) return Specification.unrestricted();
 		try {
@@ -232,8 +232,8 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 			ValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newValidationRSQLVisitor(
 					entityClass,
 					dtoClass,
-					andNodeAllowed,
-					orNodeAllowed,
+					allowAndOperation,
+					allowOrOperation,
 					maxASTDepth
 			);
 			rootNode.accept(visitor, NodeMetadata.of(0));

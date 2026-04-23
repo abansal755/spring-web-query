@@ -30,7 +30,7 @@ public interface WebQueryRepository<E> {
 	<D> List<D> findAll(
 			@Nullable String rsqlQuery, Pageable pageable,
 			SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			Class<D> dtoClass, boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
+			Class<D> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	);
 
 	<D> List<D> findAll(
@@ -48,7 +48,7 @@ public interface WebQueryRepository<E> {
 
 	long count(
 			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			Class<?> dtoClass, boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
+			Class<?> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	);
 
 	long count(@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer, Class<?> dtoClass);
@@ -60,21 +60,21 @@ public interface WebQueryRepository<E> {
 	default <D> Page<D> findAllPaged(
 			@Nullable String rsqlQuery, @NonNull Pageable pageable,
 			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			@NonNull Class<D> dtoClass, boolean andNodeAllowed, boolean orNodeAllowed, int maxASTDepth
+			@NonNull Class<D> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
 		// If unpaged, there is no need to issue another query for count
 		if (pageable.isUnpaged()) {
 			return new PageImpl<>(findAll(
 					rsqlQuery, pageable,
 					selectionsProvider, specificationCustomizer,
-					dtoClass, andNodeAllowed, orNodeAllowed, maxASTDepth
+					dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
 			));
 		}
 
 		// Paged, issue a separate query for count
 		long count = count(
 				rsqlQuery, specificationCustomizer,
-				dtoClass, andNodeAllowed, orNodeAllowed, maxASTDepth
+				dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
 		);
 
 		// If no results, return an empty page
@@ -85,7 +85,7 @@ public interface WebQueryRepository<E> {
 				findAll(
 						rsqlQuery, pageable,
 						selectionsProvider, specificationCustomizer,
-						dtoClass, andNodeAllowed, orNodeAllowed, maxASTDepth
+						dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
 				),
 				pageable, count
 		);

@@ -22,6 +22,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryMaxASTDepthExceededExcep
 import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.util.Collections;
@@ -32,9 +33,9 @@ import static in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper
 
 public class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 
-	private final boolean andNodeAllowed;
-	private final boolean orNodeAllowed;
-	private final int maxDepth;
+		private final boolean allowAndOperation;
+	private final boolean allowOrOperation;
+	private final int maxASTDepth;
 
 	private final DTOToEntityPathMapper pathMapper;
 	private final FilterableFieldValidator filterableFieldValidator;
@@ -42,15 +43,15 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 	private final Map<String, String> fieldMappings;
 
 	public ValidationRSQLVisitor(
-			boolean andNodeAllowed,
-			boolean orNodeAllowed,
-			int maxDepth,
+			boolean allowAndOperation,
+			boolean allowOrOperation,
+			int maxASTDepth,
 			DTOToEntityPathMapper pathMapper,
 			FilterableFieldValidator filterableFieldValidator
 	) {
-		this.andNodeAllowed = andNodeAllowed;
-		this.orNodeAllowed = orNodeAllowed;
-		this.maxDepth = maxDepth;
+		this.allowAndOperation = allowAndOperation;
+		this.allowOrOperation = allowOrOperation;
+		this.maxASTDepth = maxASTDepth;
 		this.pathMapper = pathMapper;
 		this.filterableFieldValidator = filterableFieldValidator;
 
@@ -62,6 +63,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 	}
 
 	@Override
+	@Nullable
 	public Void visit(@NonNull AndNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
@@ -69,6 +71,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 	}
 
 	@Override
+	@Nullable
 	public Void visit(@NonNull OrNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		node.forEach(child -> child.accept(this, NodeMetadata.of(metadata.getDepth() + 1)));
@@ -76,6 +79,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 	}
 
 	@Override
+	@Nullable
 	public Void visit(@NonNull ComparisonNode node, @NonNull NodeMetadata metadata) {
 		validateNode(node, metadata);
 		// Extract the field name and operator from the RSQL node
@@ -94,17 +98,17 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 	}
 
 	private void validateNode(Node node, NodeMetadata metadata) {
-		if ((node instanceof AndNode andNode) && !andNodeAllowed)
+		if ((node instanceof AndNode andNode) && !allowAndOperation)
 			throw new QueryForbiddenLogicalOperatorException("Logical AND operator is not allowed", andNode.getOperator());
-		if ((node instanceof OrNode orNode) && !orNodeAllowed)
+		if ((node instanceof OrNode orNode) && !allowOrOperation)
 			throw new QueryForbiddenLogicalOperatorException("Logical OR operator is not allowed", orNode.getOperator());
 		int depth = metadata.getDepth();
-		if (depth > maxDepth) {
+		if (depth > maxASTDepth) {
 			throw new QueryMaxASTDepthExceededException(
 					MessageFormat.format(
 							"Exceeded maximum allowed depth of RSQL Abstract Syntax Tree ({0}) at node: {1}",
-							maxDepth, node
-					), maxDepth
+							maxASTDepth, node
+					), maxASTDepth
 			);
 		}
 	}

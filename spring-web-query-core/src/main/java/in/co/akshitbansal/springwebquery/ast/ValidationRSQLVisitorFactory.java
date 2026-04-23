@@ -30,11 +30,11 @@ public class ValidationRSQLVisitorFactory {
 	public ValidationRSQLVisitor newValidationRSQLVisitor(
 			Class<?> entityClass,
 			Class<?> dtoClass,
-			boolean andNodeAllowed,
-			boolean orNodeAllowed,
+			boolean allowAndOperation,
+			boolean allowOrOperation,
 			int maxASTDepth
 	) {
 		DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(entityClass, dtoClass);
-		return new ValidationRSQLVisitor(andNodeAllowed, orNodeAllowed, maxASTDepth, pathMapper, filterableFieldValidator);
+		return new ValidationRSQLVisitor(allowAndOperation, allowOrOperation, maxASTDepth, pathMapper, filterableFieldValidator);
 	}
 }
