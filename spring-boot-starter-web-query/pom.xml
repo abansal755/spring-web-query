@@ -5,7 +5,7 @@
 	<groupId>in.co.akshitbansal</groupId>
 	<artifactId>spring-boot-starter-web-query</artifactId>
 	<version>0.19.1-SNAPSHOT</version>
-	<name>${project.groupId}:${project.artifactId}</name>
+	<name>spring-boot-starter-web-query</name>
 	<description>Effective querying for Spring Web APIs</description>
 	<url>https://github.com/abansal755/spring-web-query</url>
 	<scm>
