@@ -32,7 +32,7 @@ public interface SpecificationCustomizer<E> {
 	 * Applies additional specification logic to the generated filter.
 	 *
 	 * @param specification generated specification, which may already be
-	 * unrestricted
+	 * unrestricted ({@code Specification.unrestricted()})
 	 *
 	 * @return specification to execute, or {@code null} to remove filtering
 	 */

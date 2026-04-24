@@ -323,7 +323,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		if (specificationCustomizer != null) filterSpec = specificationCustomizer.apply(filterSpec);
 		if (filterSpec == null) return;
 		Predicate predicate = filterSpec.toPredicate(root, query, cb);
-		if (predicate != null) query.where(filterSpec.toPredicate(root, query, cb));
+		if (predicate != null) query.where(predicate);
 	}
 
 	/**
@@ -375,20 +375,20 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 			boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
 		if (rsqlQuery == null) return Specification.unrestricted();
-		try {
-			// Parse the RSQL query into an Abstract Syntax Tree (AST)
-			Node rootNode = rsqlParser.parse(rsqlQuery);
-			// Validate the parsed AST
-			ValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newValidationRSQLVisitor(
-					entityClass,
-					dtoClass,
-					allowAndOperation,
-					allowOrOperation,
-					maxASTDepth
-			);
-			rootNode.accept(visitor, NodeMetadata.of(0));
+		return (Root<E> root, CriteriaQuery<?> ignored, CriteriaBuilder cb) -> {
+			try {
+				// Parse the RSQL query into an Abstract Syntax Tree (AST)
+				Node rootNode = rsqlParser.parse(rsqlQuery);
+				// Validate the parsed AST
+				ValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newValidationRSQLVisitor(
+						entityClass,
+						dtoClass,
+						allowAndOperation,
+						allowOrOperation,
+						maxASTDepth
+				);
+				rootNode.accept(visitor, NodeMetadata.of(0));
 
-			return (Root<E> root, CriteriaQuery<?> ignored, CriteriaBuilder cb) -> {
 				// Convert AST into Predicate
 				RSQLJPAPredicateConverter predicateConverter = new RSQLJPAPredicateConverter(
 						cb,
@@ -405,25 +405,25 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 						JsonbConfiguration.DEFAULT
 				);
 				return rootNode.accept(predicateConverter, root);
-			};
-		}
-		catch (RSQLParserException ex) {
-			throw new QueryValidationException(
-					MessageFormat.format(
-							"Unable to parse RSQL query: {0}", rsqlQuery
-					), ex
-			);
-		}
-		catch (QueryException ex) {
-			throw ex;
-		}
-		catch (RuntimeException ex) {
-			throw new QueryConfigurationException(
-					MessageFormat.format(
-							"Failed to construct Predicate from RSQL query: {0}", rsqlQuery
-					), ex
-			);
-		}
+			}
+			catch (RSQLParserException ex) {
+				throw new QueryValidationException(
+						MessageFormat.format(
+								"Unable to parse RSQL query: {0}", rsqlQuery
+						), ex
+				);
+			}
+			catch (QueryException ex) {
+				throw ex;
+			}
+			catch (RuntimeException ex) {
+				throw new QueryConfigurationException(
+						MessageFormat.format(
+								"Failed to construct Predicate from RSQL query: {0}", rsqlQuery
+						), ex
+				);
+			}
+		};
 	}
 
 	/**
@@ -480,7 +480,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		catch (RuntimeException ex) {
 			throw new QueryConfigurationException(MessageFormat.format(
 					"Failed to construct JPA Orders from Sort: {0}", sort
-			));
+			), ex);
 		}
 	}
 

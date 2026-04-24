@@ -91,7 +91,6 @@ public class RSQLOperatorsAutoConfig {
 		for (RSQLDefaultOperator operator: defaultOperatorSet)
 			symbolSet.addAll(Arrays.asList(operator.getOperator().getSymbols()));
 
-		// Custom operators gathered from all the configurers
 		Set<RSQLCustomOperator<?>> customOperators = new HashSet<>();
 		for (RSQLCustomOperator<?> operator: customOperatorBeans) {
 			for (String symbol: operator.getComparisonOperator().getSymbols()) {

@@ -94,11 +94,11 @@ public class ReflectiveFieldResolver {
 	 */
 	public List<Field> resolveFieldPath(@NonNull String path) {
 		if (path.isEmpty()) throw new IllegalArgumentException("Field path cannot be empty");
-		String[] fieldNames = path.split("\\.");
-		if (fieldNames.length == 0) throw new IllegalArgumentException("Field path cannot be empty");
+		String[] fieldNames = path.split("\\.", -1);
 		Class<?> current = clazz;
 		List<Field> fieldPath = new ArrayList<>();
 		for (String fieldName: fieldNames) {
+			if (fieldName.isEmpty()) throw new IllegalArgumentException("Field path cannot contain empty segments");
 			Field field = resolveFieldUpHierarchy(current, fieldName);
 			fieldPath.add(field);
 			current = unwrapContainerType(field);
