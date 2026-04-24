@@ -348,39 +348,11 @@ public interface WebQueryRepository<E> {
 	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
 	 * {@link Integer#MAX_VALUE}
 	 */
-	default <D> Page<D> findAllPaged(
+	<D> Page<D> findAllPaged(
 			@Nullable String rsqlQuery, @NonNull Pageable pageable,
 			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
 			@NonNull Class<D> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
-	) {
-		// If unpaged, there is no need to issue another query for count
-		if (pageable.isUnpaged()) {
-			return new PageImpl<>(findAll(
-					rsqlQuery, pageable,
-					selectionsProvider, specificationCustomizer,
-					dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
-			));
-		}
-
-		// Paged, issue a separate query for count
-		long count = count(
-				rsqlQuery, specificationCustomizer,
-				dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
-		);
-
-		// If no results, return an empty page
-		if (count == 0) return new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-		// Issue a results query to get the actual results
-		return new PageImpl<>(
-				findAll(
-						rsqlQuery, pageable,
-						selectionsProvider, specificationCustomizer,
-						dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
-				),
-				pageable, count
-		);
-	}
+	);
 
 	/**
 	 * Executes a filtered, sorted, and paginated projection query using the
