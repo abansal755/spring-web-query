@@ -19,7 +19,13 @@ package in.co.akshitbansal.springwebquery.annotation;
 import java.lang.annotation.*;
 
 /**
- * Container annotation for repeatable {@link RSQLFilterable} declarations on a field.
+ * Container annotation for repeatable {@link RSQLFilterable} declarations on a
+ * single field.
+ *
+ * <p>This type is primarily used by the compiler when
+ * {@code @RSQLFilterable} is declared multiple times on the same field. During
+ * validation, all contained declarations are merged into one effective allowed
+ * operator set.</p>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -27,7 +33,7 @@ import java.lang.annotation.*;
 public @interface RSQLFilterables {
 
 	/**
-	 * Repeated {@link RSQLFilterable} entries declared on the same field.
+	 * Repeated {@link RSQLFilterable} declarations present on the same field.
 	 *
 	 * @return filterability declarations for the field
 	 */

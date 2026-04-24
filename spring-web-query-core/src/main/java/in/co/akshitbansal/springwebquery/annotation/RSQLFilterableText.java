@@ -21,15 +21,18 @@ import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import java.lang.annotation.*;
 
 /**
- * Composed annotation that allows text-oriented filtering on a field.
- * <p>
- * Equivalent to declaring {@link RSQLFilterable} with:
+ * Convenience annotation that allows text-oriented filtering on a query
+ * contract field.
+ *
+ * <p>This annotation is equivalent to declaring {@link RSQLFilterable} with
  * {@link RSQLDefaultOperator#LIKE},
  * {@link RSQLDefaultOperator#NOT_LIKE},
  * {@link RSQLDefaultOperator#IGNORE_CASE_LIKE},
  * {@link RSQLDefaultOperator#IGNORE_CASE_NOT_LIKE}, and
- * {@link RSQLDefaultOperator#IGNORE_CASE}.
- * </p>
+ * {@link RSQLDefaultOperator#IGNORE_CASE}.</p>
+ *
+ * <p>It is intended for string-like fields that support substring matching and
+ * case-insensitive comparisons.</p>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

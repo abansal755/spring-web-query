@@ -1,6 +1,6 @@
 /**
- * Validators that enforce field mappings plus filterability and sortability
- * constraints for resolved selectors.
+ * Validators that enforce field-level filtering and sorting permissions for
+ * resolved selector paths.
  */
 @NullMarked
 package in.co.akshitbansal.springwebquery.validator;

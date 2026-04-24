@@ -10,9 +10,9 @@ jobs:
         strategy:
             matrix:
                 className:
-                    - ReflectionUtilBenchmark
-                    - DTOAwareFieldResolverBenchmark
-                    - CachedDTOAwareFieldResolverBenchmark
+                    - ReflectiveFieldResolverBenchmark
+                    - DTOToEntityPathMapperBenchmark
+                    - CachedDTOToEntityPathMapperBenchmark
         
         steps:
             - name: Checkout

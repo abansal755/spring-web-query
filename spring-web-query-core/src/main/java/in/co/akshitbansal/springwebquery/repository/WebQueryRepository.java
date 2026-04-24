@@ -16,134 +16,446 @@
 
 package in.co.akshitbansal.springwebquery.repository;
 
-import jakarta.persistence.Tuple;
+import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitor;
+import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
+import in.co.akshitbansal.springwebquery.exception.QueryException;
+import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
+import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper;
+import in.co.akshitbansal.springwebquery.tupleconverter.TupleConverter;
+import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
+import io.github.perplexhub.rsql.RSQLJPAPredicateConverter;
+import lombok.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Repository fragment for executing {@link Specification}-based tuple selections.
+ * Primary repository entry point of Spring Web Query.
  *
- * @param <T> entity type backing the repository
+ * <p>This interface is exposed as a Spring Data repository fragment. Although
+ * it is declared as an interface for fragment composition, the Javadoc here
+ * describes the concrete behavior provided by the library's built-in
+ * JPA-backed implementation.</p>
+ *
+ * <p>For each invocation, the fragment resolves the backing entity type from
+ * the current repository method call, obtains a tuple projection from the
+ * supplied {@link SelectionsProvider}, parses the optional RSQL filter,
+ * validates the parsed AST with a {@link ValidationRSQLVisitor}, maps
+ * selector paths from {@code dtoClass} to entity paths through
+ * {@link DTOToEntityPathMapper}, validates sortable fields through
+ * {@link SortableFieldValidator}, and delegates predicate construction to
+ * {@link RSQLJPAPredicateConverter}.</p>
+ *
+ * <p>The supplied DTO class therefore controls both which field paths may be
+ * used for filtering and sorting and how the projected result is materialized.
+ * The resulting Criteria query applies sorting and pagination from
+ * {@link Pageable}. Query rows are fetched as tuples and converted to the
+ * requested DTO type through {@link TupleConverter}, so the selections
+ * produced by {@link SelectionsProvider} must be compatible in order and type
+ * with the conversion strategy discoverable for {@code dtoClass}. If the
+ * selections provider returns no selections, query execution fails with a
+ * {@link QueryConfigurationException}.</p>
+ *
+ * <p>{@link #count(String, SpecificationCustomizer, Class, boolean, boolean, int)}
+ * reuses the same filter construction pipeline without tuple projection.
+ * {@link #findAllPaged(String, Pageable, SelectionsProvider, SpecificationCustomizer, Class, boolean, boolean, int)}
+ * uses the same filtering, sorting, pagination, and projection behavior as
+ * {@link #findAll(String, Pageable, SelectionsProvider, SpecificationCustomizer, Class, boolean, boolean, int)};
+ * for paged requests it first executes a count query and skips the content
+ * query when the count is zero, while unpaged requests are wrapped directly in
+ * a {@link PageImpl} without a separate count query.</p>
+ *
+ * <p>The overloads that do not accept explicit validation settings use the
+ * repository-wide defaults sourced from the properties
+ * {@code spring-web-query.filtering.allow-and-operation},
+ * {@code spring-web-query.filtering.allow-or-operation}, and
+ * {@code spring-web-query.filtering.max-ast-depth}.</p>
+ *
+ * @param <E> entity type backing the repository implementation
  */
-public interface WebQueryRepository<T> {
+public interface WebQueryRepository<E> {
 
 	/**
-	 * Executes a tuple query for the given specification, sort/page request, and selection definition.
+	 * Executes the full Spring Web Query pipeline and returns only the projected
+	 * content rows for the requested page window.
 	 *
-	 * <p>The selection callback receives the live result {@code CriteriaQuery} so it can build correlated subqueries or
-	 * inspect query state while defining projected columns.</p>
+	 * <p>If {@code rsqlQuery} is not {@code null}, the current implementation
+	 * parses it, validates the AST against the supplied DTO type and the
+	 * provided logical-operator and depth settings, translates validated
+	 * selectors to entity paths, and creates a JPA {@code Specification} from
+	 * the validated tree. The optional {@code specificationCustomizer} is then
+	 * applied to that specification and may augment it, replace it, or remove it
+	 * completely by returning {@code null}.</p>
 	 *
-	 * @param specification filtering criteria to apply
-	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
-	 * @param selectionsProvider callback that defines the tuple selections for the query
+	 * <p>The {@code selectionsProvider} defines the tuple select clause. The
+	 * built-in implementation rejects an empty selection list, applies the sort
+	 * orders and pagination window from {@code pageable}, executes the query, and
+	 * converts each returned tuple into an instance of {@code dtoClass} through
+	 * {@link TupleConverter}. Even though this method returns a {@link List},
+	 * the offset and page size from {@code pageable} are still applied to the
+	 * query when {@code pageable} is paged.</p>
 	 *
-	 * @return tuples matching the requested filter, sort, and selection set
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param pageable requested paging and sorting information
+	 * @param selectionsProvider callback that defines the tuple projection
+	 * @param specificationCustomizer optional hook to amend the generated filter
+	 * specification before it is applied
+	 * @param dtoClass DTO type whose fields are used for filtering and sorting
+	 * and whose shape is used for result projection
+	 * @param allowAndOperation whether logical {@code AND} is allowed in the
+	 * RSQL expression
+	 * @param allowOrOperation whether logical {@code OR} is allowed in the RSQL
+	 * expression
+	 * @param maxASTDepth maximum RSQL AST depth accepted during validation
+	 * @param <D> projected DTO type
+	 *
+	 * @return projected results for the requested page window, ordered according
+	 * to the translated sort instructions
+	 *
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if no selections are provided, selector
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
+	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
+	 * {@link Integer#MAX_VALUE}
 	 */
-	List<Tuple> findAll(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+	<D> List<D> findAll(
+			@Nullable String rsqlQuery, Pageable pageable,
+			SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			Class<D> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	);
 
 	/**
-	 * Executes a tuple query and wraps the results in a page.
+	 * Executes {@link #findAll(String, Pageable, SelectionsProvider, SpecificationCustomizer, Class, boolean, boolean, int)}
+	 * using the repository-wide validation defaults configured for the
+	 * implementation.
 	 *
-	 * <p>When {@code pageable} is unpaged, the returned page contains all matching tuples without issuing a separate
-	 * count query.</p>
+	 * <p>This overload keeps the same filtering, sorting, projection, and
+	 * pagination semantics as the fully configurable variant, but derives the
+	 * logical-operator and AST-depth settings from repository configuration
+	 * instead of requiring them from the caller.</p>
 	 *
-	 * <p>The selection callback receives the live result {@code CriteriaQuery}. For paged execution, avoid mutating the
-	 * outer query in ways that change row cardinality, such as enabling distinct results or adding grouping, because
-	 * the total count is derived from a separate count query built from the {@link Specification}.</p>
+	 * <p>The default values come from the properties
+	 * {@code spring-web-query.filtering.allow-and-operation},
+	 * {@code spring-web-query.filtering.allow-or-operation}, and
+	 * {@code spring-web-query.filtering.max-ast-depth}.</p>
 	 *
-	 * @param specification filtering criteria to apply
-	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
-	 * @param selectionsProvider callback that defines the tuple selections for the query
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param pageable requested paging and sorting information
+	 * @param selectionsProvider callback that defines the tuple projection
+	 * @param specificationCustomizer optional hook to amend the generated filter
+	 * @param dtoClass DTO type whose fields are used for filtering and sorting
+	 * and whose shape is used for result projection
+	 * @param <D> projected DTO type
 	 *
-	 * @return a page of tuples matching the requested filter, sort, and selection set
+	 * @return projected results for the requested page window, ordered according
+	 * to the translated sort instructions
+	 *
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if no selections are provided, selector
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
+	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
+	 * {@link Integer#MAX_VALUE}
 	 */
-	Page<Tuple> findAllPaged(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider
+	<D> List<D> findAll(
+			@Nullable String rsqlQuery, Pageable pageable,
+			SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			Class<D> dtoClass
 	);
 
 	/**
-	 * Executes a tuple query and converts each result row into an instance of the requested DTO type.
+	 * Executes a filtered, sorted, and paginated projection query without a
+	 * specification customizer.
 	 *
-	 * <p>Use this overload when the caller wants constructor-backed DTO projection instead of working with raw
-	 * {@link Tuple} instances. The provided {@link SelectionsProvider} still defines the tuple projection, but each
-	 * resulting row is converted into {@code dtoClass} immediately before being returned to the caller.</p>
+	 * <p>This is a convenience overload equivalent to invoking the repository
+	 * default-settings variant with a {@code null} customizer.</p>
 	 *
-	 * <p>Conversion is positional. The selected tuple elements are passed to the DTO constructor in the same order as
-	 * they are returned by {@link SelectionsProvider#getSelections}. Tuple aliases or selection names are ignored.</p>
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param pageable requested paging and sorting information
+	 * @param selectionsProvider callback that defines the tuple projection
+	 * @param dtoClass DTO type whose fields are used for filtering and sorting
+	 * and whose shape is used for result projection
+	 * @param <D> projected DTO type
 	 *
-	 * <p>A constructor is considered compatible when it has the same number of parameters as projected tuple elements
-	 * and each parameter type is assignable from the corresponding tuple element runtime Java type after primitive
-	 * types are normalized to their wrapper equivalents. When multiple constructors are compatible, a constructor
-	 * annotated with {@link org.springframework.data.annotation.PersistenceCreator} is preferred. Callers should define
-	 * at most one such annotated constructor; if more than one constructor is annotated, or if multiple compatible
-	 * constructors exist and selection is not uniquely determined, behavior is unpredictable.</p>
+	 * @return projected results for the requested page window, ordered according
+	 * to the translated sort instructions
 	 *
-	 * <p>If no compatible constructor can be found, or if reflective instantiation fails for any row, the conversion
-	 * fails at runtime.</p>
-	 *
-	 * @param specification filtering criteria to apply
-	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
-	 * @param selectionsProvider callback that defines the tuple selections for the query
-	 * @param dtoClass target DTO type to instantiate for each tuple row
-	 * @param <U> DTO projection type
-	 *
-	 * @return DTO instances matching the requested filter, sort, selection set, and constructor mapping rules
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if no selections are provided, selector
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
+	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
+	 * {@link Integer#MAX_VALUE}
 	 */
-	<U> List<U> findAll(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider,
-			Class<U> dtoClass
+	default <D> List<D> findAll(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider, @NonNull Class<D> dtoClass
+	) {
+		return findAll(rsqlQuery, pageable, selectionsProvider, null, dtoClass);
+	}
+
+	/**
+	 * Executes the same filtering pipeline as
+	 * {@link #findAll(String, Pageable, SelectionsProvider, SpecificationCustomizer, Class, boolean, boolean, int)}
+	 * but produces a row count instead of projected content.
+	 *
+	 * <p>If {@code rsqlQuery} is {@code null}, the base specification is
+	 * unrestricted and only the optional {@code specificationCustomizer} can add
+	 * restrictions. Otherwise the RSQL expression is parsed, validated, and
+	 * translated exactly as it is for {@code findAll}. The current implementation
+	 * applies the resulting specification to a count query and uses
+	 * {@code countDistinct(root)} when the underlying criteria query has been
+	 * marked distinct; otherwise it uses a regular {@code count(root)}.</p>
+	 *
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param specificationCustomizer optional hook to amend the generated filter
+	 * @param dtoClass DTO type whose fields are used for filter validation and
+	 * path translation
+	 * @param allowAndOperation whether logical {@code AND} is allowed in the
+	 * RSQL expression
+	 * @param allowOrOperation whether logical {@code OR} is allowed in the RSQL
+	 * expression
+	 * @param maxASTDepth maximum RSQL AST depth accepted during validation
+	 *
+	 * @return number of matching rows after the generated and customized filter
+	 * specification has been applied
+	 *
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if selector translation fails because
+	 * of invalid configuration or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
+	 */
+	long count(
+			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			Class<?> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	);
 
 	/**
-	 * Executes a tuple query, converts each result row into an instance of the requested DTO type, and wraps the
-	 * converted results in a page.
+	 * Counts rows using the repository-wide validation defaults configured for
+	 * the implementation.
 	 *
-	 * <p>Use this overload when the caller wants constructor-backed DTO projection together with Spring Data paging
-	 * metadata. The provided {@link SelectionsProvider} still defines the tuple projection, and each tuple row is
-	 * converted into {@code dtoClass} before being exposed in the returned page.</p>
+	 * <p>This overload retains the same counting semantics as
+	 * {@link #count(String, SpecificationCustomizer, Class, boolean, boolean, int)}
+	 * while sourcing the logical-operator and AST-depth settings from repository
+	 * configuration.</p>
 	 *
-	 * <p>Conversion is positional. The selected tuple elements are supplied to the DTO constructor in the same order as
-	 * they are returned by {@link SelectionsProvider#getSelections}. Tuple aliases or selection names do not
-	 * participate in constructor binding.</p>
+	 * <p>The default values come from the properties
+	 * {@code spring-web-query.filtering.allow-and-operation},
+	 * {@code spring-web-query.filtering.allow-or-operation}, and
+	 * {@code spring-web-query.filtering.max-ast-depth}.</p>
 	 *
-	 * <p>A constructor is considered compatible when it has the same number of parameters as projected tuple elements
-	 * and each parameter type is assignable from the corresponding tuple element runtime Java type after primitive
-	 * types are normalized to their wrapper equivalents. When multiple constructors are compatible, a constructor
-	 * annotated with {@link org.springframework.data.annotation.PersistenceCreator} is preferred. Callers should define
-	 * at most one such annotated constructor; if more than one constructor is annotated, or if multiple compatible
-	 * constructors exist and selection is not uniquely determined, behavior is unpredictable.</p>
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param specificationCustomizer optional hook to amend the generated filter
+	 * @param dtoClass DTO type whose fields are used for filter validation and
+	 * path translation
 	 *
-	 * <p>This method inherits the same count-query caveats as {@link #findAllPaged(Specification, Pageable,
-	 * SelectionsProvider)}. In particular, callers should avoid mutating the outer query in ways that change row
-	 * cardinality, because the total count is derived from a separate count query built from the
-	 * {@link Specification}.</p>
+	 * @return number of matching rows after the generated and customized filter
+	 * specification has been applied
 	 *
-	 * <p>If no compatible constructor can be found, or if reflective instantiation fails for any row, the conversion
-	 * fails at runtime.</p>
-	 *
-	 * @param specification filtering criteria to apply
-	 * @param pageable paging and sorting information; sorting is always applied and limits are applied when paged
-	 * @param selectionsProvider callback that defines the tuple selections for the query
-	 * @param dtoClass target DTO type to instantiate for each tuple row
-	 * @param <U> DTO projection type
-	 *
-	 * @return a page of DTO instances matching the requested filter, sort, selection set, and constructor mapping rules
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if selector translation fails because
+	 * of invalid configuration or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
 	 */
-	<U> Page<U> findAllPaged(
-			Specification<T> specification,
-			Pageable pageable,
-			SelectionsProvider<T> selectionsProvider,
-			Class<U> dtoClass
+	long count(@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer, Class<?> dtoClass);
+
+	/**
+	 * Counts rows without a specification customizer.
+	 *
+	 * <p>This is a convenience overload equivalent to invoking the repository
+	 * default-settings variant with a {@code null} customizer.</p>
+	 *
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param dtoClass DTO type whose fields are used for filter validation and
+	 * path translation
+	 *
+	 * @return number of matching rows after applying only the repository-built
+	 * filter specification
+	 *
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if selector translation fails because
+	 * of invalid configuration or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
+	 */
+	default long count(@Nullable String rsqlQuery, @NonNull Class<?> dtoClass) {
+		return count(rsqlQuery, null, dtoClass);
+	}
+
+	/**
+	 * Executes the same query pipeline as
+	 * {@link #findAll(String, Pageable, SelectionsProvider, SpecificationCustomizer, Class, boolean, boolean, int)}
+	 * but returns a {@link Page} with count metadata.
+	 *
+	 * <p>The current implementation behaves in two modes. When
+	 * {@code pageable.isUnpaged()} is {@code true}, it runs only
+	 * {@code findAll(...)} and wraps the resulting content in a {@link PageImpl}.
+	 * When {@code pageable} is paged, it first executes
+	 * {@link #count(String, SpecificationCustomizer, Class, boolean, boolean, int)}.
+	 * If that count is zero, it returns an empty page without issuing the content
+	 * query. Otherwise it executes {@code findAll(...)} for the requested page
+	 * window and combines the content with the total row count.</p>
+	 *
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param pageable requested paging and sorting information
+	 * @param selectionsProvider callback that defines the tuple projection
+	 * @param specificationCustomizer optional hook to amend the generated filter
+	 * @param dtoClass DTO type whose fields are used for filtering and sorting
+	 * and whose shape is used for result projection
+	 * @param allowAndOperation whether logical {@code AND} is allowed in the
+	 * RSQL expression
+	 * @param allowOrOperation whether logical {@code OR} is allowed in the RSQL
+	 * expression
+	 * @param maxASTDepth maximum RSQL AST depth accepted during validation
+	 * @param <D> projected DTO type
+	 *
+	 * @return page of projected results together with paging metadata derived
+	 * from the matching-row count
+	 *
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if no selections are provided, selector
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
+	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
+	 * {@link Integer#MAX_VALUE}
+	 */
+	default <D> Page<D> findAllPaged(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			@NonNull Class<D> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
+	) {
+		// If unpaged, there is no need to issue another query for count
+		if (pageable.isUnpaged()) {
+			return new PageImpl<>(findAll(
+					rsqlQuery, pageable,
+					selectionsProvider, specificationCustomizer,
+					dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
+			));
+		}
+
+		// Paged, issue a separate query for count
+		long count = count(
+				rsqlQuery, specificationCustomizer,
+				dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
+		);
+
+		// If no results, return an empty page
+		if (count == 0) return new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+		// Issue a results query to get the actual results
+		return new PageImpl<>(
+				findAll(
+						rsqlQuery, pageable,
+						selectionsProvider, specificationCustomizer,
+						dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
+				),
+				pageable, count
+		);
+	}
+
+	/**
+	 * Executes a filtered, sorted, and paginated projection query using the
+	 * repository-wide validation defaults and returns a {@link Page}.
+	 *
+	 * <p>This overload keeps the same page-assembly behavior as the fully
+	 * configurable variant while sourcing the logical-operator and AST-depth
+	 * settings from repository configuration.</p>
+	 *
+	 * <p>The default values come from the properties
+	 * {@code spring-web-query.filtering.allow-and-operation},
+	 * {@code spring-web-query.filtering.allow-or-operation}, and
+	 * {@code spring-web-query.filtering.max-ast-depth}.</p>
+	 *
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param pageable requested paging and sorting information
+	 * @param selectionsProvider callback that defines the tuple projection
+	 * @param specificationCustomizer optional hook to amend the generated filter
+	 * @param dtoClass DTO type whose fields are used for filtering and sorting
+	 * and whose shape is used for result projection
+	 * @param <D> projected DTO type
+	 *
+	 * @return page of projected results together with paging metadata derived
+	 * from the matching-row count
+	 *
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if no selections are provided, selector
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
+	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
+	 * {@link Integer#MAX_VALUE}
+	 */
+	<D> Page<D> findAllPaged(
+			@Nullable String rsqlQuery, Pageable pageable,
+			SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			Class<D> dtoClass
 	);
+
+	/**
+	 * Executes a filtered, sorted, and paginated projection query without a
+	 * specification customizer and returns a {@link Page}.
+	 *
+	 * <p>This is a convenience overload equivalent to invoking the repository
+	 * default-settings variant with a {@code null} customizer.</p>
+	 *
+	 * @param rsqlQuery optional RSQL filter expression
+	 * @param pageable requested paging and sorting information
+	 * @param selectionsProvider callback that defines the tuple projection
+	 * @param dtoClass DTO type whose fields are used for filtering and sorting
+	 * and whose shape is used for result projection
+	 * @param <D> projected DTO type
+	 *
+	 * @return page of projected results together with paging metadata derived
+	 * from the matching-row count
+	 *
+	 * @throws QueryValidationException if the RSQL expression cannot be parsed
+	 * or violates the configured validation rules
+	 * @throws QueryConfigurationException if no selections are provided, selector
+	 * translation fails because of invalid configuration, JPA sort order
+	 * construction fails, or predicate creation fails after parsing and
+	 * validation
+	 * @throws QueryException if another Spring Web Query exception is raised
+	 * during processing
+	 * @throws IllegalArgumentException if {@code pageable.getOffset()} exceeds
+	 * {@link Integer#MAX_VALUE}
+	 */
+	default <D> Page<D> findAllPaged(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider,
+			@NonNull Class<D> dtoClass
+	) {
+		return findAllPaged(rsqlQuery, pageable, selectionsProvider, null, dtoClass);
+	}
 }

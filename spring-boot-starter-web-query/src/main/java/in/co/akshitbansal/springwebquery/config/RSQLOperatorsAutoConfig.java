@@ -17,7 +17,6 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import in.co.akshitbansal.springwebquery.RSQLCustomOperatorsConfigurer;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
@@ -74,18 +73,17 @@ public class RSQLOperatorsAutoConfig {
 	}
 
 	/**
-	 * Collects custom operators from all configured
-	 * {@link RSQLCustomOperatorsConfigurer} beans and validates that their
-	 * symbols do not conflict with each other or with the default operators.
+	 * Collects user-defined custom operators and validates that none of their
+	 * symbols overlap with each other or the built-in set.
 	 *
-	 * @param rsqlCustomOperatorsConfigurers custom operator contributors
-	 * @param defaultOperatorSet previously validated default operators
+	 * @param customOperatorBeans custom operator beans discovered by Spring
+	 * @param defaultOperatorSet validated default operators
 	 *
-	 * @return immutable set of registered custom operators
+	 * @return immutable set of validated custom operators
 	 */
 	@Bean
 	public Set<? extends RSQLCustomOperator<?>> customOperatorSet(
-			List<RSQLCustomOperatorsConfigurer> rsqlCustomOperatorsConfigurers,
+			List<RSQLCustomOperator<?>> customOperatorBeans,
 			Set<RSQLDefaultOperator> defaultOperatorSet
 	) {
 		// Set for checking duplicates
@@ -93,21 +91,18 @@ public class RSQLOperatorsAutoConfig {
 		for (RSQLDefaultOperator operator: defaultOperatorSet)
 			symbolSet.addAll(Arrays.asList(operator.getOperator().getSymbols()));
 
-		// Custom operators gathered from all the configurers
 		Set<RSQLCustomOperator<?>> customOperators = new HashSet<>();
-		for (RSQLCustomOperatorsConfigurer configurer: rsqlCustomOperatorsConfigurers) {
-			for (RSQLCustomOperator<?> operator: configurer.getCustomOperators()) {
-				for (String symbol: operator.getComparisonOperator().getSymbols()) {
-					// If already an operator is present with the same symbol, throw exception
-					if (!symbolSet.add(symbol)) {
-						throw new QueryConfigurationException(MessageFormat.format(
-								"Duplicate operator symbol ''{0}'' found in custom RSQL operators. Each operator must be unique and not overlap with default operators.",
-								symbol
-						));
-					}
+		for (RSQLCustomOperator<?> operator: customOperatorBeans) {
+			for (String symbol: operator.getComparisonOperator().getSymbols()) {
+				// If already an operator is present with the same symbol, throw exception
+				if (!symbolSet.add(symbol)) {
+					throw new QueryConfigurationException(MessageFormat.format(
+							"Duplicate operator symbol ''{0}'' found in custom RSQL operators. Each operator must be unique and not overlap with default operators.",
+							symbol
+					));
 				}
-				customOperators.add(operator);
 			}
+			customOperators.add(operator);
 		}
 		log.info(
 				"Registered custom RSQL operators: {}", customOperators

@@ -16,66 +16,50 @@
 
 package in.co.akshitbansal.springwebquery.ast;
 
-import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.field.EntityAwareFieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
-import in.co.akshitbansal.springwebquery.enums.ResolutionMode;
-import in.co.akshitbansal.springwebquery.resolver.spring.config.SpecificationArgumentResolverConfig;
+import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper;
+import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapperFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Factory for creating validation visitors with the shared resolver and
- * filterability infrastructure used across specification resolvers.
+ * Creates fully configured {@link ValidationRSQLVisitor} instances for a
+ * specific entity/DTO pair.
  */
 @RequiredArgsConstructor
 public class ValidationRSQLVisitorFactory {
 
 	/**
-	 * Factory for creating the field resolver that matches the active query contract.
+	 * Factory used to create DTO-to-entity path mappers.
 	 */
 	@NonNull
-	private final FieldResolverFactory fieldResolverFactory;
+	private final DTOToEntityPathMapperFactory pathMapperFactory;
 
 	/**
-	 * Validator shared by created visitors for terminal-field filterability checks.
+	 * Validator used to enforce field-level filterability rules.
 	 */
 	@NonNull
 	private final FilterableFieldValidator filterableFieldValidator;
 
 	/**
-	 * Creates a validation visitor matching the supplied specification resolver configuration.
+	 * Creates a validation visitor for the supplied query contract.
 	 *
-	 * <p>DTO-aware configurations produce {@link DTOValidationRSQLVisitor}; otherwise
-	 * an {@link EntityValidationRSQLVisitor} is created.</p>
+	 * @param entityClass entity type that ultimately backs predicate creation
+	 * @param dtoClass DTO type exposed to callers for filtering
+	 * @param allowAndOperation whether logical {@code AND} is allowed
+	 * @param allowOrOperation whether logical {@code OR} is allowed
+	 * @param maxASTDepth maximum AST depth accepted during validation
 	 *
-	 * @param config effective specification resolver configuration
-	 *
-	 * @return validation visitor aligned with the configured query model
+	 * @return configured validation visitor
 	 */
-	public AbstractValidationRSQLVisitor newValidationRSQLVisitor(@NonNull SpecificationArgumentResolverConfig config) {
-		FieldResolver fieldResolver = fieldResolverFactory.newFieldResolver(config);
-
-		// DTOValidationRSQLVisitor
-		if (config.getResolutionMode() == ResolutionMode.DTO_AWARE) {
-			return new DTOValidationRSQLVisitor(
-					(DTOAwareFieldResolver) fieldResolver,
-					filterableFieldValidator,
-					config.isAndNodeAllowed(),
-					config.isOrNodeAllowed(),
-					config.getMaxASTDepth()
-			);
-		}
-
-		// EntityValidationRSQLVisitor
-		return new EntityValidationRSQLVisitor(
-				(EntityAwareFieldResolver) fieldResolver,
-				filterableFieldValidator,
-				config.isAndNodeAllowed(),
-				config.isOrNodeAllowed(),
-				config.getMaxASTDepth()
-		);
+	public ValidationRSQLVisitor newValidationRSQLVisitor(
+			@NonNull Class<?> entityClass,
+			@NonNull Class<?> dtoClass,
+			boolean allowAndOperation,
+			boolean allowOrOperation,
+			int maxASTDepth
+	) {
+		DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(entityClass, dtoClass);
+		return new ValidationRSQLVisitor(allowAndOperation, allowOrOperation, maxASTDepth, pathMapper, filterableFieldValidator);
 	}
 }

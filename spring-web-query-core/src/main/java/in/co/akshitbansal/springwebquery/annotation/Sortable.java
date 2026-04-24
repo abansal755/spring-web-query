@@ -16,43 +16,21 @@
 
 package in.co.akshitbansal.springwebquery.annotation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
- * Marks a field as eligible for sorting in API query requests.
+ * Marks a field as eligible for request-driven sorting.
  *
- * <p>Fields annotated with {@code @Sortable} may be referenced in
- * {@code sort} query parameters when pagination is enabled via
- * method-level {@link WebQuery} configuration.</p>
+ * <p>Sortability is validated against the terminal field of the requested sort
+ * selector. In practice, this annotation belongs on the fields that make up
+ * the public sorting contract for the query.</p>
  *
- * <p>The annotation is applied to whichever type is used as the sorting contract:
- * entity fields in entity-aware mode, or DTO fields in DTO-aware mode.</p>
+ * <p>Fields without this annotation are rejected by the sorting validator even
+ * if the selector path itself is valid and the underlying entity path exists.</p>
  *
- * <p>This annotation is purely declarative and does not impose any
- * persistence or indexing requirements. Its sole purpose is to
- * explicitly whitelist fields that are safe and supported for sorting
- * at the API level.</p>
- *
- * <p>Sorting requests targeting fields not annotated with
- * {@code @Sortable} will be rejected during request resolution.</p>
- *
- * <p>Example usage:</p>
- *
- * <pre>{@code
- * @Entity
- * public class User {
- *
- *     @Sortable
- *     private String username;
- *
- *     @Sortable
- *     private Instant createdAt;
- * }
- * }</pre>
+ * <p><b>Example:</b></p>
+ * <pre>{@code @Sortable
+ * private String displayName;}</pre>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

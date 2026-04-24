@@ -16,37 +16,45 @@
 
 package in.co.akshitbansal.springwebquery.validator;
 
-import in.co.akshitbansal.springwebquery.annotation.Sortable;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
+import in.co.akshitbansal.springwebquery.model.Name;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.lang.reflect.Field;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class SortableFieldValidatorTest {
 
-	@Test
-	void validate_acceptsSortableField() throws Exception {
-		SortableFieldValidator validator = new SortableFieldValidator();
-		var field = SortableEntity.class.getDeclaredField("name");
-		assertDoesNotThrow(() -> validator.validate(field, "name"));
+	private final SortableFieldValidator validator;
+	private final Field firstNameField;
+	private final Field lastNameField;
+
+	SortableFieldValidatorTest() throws NoSuchFieldException {
+		this.validator = new SortableFieldValidator();
+		this.firstNameField = Name.class.getDeclaredField("firstName");
+		this.lastNameField = Name.class.getDeclaredField("lastName");
 	}
 
 	@Test
-	void validate_rejectsNonSortableField() throws Exception {
-		SortableFieldValidator validator = new SortableFieldValidator();
-		var field = NonSortableEntity.class.getDeclaredField("name");
-		assertThrows(QueryFieldValidationException.class, () -> validator.validate(field, "name"));
+	void testValidateWithNullField() {
+		assertThrows(NullPointerException.class, () -> validator.validate(null, "hello"));
 	}
 
-	private static class SortableEntity {
-
-		@Sortable
-		private String name;
+	@Test
+	void testValidateWithNullFieldPath() {
+		assertThrows(NullPointerException.class, () -> validator.validate(firstNameField, null));
 	}
 
-	private static class NonSortableEntity {
+	@Test
+	void testValidateWithSortableField() {
+		assertDoesNotThrow(() -> validator.validate(firstNameField, "firstName"));
+	}
 
-		private String name;
+	@Test
+	void testValidateWithNonSortableField() {
+		QueryFieldValidationException ex = assertThrows(QueryFieldValidationException.class, () -> validator.validate(lastNameField, "lastName"));
+		assertEquals("lastName", ex.getFieldPath());
+		assertTrue(ex.getMessage().contains("Sorting is not allowed"));
 	}
 }

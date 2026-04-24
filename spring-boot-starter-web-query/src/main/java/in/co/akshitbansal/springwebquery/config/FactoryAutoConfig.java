@@ -16,87 +16,76 @@
 
 package in.co.akshitbansal.springwebquery.config;
 
-import in.co.akshitbansal.springwebquery.SpringWebQueryProperties;
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
-import in.co.akshitbansal.springwebquery.resolver.field.FieldResolverFactory;
-import in.co.akshitbansal.springwebquery.resolver.field.cache.DTOAwareFieldResolutionCache;
+import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapperFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 /**
- * Publishes shared infrastructure beans used by the starter's query resolvers.
+ * Auto-configuration that wires the core factories used by query validation
+ * and DTO/entity path translation.
  */
 @AutoConfiguration
 @Slf4j
 public class FactoryAutoConfig {
 
 	/**
-	 * Creates the shared cache used by DTO-aware field resolvers when caching is
-	 * enabled.
+	 * Creates the mapper factory variant that shares resolution caches across
+	 * mapper instances.
 	 *
-	 * @param properties validated global starter properties
+	 * @param failedResolutionsMaxCapacity maximum cached failed resolutions
+	 * @param lockStripeCount number of striped locks used during cache fills
 	 *
-	 * @return DTO-aware field-resolution cache
+	 * @return cached mapper factory
 	 */
 	@Bean
 	@ConditionalOnProperty(
-			name = "spring-web-query.field-resolution.dto-aware.caching.enabled",
+			name = "spring-web-query.field-resolution.caching.enabled",
 			havingValue = "true",
 			matchIfMissing = true
 	)
 	@ConditionalOnMissingBean
-	public DTOAwareFieldResolutionCache dtoAwareFieldResolutionCache(SpringWebQueryProperties properties) {
-		log.info("Registered {} for caching DTO-aware field resolutions", DTOAwareFieldResolutionCache.class.getSimpleName());
-		return new DTOAwareFieldResolutionCache(properties.getFailedDTOAwareResolutionCachingMaxCapacity(), properties.getDtoAwareFieldResolutionCachingLockStripeCount());
+	public DTOToEntityPathMapperFactory dtoToEntityPathMapperFactoryWithCaching(
+			@Value("${spring-web-query.field-resolution.caching.failed-resolutions-max-capacity:1000}") int failedResolutionsMaxCapacity,
+			@Value("${spring-web-query.field-resolution.caching.lock-stripe-count:32}") int lockStripeCount
+	) {
+		return new DTOToEntityPathMapperFactory(failedResolutionsMaxCapacity, lockStripeCount);
 	}
 
 	/**
-	 * Creates the shared field-resolver factory backed by the DTO-resolution
-	 * cache.
+	 * Creates the mapper factory variant that performs no caching.
 	 *
-	 * @param cache cache for memoizing DTO-aware field-resolution results
-	 *
-	 * @return field-resolver factory that produces cached DTO-aware resolvers
+	 * @return uncached mapper factory
 	 */
 	@Bean
-	@ConditionalOnBean(DTOAwareFieldResolutionCache.class)
+	@ConditionalOnProperty(
+			name = "spring-web-query.field-resolution.caching.enabled",
+			havingValue = "false"
+	)
 	@ConditionalOnMissingBean
-	public FieldResolverFactory fieldResolverFactoryWithDTOCache(DTOAwareFieldResolutionCache cache) {
-		return new FieldResolverFactory(cache);
+	public DTOToEntityPathMapperFactory dtoToEntityPathMapperFactoryWithoutCaching() {
+		return new DTOToEntityPathMapperFactory();
 	}
 
 	/**
-	 * Creates the shared factory for field resolver instances when caching is not
-	 * enabled.
+	 * Creates the validation visitor factory used during RSQL parsing.
 	 *
-	 * @return field resolver factory
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	public FieldResolverFactory fieldResolverFactoryWithoutDTOCache() {
-		return new FieldResolverFactory();
-	}
-
-	/**
-	 * Creates the shared factory for validation visitors used during RSQL
-	 * specification resolution.
-	 *
-	 * @param fieldResolverFactory factory for DTO-aware and entity-aware field resolvers
-	 * @param filterableFieldValidator validator used for terminal field/operator checks
+	 * @param pathMapperFactory mapper factory used to resolve DTO selectors
+	 * @param filterableFieldValidator validator used for field-level filtering rules
 	 *
 	 * @return validation visitor factory
 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public ValidationRSQLVisitorFactory validationRSQLVisitorFactory(
-			FieldResolverFactory fieldResolverFactory,
+			DTOToEntityPathMapperFactory pathMapperFactory,
 			FilterableFieldValidator filterableFieldValidator
 	) {
-		return new ValidationRSQLVisitorFactory(fieldResolverFactory, filterableFieldValidator);
+		return new ValidationRSQLVisitorFactory(pathMapperFactory, filterableFieldValidator);
 	}
 }

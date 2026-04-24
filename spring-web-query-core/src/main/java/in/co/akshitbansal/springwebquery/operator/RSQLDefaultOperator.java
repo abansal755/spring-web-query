@@ -17,44 +17,47 @@
 package in.co.akshitbansal.springwebquery.operator;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import in.co.akshitbansal.springwebquery.ast.EntityValidationRSQLVisitor;
 import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import io.github.perplexhub.rsql.RSQLOperators;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Enumeration of supported RSQL comparison operators.
- * <p>
- * This enum provides a type-safe wrapper around the built-in
- * {@link cz.jirutka.rsql.parser.ast.RSQLOperators} supplied by the RSQL library.
- * Each enum constant maps directly to a corresponding {@link cz.jirutka.rsql.parser.ast.ComparisonOperator}
- * instance and represents a single logical comparison operation supported by RSQL.
+ * Enumerates the built-in comparison operators exposed by the library.
  *
- * <p>
- * The primary purpose of this enum is to:
+ * <p>This enum is the public, annotation-friendly view of the default operator
+ * set. Callers typically use these constants in {@link RSQLFilterable}
+ * declarations to describe which comparisons are allowed on a field, while the
+ * library internally uses the wrapped {@link ComparisonOperator} instances for
+ * parsing, validation, and predicate construction.</p>
+ *
+ * <p>The constants are grouped by the kinds of comparisons they enable:</p>
  * <ul>
- *     <li>Expose RSQL operators in a form that can be safely used in Java annotations</li>
- *     <li>Allow fine-grained control over which operators are permitted for a given entity field</li>
- *     <li>Decouple application code from direct usage of {@link RSQLOperators}</li>
+ *   <li>equality: {@link #EQUAL}, {@link #NOT_EQUAL}</li>
+ *   <li>ordering: {@link #GREATER_THAN}, {@link #GREATER_THAN_OR_EQUAL},
+ *       {@link #LESS_THAN}, {@link #LESS_THAN_OR_EQUAL}</li>
+ *   <li>membership: {@link #IN}, {@link #NOT_IN}</li>
+ *   <li>null checks: {@link #IS_NULL}, {@link #NOT_NULL}</li>
+ *   <li>text: {@link #LIKE}, {@link #NOT_LIKE}, {@link #IGNORE_CASE},
+ *       {@link #IGNORE_CASE_LIKE}, {@link #IGNORE_CASE_NOT_LIKE}</li>
+ *   <li>range: {@link #BETWEEN}, {@link #NOT_BETWEEN}</li>
  * </ul>
  *
- * <p>
- * {@link RSQLDefaultOperator} is typically used in conjunction with
- * {@link RSQLFilterable} to declare the set of allowed operators on an entity field,
- * and with {@link EntityValidationRSQLVisitor} to enforce these constraints at runtime.
- * </p>
+ * <p><b>Example usage in a DTO or entity contract:</b></p>
+ * <pre>{@code @RSQLFilterable({
+ *     RSQLDefaultOperator.EQUAL,
+ *     RSQLDefaultOperator.NOT_EQUAL,
+ *     RSQLDefaultOperator.IN
+ * })
+ * private String status;}</pre>
  *
- * <p><b>Example usage:</b></p>
- * <pre>{@code
- * @RSQLFilterable({RSQLDefaultOperator.EQUAL, RSQLDefaultOperator.IN})
- * private String status;
- * }</pre>
+ * <p><b>Example request filters that such a declaration would allow:</b></p>
+ * <pre>{@code status==ACTIVE
+ * status!=DELETED
+ * status=in=(ACTIVE,PENDING)}</pre>
  *
- * @see RSQLFilterable
- * @see EntityValidationRSQLVisitor
- * @see RSQLOperators
- * @see cz.jirutka.rsql.parser.ast.ComparisonOperator
+ * <p>The individual enum constants document the accepted symbolic forms and
+ * show representative query examples.</p>
  */
 @RequiredArgsConstructor
 @Getter
@@ -179,6 +182,9 @@ public enum RSQLDefaultOperator {
 
 	/**
 	 * Underlying parser operator represented by this enum constant.
+	 *
+	 * <p>This is the {@link ComparisonOperator} instance registered with the
+	 * parser and later used by validation and predicate conversion.</p>
 	 */
 	private final ComparisonOperator operator;
 }
