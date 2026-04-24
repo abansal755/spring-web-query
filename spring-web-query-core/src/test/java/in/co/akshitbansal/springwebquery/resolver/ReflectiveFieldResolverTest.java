@@ -20,6 +20,9 @@ import in.co.akshitbansal.springwebquery.model.Address;
 import in.co.akshitbansal.springwebquery.model.Name;
 import in.co.akshitbansal.springwebquery.model.Phone;
 import in.co.akshitbansal.springwebquery.model.User;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -116,5 +119,28 @@ class ReflectiveFieldResolverTest {
 		// Assertions on the 2nd field
 		assertEquals("city", fields.get(1).getName());
 		assertEquals(Address.class, fields.get(1).getDeclaringClass());
+	}
+
+	@Test
+	void testResolveFieldPathWithSuperClass() {
+		ReflectiveFieldResolver resolver = ReflectiveFieldResolver.of(ExtendedUser.class);
+		List<Field> fields = resolver.resolveFieldPath("email");
+		assertEquals(1, fields.size());
+		assertEquals("email", fields.get(0).getName());
+	}
+
+	@Test
+	void testResolveFieldPathWithRawCollection() {
+		ReflectiveFieldResolver resolver = ReflectiveFieldResolver.of(ExtendedUser.class);
+		UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class, () -> resolver.resolveFieldPath("accounts"));
+		assertTrue(ex.getMessage().contains("Cannot resolve generic type"));
+	}
+
+	@Data
+	@EqualsAndHashCode( callSuper = true)
+	@ToString(callSuper = true)
+	private static class ExtendedUser extends User {
+
+		private List accounts;
 	}
 }
