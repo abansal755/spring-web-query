@@ -127,6 +127,7 @@ class ReflectiveFieldResolverTest {
 		List<Field> fields = resolver.resolveFieldPath("email");
 		assertEquals(1, fields.size());
 		assertEquals("email", fields.get(0).getName());
+		assertEquals(User.class, fields.get(0).getDeclaringClass());
 	}
 
 	@Test
@@ -137,7 +138,7 @@ class ReflectiveFieldResolverTest {
 	}
 
 	@Data
-	@EqualsAndHashCode( callSuper = true)
+	@EqualsAndHashCode(callSuper = true)
 	@ToString(callSuper = true)
 	private static class ExtendedUser extends User {
 
