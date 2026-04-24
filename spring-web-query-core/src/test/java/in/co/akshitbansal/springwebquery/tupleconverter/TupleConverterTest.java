@@ -79,7 +79,8 @@ class TupleConverterTest {
 		assertNotNull(constructor2);
 
 		// Subsequent calls should use the cached constructor
-		converter.convert(tuple);
+		Address address2 = converter.convert(tuple);
+		assertEquals("city", address2.getCity());
 		var constructor3 = getCachedConstructor(converter);
 		assertEquals(constructor2, constructor3);
 	}

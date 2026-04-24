@@ -43,6 +43,6 @@ public class IsLongGreaterThanFiveOperator implements RSQLCustomOperator<Long> {
 	@Override
 	public Predicate toPredicate(RSQLCustomPredicateInput input) {
 		CriteriaBuilder cb = input.getCriteriaBuilder();
-		return cb.equal(input.getPath(), 5);
+		return cb.greaterThan(input.getPath().as(Long.class), 5L);
 	}
 }

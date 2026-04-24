@@ -65,5 +65,7 @@ class PreferredConstructorDiscovererTest {
 		Tuple tuple = new TupleImpl(metadata, new Object[]{ "city" });
 		Constructor<Address> constructor = discoverer.discover(tuple);
 		assertTrue(constructor.isAnnotationPresent(PersistenceCreator.class));
+		assertEquals(1, constructor.getParameterCount());
+		assertEquals(String.class, constructor.getParameterTypes()[0]);
 	}
 }

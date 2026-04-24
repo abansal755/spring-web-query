@@ -57,6 +57,18 @@ class ReflectiveFieldResolverTest {
 	}
 
 	@Test
+	void testResolveFieldPathWithEmptyTrailingSegment() {
+		IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> resolver.resolveFieldPath("name."));
+		assertTrue(ex.getMessage().contains("cannot contain empty segments"));
+	}
+
+	@Test
+	void testResolveFieldPathWithEmptySegments() {
+		IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> resolver.resolveFieldPath("name..firstName"));
+		assertTrue(ex.getMessage().contains("cannot contain empty segments"));
+	}
+
+	@Test
 	void testResolveFieldPathWithValidPath() {
 		List<Field> fields = resolver.resolveFieldPath("email");
 		assertEquals(1, fields.size());
