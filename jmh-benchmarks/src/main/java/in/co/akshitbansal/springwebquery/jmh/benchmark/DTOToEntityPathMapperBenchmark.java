@@ -18,20 +18,20 @@ package in.co.akshitbansal.springwebquery.jmh.benchmark;
 
 import in.co.akshitbansal.springwebquery.jmh.entity.UserEntity;
 import in.co.akshitbansal.springwebquery.jmh.model.User;
-import in.co.akshitbansal.springwebquery.resolver.field.DTOAwareFieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.field.FieldResolver;
-import in.co.akshitbansal.springwebquery.resolver.field.ResolutionResult;
+import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper;
+import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapperFactory;
 import org.openjdk.jmh.annotations.*;
 
-import java.lang.reflect.Constructor;
 import java.util.concurrent.TimeUnit;
+
+import static in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper.MappingResult;
 
 @BenchmarkMode(Mode.AverageTime)
 @Fork(2)
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class DTOAwareFieldResolverBenchmark {
+public class DTOToEntityPathMapperBenchmark {
 
 	@State(Scope.Thread)
 	public static class TestParams {
@@ -44,24 +44,17 @@ public class DTOAwareFieldResolverBenchmark {
 		})
 		public String dtoPath;
 
-		public FieldResolver fieldResolver;
+		public DTOToEntityPathMapper pathMapper;
 
 		@Setup(Level.Trial)
 		public void setup() {
-			try {
-				Class<DTOAwareFieldResolver> clazz = DTOAwareFieldResolver.class;
-				Constructor<DTOAwareFieldResolver> constructor = clazz.getDeclaredConstructor(Class.class, Class.class);
-				constructor.setAccessible(true);
-				this.fieldResolver = constructor.newInstance(UserEntity.class, User.class);
-			}
-			catch (Exception ex) {
-				throw new RuntimeException(ex);
-			}
+			DTOToEntityPathMapperFactory factory = new DTOToEntityPathMapperFactory();
+			pathMapper = factory.newMapper(UserEntity.class, User.class);
 		}
 	}
 
 	@Benchmark
-	public ResolutionResult resolvePathTest(TestParams params) {
-		return params.fieldResolver.resolvePath(params.dtoPath);
+	public MappingResult resolvePathTest(TestParams params) {
+		return params.pathMapper.map(params.dtoPath);
 	}
 }

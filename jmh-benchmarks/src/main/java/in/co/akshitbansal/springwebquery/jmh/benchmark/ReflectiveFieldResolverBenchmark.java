@@ -17,7 +17,7 @@
 package in.co.akshitbansal.springwebquery.jmh.benchmark;
 
 import in.co.akshitbansal.springwebquery.jmh.model.User;
-import in.co.akshitbansal.springwebquery.util.ReflectionUtil;
+import in.co.akshitbansal.springwebquery.resolver.ReflectiveFieldResolver;
 import org.openjdk.jmh.annotations.*;
 
 import java.lang.reflect.Field;
@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class ReflectionUtilBenchmark {
+public class ReflectiveFieldResolverBenchmark {
 
 	@State(Scope.Thread)
 	public static class TestParams {
@@ -42,11 +42,16 @@ public class ReflectionUtilBenchmark {
 		})
 		public String fieldPath;
 
-		public Class<?> clazz = User.class;
+		public ReflectiveFieldResolver resolver;
+
+		@Setup(Level.Trial)
+		public void setup() {
+			resolver = ReflectiveFieldResolver.of(User.class);
+		}
 	}
 
 	@Benchmark
-	public List<Field> resolveFieldTest(TestParams params) {
-		return ReflectionUtil.resolveFieldPath(params.clazz, params.fieldPath);
+	public List<Field> resolveFieldPathTest(TestParams params) {
+		return params.resolver.resolveFieldPath(params.fieldPath);
 	}
 }
