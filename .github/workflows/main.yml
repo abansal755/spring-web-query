@@ -99,10 +99,7 @@ jobs:
 
     snapshot-release:
         name: Snapshot Release
-        needs:
-            - build-test
-            - jmh-build-test
-            - jacoco
+        needs: jacoco
         runs-on: ubuntu-latest
         if: >-
             ${{ 
