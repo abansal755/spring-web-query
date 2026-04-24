@@ -54,7 +54,7 @@ public class DTOToEntityPathMapperBenchmark {
 	}
 
 	@Benchmark
-	public MappingResult resolvePathTest(TestParams params) {
+	public MappingResult mapTest(TestParams params) {
 		return params.pathMapper.map(params.dtoPath);
 	}
 }

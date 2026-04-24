@@ -76,12 +76,12 @@ public class CachedDTOToEntityPathMapperBenchmark {
 	}
 
 	@Benchmark
-	public MappingResult resolvePathCacheMissTest(CacheMissMapperState mapperState, TestParams params) {
+	public MappingResult mapCacheMissTest(CacheMissMapperState mapperState, TestParams params) {
 		return mapperState.pathMapper.map(params.dtoPath);
 	}
 
 	@Benchmark
-	public MappingResult resolvePathCacheHitTest(CacheHitMapperState mapperState, TestParams params) {
+	public MappingResult mapCacheHitTest(CacheHitMapperState mapperState, TestParams params) {
 		return mapperState.pathMapper.map(params.dtoPath);
 	}
 }
