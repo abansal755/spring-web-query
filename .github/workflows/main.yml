@@ -72,6 +72,13 @@ jobs:
               working-directory: ${{ github.workspace }}/jmh-benchmarks
               run: mvn -B -ntp clean verify
 
+    jacoco:
+        uses: ./.github/workflows/jacoco.yml
+        needs:
+            - build-test
+            - jmh-build-test
+        name: JaCoCo Report Generation
+
     trivy:
         uses: ./.github/workflows/trivy.yml
         needs:
@@ -95,6 +102,7 @@ jobs:
         needs:
             - build-test
             - jmh-build-test
+            - jacoco
         runs-on: ubuntu-latest
         if: >-
             ${{ 

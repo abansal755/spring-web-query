@@ -1,0 +1,28 @@
+name: Generate JaCoCo Report
+
+on:
+    workflow_call:
+
+jobs:
+    jacoco:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Set up JDK 17
+              uses: actions/setup-java@v5
+              with:
+                  distribution: temurin
+                  java-version: "17"
+                  cache: maven
+
+            - name: Run tests for core package
+              working-directory: ${{ github.workspace }}/spring-web-query-core
+              run: mvn -B -ntp clean test -Pjacoco
+
+            - name: Upload jacoco report
+              uses: actions/upload-artifact@v7
+              with:
+                  name: spring-web-query-core-jacoco-report
+                  path: spring-web-query-core/target/site/jacoco
