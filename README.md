@@ -10,7 +10,7 @@
 [![Maven Central (spring-boot-starter-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fin%2Fco%2Fakshitbansal%2Fspring-boot-starter-web-query%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Maven%20Central%20(Starter)&color=brightgreen&logo=apachemaven)](https://central.sonatype.com/artifact/in.co.akshitbansal/spring-boot-starter-web-query)
 [![Maven Central (spring-boot-starter-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fin%2Fco%2Fakshitbansal%2Fspring-boot-starter-web-query%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Snapshot%20(Starter)&color=yellow&logo=apachemaven)](https://central.sonatype.com/repository/maven-snapshots/in/co/akshitbansal/spring-boot-starter-web-query/maven-metadata.xml)
 
-`spring-web-query` is a Spring Boot library that provides a **declarative**, **secure**, and **high-performance** way to implement filtering, pagination, and sorting for your JPA-based APIs.
+`spring-web-query` is a Spring Boot library that provides a **declarative**, **secure**, and **high-performance** way to implement filtering, pagination, and sorting for your Spring MVC APIs.
 
 It leverages **RSQL** (a URL-friendly query language) to provide powerful filtering capabilities while ensuring that only explicitly whitelisted fields and operators are exposed to clients.
 
