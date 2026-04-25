@@ -293,7 +293,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		}
 
 		// ORDER BY clause
-		List<Order> orders = mapSortToJpaOrders(pageable.getSort(), root, cb, entityClass, dtoClass);
+		List<Order> orders = mapSortToJpaOrders(pageable.getSort(), root, cb, dtoClass);
 		query.orderBy(orders);
 
 		TypedQuery<Tuple> typedQuery = entityManager.createQuery(query);
@@ -330,8 +330,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	private long count(@Nullable Specification<E> specification) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> query = cb.createQuery(Long.class);
-		Class<E> entityClass = getEntityClass();
-		Root<E> root = query.from(entityClass);
+		Root<E> root = query.from(getEntityClass());
 
 		// WHERE clause
 		if (specification != null) {
@@ -365,10 +364,8 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
 			Class<?> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
-		Class<E> entityClass = getEntityClass();
 		Specification<E> filterSpec = createRSQLFilterSpecification(
-				rsqlQuery,
-				entityClass, dtoClass,
+				rsqlQuery, dtoClass,
 				allowAndOperation, allowOrOperation, maxASTDepth
 		);
 		if (specificationCustomizer == null) return filterSpec;
@@ -384,7 +381,6 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	 * both count and content queries.</p>
 	 *
 	 * @param rsqlQuery optional filter string
-	 * @param entityClass entity type for predicate creation
 	 * @param dtoClass DTO type for selector contract enforcement
 	 * @param allowAndOperation whether AND nodes are allowed
 	 * @param allowOrOperation whether OR nodes are allowed
@@ -392,8 +388,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	 * @return specification representing the validated RSQL query
 	 */
 	private Specification<E> createRSQLFilterSpecification(
-			@Nullable String rsqlQuery,
-			Class<E> entityClass, Class<?> dtoClass,
+			@Nullable String rsqlQuery, Class<?> dtoClass,
 			boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
 		if (rsqlQuery == null) return Specification.unrestricted();
@@ -402,7 +397,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 			Node rootNode = rsqlParser.parse(rsqlQuery);
 			// Validate the parsed AST
 			ValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newValidationRSQLVisitor(
-					entityClass,
+					getEntityClass(),
 					dtoClass,
 					allowAndOperation,
 					allowOrOperation,
@@ -476,14 +471,13 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	 * @param sort sort specification supplied through the current {@link Pageable}
 	 * @param root root entity path for the query being constructed
 	 * @param cb criteria builder used to create ascending and descending orders
-	 * @param entityClass backing entity type used for selector translation
 	 * @param dtoClass DTO type that defines the sortable selector contract
 	 *
 	 * @return JPA order list corresponding to the requested sort specification
 	 */
-	private List<Order> mapSortToJpaOrders(Sort sort, Root<E> root, CriteriaBuilder cb, Class<E> entityClass, Class<?> dtoClass) {
+	private List<Order> mapSortToJpaOrders(Sort sort, Root<E> root, CriteriaBuilder cb, Class<?> dtoClass) {
 		try {
-			DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(entityClass, dtoClass);
+			DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(getEntityClass(), dtoClass);
 			List<Order> orders = new ArrayList<>();
 			for (Sort.Order order: sort) {
 				String dtoPath = order.getProperty();
