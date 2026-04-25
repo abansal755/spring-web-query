@@ -40,6 +40,7 @@ import lombok.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -48,6 +49,7 @@ import org.springframework.data.repository.core.support.RepositoryMetadataAccess
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper.MappingResult;
@@ -158,6 +160,121 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
 			@NonNull Class<D> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
+		Specification<E> spec = createSpecification(
+				rsqlQuery, specificationCustomizer,
+				dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
+		);
+		return findAll(spec, pageable, selectionsProvider, dtoClass);
+	}
+
+	/**
+	 * Executes a projected result query using repository defaults.
+	 */
+	@Override
+	public <D> List<D> findAll(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			@NonNull Class<D> dtoClass
+	) {
+		return findAll(
+				rsqlQuery, pageable,
+				selectionsProvider, specificationCustomizer,
+				dtoClass, globalAllowAndOperation, globalAllowOrOperation, globalMaxASTDepth
+		);
+	}
+
+	/**
+	 * Counts rows matching the supplied filter using explicit validation settings.
+	 */
+	@Override
+	public long count(
+			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			@NonNull Class<?> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
+	) {
+		Specification<E> spec = createSpecification(
+				rsqlQuery, specificationCustomizer, dtoClass,
+				allowAndOperation, allowOrOperation, maxASTDepth
+		);
+		return count(spec);
+	}
+
+	/**
+	 * Counts rows matching the supplied filter using repository defaults.
+	 */
+	@Override
+	public long count(@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer, @NonNull Class<?> dtoClass) {
+		return count(
+				rsqlQuery, specificationCustomizer,
+				dtoClass, globalAllowAndOperation, globalAllowOrOperation, globalMaxASTDepth
+		);
+	}
+
+	/**
+	 * Executes a paged projected query using explicit validation settings.
+	 */
+	@Override
+	public <D> Page<D> findAllPaged(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			@NonNull Class<D> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
+	) {
+		// Create the specification
+		Specification<E> spec = createSpecification(
+				rsqlQuery, specificationCustomizer,
+				dtoClass, allowAndOperation, allowOrOperation, maxASTDepth
+		);
+
+		// If unpaged, there is no need to issue another query for count
+		if (pageable.isUnpaged())
+			return new PageImpl<>(findAll(spec, pageable, selectionsProvider, dtoClass));
+
+		// Paged, issue a separate query for count
+		long count = count(spec);
+
+		// If no results, return an empty page
+		if (count == 0) return new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+		// Issue a results query to get the actual results
+		return new PageImpl<>(
+				findAll(spec, pageable, selectionsProvider, dtoClass),
+				pageable, count
+		);
+	}
+
+	/**
+	 * Executes a paged projected query using repository defaults.
+	 */
+	@Override
+	public <D> Page<D> findAllPaged(
+			@Nullable String rsqlQuery, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
+			@NonNull Class<D> dtoClass
+	) {
+		return findAllPaged(
+				rsqlQuery, pageable,
+				selectionsProvider, specificationCustomizer,
+				dtoClass, globalAllowAndOperation, globalAllowOrOperation, globalMaxASTDepth
+		);
+	}
+
+	/**
+	 * Internal helper to execute a projection query with a pre-built specification.
+	 *
+	 * <p>This helper manages the full lifecycle of a result query, including
+	 * selector projection, sorting, and pagination. It converts the resulting
+	 * {@link Tuple} objects into the target DTO type.</p>
+	 *
+	 * @param specification the filter specification to apply
+	 * @param pageable pagination and sorting metadata
+	 * @param selectionsProvider callback to define the select clause
+	 * @param dtoClass target class for tuple conversion
+	 * @param <D> result type
+	 * @return projected results for the requested page window
+	 */
+	private <D> List<D> findAll(
+			@Nullable Specification<E> specification, @NonNull Pageable pageable,
+			@NonNull SelectionsProvider<E> selectionsProvider, @NonNull Class<D> dtoClass
+	) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Tuple> query = cb.createTupleQuery();
 		Class<E> entityClass = getEntityClass();
@@ -170,15 +287,13 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		query.select(cb.tuple(selectionsArray));
 
 		// WHERE clause
-		applyWhereClause(
-				root, query, cb,
-				rsqlQuery, specificationCustomizer,
-				entityClass, dtoClass,
-				allowAndOperation, allowOrOperation, maxASTDepth
-		);
+		if (specification != null) {
+			Predicate predicate = specification.toPredicate(root, query, cb);
+			if (predicate != null) query.where(predicate);
+		}
 
 		// ORDER BY clause
-		List<Order> orders = mapSortToJpaOrders(pageable.getSort(), root, cb, entityClass, dtoClass);
+		List<Order> orders = mapSortToJpaOrders(pageable.getSort(), root, cb, dtoClass);
 		query.orderBy(orders);
 
 		TypedQuery<Tuple> typedQuery = entityManager.createQuery(query);
@@ -207,42 +322,21 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	}
 
 	/**
-	 * Executes a projected result query using repository defaults.
+	 * Internal helper to execute a count query with a pre-built specification.
+	 *
+	 * @param specification the filter specification to apply
+	 * @return total number of matching rows
 	 */
-	@Override
-	public <D> List<D> findAll(
-			@Nullable String rsqlQuery, @NonNull Pageable pageable,
-			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			@NonNull Class<D> dtoClass
-	) {
-		return findAll(
-				rsqlQuery, pageable,
-				selectionsProvider, specificationCustomizer,
-				dtoClass, globalAllowAndOperation, globalAllowOrOperation, globalMaxASTDepth
-		);
-	}
-
-	/**
-	 * Counts rows matching the supplied filter using explicit validation
-	 * settings.
-	 */
-	@Override
-	public long count(
-			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			@NonNull Class<?> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
-	) {
+	private long count(@Nullable Specification<E> specification) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> query = cb.createQuery(Long.class);
-		Class<E> entityClass = getEntityClass();
-		Root<E> root = query.from(entityClass);
+		Root<E> root = query.from(getEntityClass());
 
 		// WHERE clause
-		applyWhereClause(
-				root, query, cb,
-				rsqlQuery, specificationCustomizer,
-				entityClass, dtoClass,
-				allowAndOperation, allowOrOperation, maxASTDepth
-		);
+		if (specification != null) {
+			Predicate predicate = specification.toPredicate(root, query, cb);
+			if (predicate != null) query.where(predicate);
+		}
 
 		// SELECT clause
 		if (query.isDistinct()) query.select(cb.countDistinct(root));
@@ -254,176 +348,106 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	}
 
 	/**
-	 * Counts rows matching the supplied filter using repository defaults.
-	 */
-	@Override
-	public long count(@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer, @NonNull Class<?> dtoClass) {
-		return count(
-				rsqlQuery, specificationCustomizer,
-				dtoClass, globalAllowAndOperation, globalAllowOrOperation, globalMaxASTDepth
-		);
-	}
-
-	/**
-	 * Executes a paged projected query using repository defaults.
-	 */
-	@Override
-	public <D> Page<D> findAllPaged(
-			@Nullable String rsqlQuery, @NonNull Pageable pageable,
-			@NonNull SelectionsProvider<E> selectionsProvider, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			@NonNull Class<D> dtoClass
-	) {
-		return findAllPaged(
-				rsqlQuery, pageable,
-				selectionsProvider, specificationCustomizer,
-				dtoClass, globalAllowAndOperation, globalAllowOrOperation, globalMaxASTDepth
-		);
-	}
-
-	/**
-	 * Applies the repository-generated filter specification, together with any
-	 * caller-supplied customization, to the provided criteria query.
+	 * Coordinates the creation of an eager RSQL specification and its optional
+	 * customization.
 	 *
-	 * <p>The method first builds the base specification for the current request
-	 * by delegating to {@link #createSpecification(String, Class, Class, boolean, boolean, int)}.
-	 * If a {@link SpecificationCustomizer} is present, it is then given the base
-	 * specification and may augment it, replace it, or return {@code null} to
-	 * indicate that no {@code WHERE} clause should be applied.</p>
-	 *
-	 * <p>If the final specification is {@code null}, or if it yields a
-	 * {@code null} {@link Predicate} for the current criteria state, the query is
-	 * left without a {@code WHERE} clause. Otherwise the produced predicate is
-	 * applied to the supplied criteria query.</p>
-	 *
-	 * @param root root entity path for the query being constructed
-	 * @param query criteria query receiving the {@code WHERE} clause
-	 * @param cb criteria builder used to obtain predicates
-	 * @param rsqlQuery optional RSQL filter expression
-	 * @param specificationCustomizer optional hook that can amend or remove the
-	 * generated specification
-	 * @param entityClass backing entity type used for path resolution
-	 * @param dtoClass DTO type that defines the allowed selector contract
-	 * @param allowAndOperation whether logical {@code AND} nodes are allowed
-	 * during validation
-	 * @param allowOrOperation whether logical {@code OR} nodes are allowed during
-	 * validation
-	 * @param maxASTDepth maximum allowed RSQL AST depth during validation
+	 * @param rsqlQuery optional filter string
+	 * @param specificationCustomizer optional hook for specification adjustment
+	 * @param dtoClass DTO class used for validation and mapping
+	 * @param allowAndOperation whether AND nodes are allowed
+	 * @param allowOrOperation whether OR nodes are allowed
+	 * @param maxASTDepth maximum allowed AST depth
+	 * @return final specification ready for use
 	 */
-	private void applyWhereClause(
-			Root<E> root, CriteriaQuery<?> query, CriteriaBuilder cb,
+	@Nullable
+	private Specification<E> createSpecification(
 			@Nullable String rsqlQuery, @Nullable SpecificationCustomizer<E> specificationCustomizer,
-			Class<E> entityClass, Class<?> dtoClass,
-			boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
+			Class<?> dtoClass, boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
-		Specification<E> filterSpec = createSpecification(
-				rsqlQuery,
-				entityClass, dtoClass,
+		Specification<E> filterSpec = createRSQLFilterSpecification(
+				rsqlQuery, dtoClass,
 				allowAndOperation, allowOrOperation, maxASTDepth
 		);
-		if (specificationCustomizer != null) filterSpec = specificationCustomizer.apply(filterSpec);
-		if (filterSpec == null) return;
-		Predicate predicate = filterSpec.toPredicate(root, query, cb);
-		if (predicate != null) query.where(predicate);
+		if (specificationCustomizer == null) return filterSpec;
+		return specificationCustomizer.apply(filterSpec);
 	}
 
 	/**
-	 * Builds the base JPA {@link Specification} for an optional RSQL expression.
+	 * Builds a JPA Specification by eagerly parsing and validating the RSQL query.
 	 *
-	 * <p>If {@code rsqlQuery} is {@code null}, this method returns
-	 * {@link Specification#unrestricted()} so callers can continue through the
-	 * pipeline without branching. Otherwise the query string is parsed into an
-	 * RSQL AST, validated with a request-scoped {@link ValidationRSQLVisitor},
-	 * and converted into a {@link Specification} whose predicate is created on
-	 * demand when the specification is later applied.</p>
+	 * <p>Unlike lazy implementations, this method performs RSQL parsing and
+	 * validation immediately. This ensures that these expensive steps are only
+	 * executed once per request, even if the resulting specification is used in
+	 * both count and content queries.</p>
 	 *
-	 * <p>The validation pass collects selector-to-entity-path mappings while
-	 * enforcing the configured logical-operator and depth limits. Those collected
-	 * mappings are then reused by the {@link RSQLJPAPredicateConverter} so that
-	 * predicate construction follows the exact selector translation that was
-	 * validated earlier in the request.</p>
-	 *
-	 * <p>The predicate converter is intentionally configured to disable wildcard
-	 * interpretation for the string equality operator. As a result, an equality
-	 * expression such as {@code name==John*} is treated as an equality check
-	 * against the literal value {@code John*}, not as a prefix match.</p>
-	 *
-	 * <p>Exception handling is normalized as follows:</p>
-	 *
-	 * <p>{@link RSQLParserException} is wrapped in a
-	 * {@link QueryValidationException}. {@link QueryException} subclasses raised
-	 * by validation or downstream components are propagated unchanged. Any other
-	 * unexpected {@link RuntimeException} is wrapped in a
-	 * {@link QueryConfigurationException} because it indicates a failure while
-	 * turning an already parsed request into a JPA predicate.</p>
-	 *
-	 * @param rsqlQuery optional RSQL filter expression
-	 * @param entityClass backing entity type used for JPA predicate creation
-	 * @param dtoClass DTO type that defines the allowed selector contract
-	 * @param allowAndOperation whether logical {@code AND} nodes are allowed
-	 * during validation
-	 * @param allowOrOperation whether logical {@code OR} nodes are allowed during
-	 * validation
-	 * @param maxASTDepth maximum allowed RSQL AST depth during validation
-	 *
-	 * @return unrestricted specification when {@code rsqlQuery} is {@code null},
-	 * otherwise a lazily evaluated specification that recreates the validated
-	 * filter as a JPA predicate when invoked
+	 * @param rsqlQuery optional filter string
+	 * @param dtoClass DTO type for selector contract enforcement
+	 * @param allowAndOperation whether AND nodes are allowed
+	 * @param allowOrOperation whether OR nodes are allowed
+	 * @param maxASTDepth maximum allowed AST depth
+	 * @return specification representing the validated RSQL query
 	 */
-	private Specification<E> createSpecification(
-			@Nullable String rsqlQuery,
-			Class<E> entityClass, Class<?> dtoClass,
+	private Specification<E> createRSQLFilterSpecification(
+			@Nullable String rsqlQuery, Class<?> dtoClass,
 			boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
 		if (rsqlQuery == null) return Specification.unrestricted();
-		return (Root<E> root, CriteriaQuery<?> ignored, CriteriaBuilder cb) -> {
-			try {
-				// Parse the RSQL query into an Abstract Syntax Tree (AST)
-				Node rootNode = rsqlParser.parse(rsqlQuery);
-				// Validate the parsed AST
-				ValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newValidationRSQLVisitor(
-						entityClass,
-						dtoClass,
-						allowAndOperation,
-						allowOrOperation,
-						maxASTDepth
-				);
-				rootNode.accept(visitor, NodeMetadata.of(0));
+		try {
+			// Parse the RSQL query into an Abstract Syntax Tree (AST)
+			Node rootNode = rsqlParser.parse(rsqlQuery);
+			// Validate the parsed AST
+			ValidationRSQLVisitor visitor = validationRSQLVisitorFactory.newValidationRSQLVisitor(
+					getEntityClass(),
+					dtoClass,
+					allowAndOperation,
+					allowOrOperation,
+					maxASTDepth
+			);
+			rootNode.accept(visitor, NodeMetadata.of(0));
 
-				// Convert AST into Predicate
-				RSQLJPAPredicateConverter predicateConverter = new RSQLJPAPredicateConverter(
-						cb,
-						visitor.getFieldMappings(),
-						customPredicates,
-						null,
-						null,
-						null,
-						// prevents wildcard parsing for string equality operator
-						// so that "name==John*" is treated as: name equals 'John*'
-						// rather than: name starts with 'John'
-						true,
-						null,
-						JsonbConfiguration.DEFAULT
-				);
-				return rootNode.accept(predicateConverter, root);
-			}
-			catch (RSQLParserException ex) {
-				throw new QueryValidationException(
-						MessageFormat.format(
-								"Unable to parse RSQL query: {0}", rsqlQuery
-						), ex
-				);
-			}
-			catch (QueryException ex) {
-				throw ex;
-			}
-			catch (RuntimeException ex) {
-				throw new QueryConfigurationException(
-						MessageFormat.format(
-								"Failed to construct Predicate from RSQL query: {0}", rsqlQuery
-						), ex
-				);
-			}
-		};
+			return (Root<E> root, CriteriaQuery<?> ignored, CriteriaBuilder cb) -> {
+				try {
+					// Convert AST into Predicate
+					RSQLJPAPredicateConverter predicateConverter = new RSQLJPAPredicateConverter(
+							cb,
+							visitor.getFieldMappings(),
+							customPredicates,
+							null,
+							null,
+							null,
+							// prevents wildcard parsing for string equality operator
+							// so that "name==John*" is treated as: name equals 'John*'
+							// rather than: name starts with 'John'
+							true,
+							null,
+							JsonbConfiguration.DEFAULT
+					);
+					return rootNode.accept(predicateConverter, root);
+				}
+				catch (Exception ex) {
+					throw new QueryConfigurationException(MessageFormat.format(
+							"Failed to convert RSQL AST to JPA Predicate: {0}", ex.getMessage()
+					), ex);
+				}
+			};
+		}
+		catch (RSQLParserException ex) {
+			throw new QueryValidationException(
+					MessageFormat.format(
+							"Unable to parse RSQL query: {0}", rsqlQuery
+					), ex
+			);
+		}
+		catch (QueryException ex) {
+			throw ex;
+		}
+		catch (RuntimeException ex) {
+			throw new QueryConfigurationException(
+					MessageFormat.format(
+							"Failed to construct Predicate from RSQL query: {0}", rsqlQuery
+					), ex
+			);
+		}
 	}
 
 	/**
@@ -447,14 +471,13 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	 * @param sort sort specification supplied through the current {@link Pageable}
 	 * @param root root entity path for the query being constructed
 	 * @param cb criteria builder used to create ascending and descending orders
-	 * @param entityClass backing entity type used for selector translation
 	 * @param dtoClass DTO type that defines the sortable selector contract
 	 *
 	 * @return JPA order list corresponding to the requested sort specification
 	 */
-	private List<Order> mapSortToJpaOrders(Sort sort, Root<E> root, CriteriaBuilder cb, Class<E> entityClass, Class<?> dtoClass) {
+	private List<Order> mapSortToJpaOrders(Sort sort, Root<E> root, CriteriaBuilder cb, Class<?> dtoClass) {
 		try {
-			DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(entityClass, dtoClass);
+			DTOToEntityPathMapper pathMapper = pathMapperFactory.newMapper(getEntityClass(), dtoClass);
 			List<Order> orders = new ArrayList<>();
 			for (Sort.Order order: sort) {
 				String dtoPath = order.getProperty();
