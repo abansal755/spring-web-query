@@ -25,16 +25,37 @@ import java.util.concurrent.ConcurrentMap;
 
 import static in.co.akshitbansal.springwebquery.tupleconverter.CachedPreferredConstructorDiscoverer.CacheKey;
 
+/**
+ * Creates {@link PreferredConstructorDiscoverer} instances with optional
+ * shared constructor caching.
+ */
 public class PreferredConstructorDiscovererFactory {
 
+	/**
+	 * Shared cache of constructors keyed by DTO type and tuple shape when
+	 * caching is enabled.
+	 */
 	@Nullable
 	private final ConcurrentMap<CacheKey, Constructor<?>> constructorCache;
 
+	/**
+	 * Creates a factory that produces cached or uncached discoverers.
+	 *
+	 * @param useCache whether discoverers should share a constructor cache
+	 */
 	public PreferredConstructorDiscovererFactory(boolean useCache) {
 		if (useCache) constructorCache = new ConcurrentHashMap<>();
 		else constructorCache = null;
 	}
 
+	/**
+	 * Creates a discoverer for the supplied DTO type.
+	 *
+	 * @param clazz DTO type whose constructors will be inspected
+	 * @param <T> target DTO type
+	 *
+	 * @return cached or uncached discoverer depending on factory configuration
+	 */
 	public <T> PreferredConstructorDiscoverer<T> newDiscoverer(@NonNull Class<T> clazz) {
 		if (constructorCache != null)
 			return new CachedPreferredConstructorDiscoverer<>(clazz, constructorCache);

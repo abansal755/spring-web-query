@@ -30,6 +30,9 @@ import org.springframework.context.annotation.Bean;
 /**
  * Auto-configuration that wires the core factories used by query validation
  * and DTO/entity path translation.
+ *
+ * <p>This configuration also exposes the factories used to discover DTO
+ * constructors and create tuple converters for projected query results.</p>
  */
 @AutoConfiguration
 @Slf4j
@@ -87,6 +90,16 @@ public class FactoryAutoConfig {
 		return new ValidationRSQLVisitorFactory(pathMapperFactory, filterableFieldValidator);
 	}
 
+	/**
+	 * Creates the constructor discoverer factory used for tuple projection
+	 * materialization.
+	 *
+	 * @param cachingEnabled whether constructor discovery should share a global
+	 * cache across converter instances
+	 *
+	 * @return constructor discoverer factory configured for cached or uncached
+	 * operation
+	 */
 	@Bean
 	public PreferredConstructorDiscovererFactory preferredConstructorDiscovererFactory(
 			@Value("${spring-web-query.constructor-discovery.caching.enabled:true}") boolean cachingEnabled
@@ -94,6 +107,14 @@ public class FactoryAutoConfig {
 		return new PreferredConstructorDiscovererFactory(cachingEnabled);
 	}
 
+	/**
+	 * Creates the tuple converter factory used by repository projections.
+	 *
+	 * @param discovererFactory constructor discoverer factory used to back new
+	 * converters
+	 *
+	 * @return tuple converter factory
+	 */
 	@Bean
 	public TupleConverterFactory tupleConverterFactory(PreferredConstructorDiscovererFactory discovererFactory) {
 		return new TupleConverterFactory(discovererFactory);

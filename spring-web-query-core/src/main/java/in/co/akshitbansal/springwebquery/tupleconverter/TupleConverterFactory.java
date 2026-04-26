@@ -19,12 +19,27 @@ package in.co.akshitbansal.springwebquery.tupleconverter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Creates {@link TupleConverter} instances backed by discoverers from a shared
+ * {@link PreferredConstructorDiscovererFactory}.
+ */
 @RequiredArgsConstructor
 public class TupleConverterFactory {
 
+	/**
+	 * Factory used to create discoverers for target DTO types.
+	 */
 	@NonNull
 	private final PreferredConstructorDiscovererFactory discovererFactory;
 
+	/**
+	 * Creates a converter for the supplied DTO type.
+	 *
+	 * @param clazz DTO type to instantiate from tuples
+	 * @param <T> target DTO type
+	 *
+	 * @return tuple converter backed by a discoverer from this factory
+	 */
 	public <T> TupleConverter<T> newConverter(@NonNull Class<T> clazz) {
 		PreferredConstructorDiscoverer<T> discoverer = discovererFactory.newDiscoverer(clazz);
 		return new TupleConverter<>(discoverer);

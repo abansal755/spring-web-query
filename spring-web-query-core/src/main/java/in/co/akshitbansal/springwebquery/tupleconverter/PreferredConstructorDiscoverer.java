@@ -66,6 +66,11 @@ public class PreferredConstructorDiscoverer<T> {
 	@NonNull
 	protected final Class<T> clazz;
 
+	/**
+	 * Returns the DTO type whose constructors this discoverer inspects.
+	 *
+	 * @return target DTO type
+	 */
 	public Class<T> getTargetClass() {
 		return clazz;
 	}

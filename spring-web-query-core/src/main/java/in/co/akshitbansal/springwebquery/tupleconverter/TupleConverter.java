@@ -29,13 +29,21 @@ import java.text.MessageFormat;
 
 /**
  * Converts JPA {@link Tuple} results into DTO instances by invoking a matching
- * constructor.
+ * constructor discovered for the target DTO type.
+ *
+ * <p>Constructor selection is delegated to the supplied
+ * {@link PreferredConstructorDiscoverer}. Once a matching constructor has been
+ * found for the first tuple shape seen by this converter, that constructor is
+ * cached on the converter instance for subsequent conversions.</p>
  *
  * @param <T> target DTO type
  */
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class TupleConverter<T> implements Converter<Tuple, T> {
 
+	/**
+	 * Discoverer used to locate a constructor compatible with incoming tuples.
+	 */
 	@NonNull
 	private final PreferredConstructorDiscoverer<T> discoverer;
 

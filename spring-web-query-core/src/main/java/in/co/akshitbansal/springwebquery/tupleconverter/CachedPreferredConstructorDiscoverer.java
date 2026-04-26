@@ -25,15 +25,38 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * Cached {@link PreferredConstructorDiscoverer} variant that memoizes
+ * constructor matches by target DTO type and tuple shape.
+ *
+ * @param <T> target DTO type
+ */
 public class CachedPreferredConstructorDiscoverer<T> extends PreferredConstructorDiscoverer<T> {
 
+	/**
+	 * Shared cache of constructors previously matched to DTO/tuple shapes.
+	 */
 	private final ConcurrentMap<CacheKey, Constructor<?>> constructorCache;
 
+	/**
+	 * Creates a cached discoverer for one target DTO type.
+	 *
+	 * @param clazz DTO type whose constructors will be inspected
+	 * @param constructorCache shared cache used across discoverer instances
+	 */
 	CachedPreferredConstructorDiscoverer(@NonNull Class<T> clazz, @NonNull ConcurrentMap<CacheKey, Constructor<?>> constructorCache) {
 		super(clazz);
 		this.constructorCache = constructorCache;
 	}
 
+	/**
+	 * Finds a constructor for the supplied tuple, serving the result from the
+	 * shared cache whenever the tuple shape has already been seen.
+	 *
+	 * @param tuple tuple whose values will be passed to the constructor
+	 *
+	 * @return cached or freshly discovered matching constructor
+	 */
 	@Override
 	public Constructor<T> discover(@NonNull Tuple tuple) {
 		// noinspection unchecked
@@ -43,6 +66,16 @@ public class CachedPreferredConstructorDiscoverer<T> extends PreferredConstructo
 		);
 	}
 
+	/**
+	 * Builds the cache key for one constructor lookup request.
+	 *
+	 * <p>The key is defined by the target DTO type and the ordered Java types of
+	 * the tuple elements. Tuple values and aliases are not considered.</p>
+	 *
+	 * @param tuple tuple whose positional shape identifies the constructor lookup
+	 *
+	 * @return cache key for the requested tuple conversion
+	 */
 	private CacheKey newCacheKey(Tuple tuple) {
 		List<Class<?>> parameterTypes = new ArrayList<>();
 		for(TupleElement<?> tupleElement: tuple.getElements())
@@ -50,13 +83,23 @@ public class CachedPreferredConstructorDiscoverer<T> extends PreferredConstructo
 		return CacheKey.of(clazz, parameterTypes);
 	}
 
+	/**
+	 * Cache key representing one DTO constructor lookup by tuple shape.
+	 */
 	@RequiredArgsConstructor(staticName = "of")
 	@Getter
 	@EqualsAndHashCode
 	@ToString
 	static class CacheKey {
 
+		/**
+		 * DTO type whose constructor is being resolved.
+		 */
 		private final Class<?> clazz;
+
+		/**
+		 * Positional tuple element types used to match a constructor.
+		 */
 		private final List<Class<?>> parameterTypes;
 	}
 }
