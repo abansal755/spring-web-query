@@ -89,7 +89,7 @@ public class FactoryAutoConfig {
 
 	@Bean
 	public PreferredConstructorDiscovererFactory preferredConstructorDiscovererFactory(
-			@Value("${spring-web-query.constructer-discovery.caching.enabled:true}") boolean cachingEnabled
+			@Value("${spring-web-query.constructor-discovery.caching.enabled:true}") boolean cachingEnabled
 	) {
 		return new PreferredConstructorDiscovererFactory(cachingEnabled);
 	}
