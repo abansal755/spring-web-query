@@ -107,7 +107,7 @@ public class ValidationRSQLVisitor implements RSQLVisitor<Void, NodeMetadata> {
 	 * @param pathMapper mapper used to resolve DTO selectors to entity paths
 	 * @param filterableFieldValidator validator for terminal-field filterability
 	 */
-	public ValidationRSQLVisitor(
+	ValidationRSQLVisitor(
 			boolean allowAndOperation,
 			boolean allowOrOperation,
 			int maxASTDepth,
