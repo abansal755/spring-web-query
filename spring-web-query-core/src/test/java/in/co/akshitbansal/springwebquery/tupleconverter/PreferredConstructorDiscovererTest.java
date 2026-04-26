@@ -32,16 +32,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PreferredConstructorDiscovererTest {
 
-	private final PreferredConstructorDiscoverer<Address> discoverer = PreferredConstructorDiscoverer.of(Address.class);
+	private final PreferredConstructorDiscoverer<Address> discoverer = new PreferredConstructorDiscoverer<>(Address.class);
 
 	@Test
 	void testConstructionWithNullClass() {
-		assertThrows(NullPointerException.class, () -> PreferredConstructorDiscoverer.of(null));
+		assertThrows(NullPointerException.class, () -> new PreferredConstructorDiscoverer<>(null));
 	}
 
 	@Test
 	void testConstructionWithNonNullClass() {
-		assertDoesNotThrow(() -> PreferredConstructorDiscoverer.of(Address.class));
+		assertDoesNotThrow(() -> new PreferredConstructorDiscoverer<>(Address.class));
 	}
 
 	@Test

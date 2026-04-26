@@ -28,6 +28,7 @@ import in.co.akshitbansal.springwebquery.exception.QueryValidationException;
 import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapper;
 import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapperFactory;
 import in.co.akshitbansal.springwebquery.tupleconverter.TupleConverter;
+import in.co.akshitbansal.springwebquery.tupleconverter.TupleConverterFactory;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import io.github.perplexhub.rsql.RSQLCustomPredicate;
 import io.github.perplexhub.rsql.RSQLJPAPredicateConverter;
@@ -110,6 +111,8 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 	 */
 	private final SortableFieldValidator sortableFieldValidator;
 
+	private final TupleConverterFactory tupleConverterFactory;
+
 	/**
 	 * Default repository-wide setting for logical {@code AND} support.
 	 */
@@ -136,6 +139,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 			@NonNull List<RSQLCustomPredicate<?>> customPredicates,
 			@NonNull DTOToEntityPathMapperFactory pathMapperFactory,
 			@NonNull SortableFieldValidator sortableFieldValidator,
+			@NonNull TupleConverterFactory tupleConverterFactory,
 			@Value("${spring-web-query.filtering.allow-and-operation:true}") boolean globalAllowAndOperation,
 			@Value("${spring-web-query.filtering.allow-or-operation:false}") boolean globalAllowOrOperation,
 			@Value("${spring-web-query.filtering.max-ast-depth:1}") int globalMaxASTDepth
@@ -146,6 +150,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		this.customPredicates = customPredicates;
 		this.pathMapperFactory = pathMapperFactory;
 		this.sortableFieldValidator = sortableFieldValidator;
+		this.tupleConverterFactory = tupleConverterFactory;
 		this.globalAllowAndOperation = globalAllowAndOperation;
 		this.globalAllowOrOperation = globalAllowOrOperation;
 		this.globalMaxASTDepth = globalMaxASTDepth;
@@ -314,7 +319,7 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		// Execute query
 		List<Tuple> results = typedQuery.getResultList();
 		// Convert the results to the desired DTO class
-		TupleConverter<D> converter = TupleConverter.of(dtoClass);
+		TupleConverter<D> converter = tupleConverterFactory.newConverter(dtoClass);
 		return results
 				.stream()
 				.map(converter::convert)

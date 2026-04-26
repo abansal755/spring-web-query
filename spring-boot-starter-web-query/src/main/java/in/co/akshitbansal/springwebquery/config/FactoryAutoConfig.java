@@ -18,6 +18,8 @@ package in.co.akshitbansal.springwebquery.config;
 
 import in.co.akshitbansal.springwebquery.ast.ValidationRSQLVisitorFactory;
 import in.co.akshitbansal.springwebquery.pathmapper.DTOToEntityPathMapperFactory;
+import in.co.akshitbansal.springwebquery.tupleconverter.PreferredConstructorDiscovererFactory;
+import in.co.akshitbansal.springwebquery.tupleconverter.TupleConverterFactory;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,5 +85,17 @@ public class FactoryAutoConfig {
 			FilterableFieldValidator filterableFieldValidator
 	) {
 		return new ValidationRSQLVisitorFactory(pathMapperFactory, filterableFieldValidator);
+	}
+
+	@Bean
+	public PreferredConstructorDiscovererFactory preferredConstructorDiscovererFactory(
+			@Value("${spring-web-query.constructer-discovery.caching.enabled:true}") boolean cachingEnabled
+	) {
+		return new PreferredConstructorDiscovererFactory(cachingEnabled);
+	}
+
+	@Bean
+	public TupleConverterFactory tupleConverterFactory(PreferredConstructorDiscovererFactory discovererFactory) {
+		return new TupleConverterFactory(discovererFactory);
 	}
 }

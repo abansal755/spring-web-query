@@ -18,6 +18,7 @@ package in.co.akshitbansal.springwebquery.tupleconverter;
 
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import jakarta.persistence.Tuple;
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -32,14 +33,11 @@ import java.text.MessageFormat;
  *
  * @param <T> target DTO type
  */
-@RequiredArgsConstructor(staticName = "of")
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class TupleConverter<T> implements Converter<Tuple, T> {
 
-	/**
-	 * DTO type to instantiate for each tuple.
-	 */
 	@NonNull
-	private final Class<T> targetType;
+	private final PreferredConstructorDiscoverer<T> discoverer;
 
 	/**
 	 * Lazily discovered constructor cached for repeated conversions.
@@ -63,10 +61,8 @@ public class TupleConverter<T> implements Converter<Tuple, T> {
 			// synchronization with double-checking
 			if (cachedConstructor == null) {
 				synchronized (this) {
-					if (cachedConstructor == null) {
-						PreferredConstructorDiscoverer<T> discoverer = PreferredConstructorDiscoverer.of(targetType);
+					if (cachedConstructor == null)
 						cachedConstructor = discoverer.discover(tuple);
-					}
 				}
 			}
 			// cachedConstructor will never be null here, so it is safe to invoke newInstance
@@ -77,7 +73,7 @@ public class TupleConverter<T> implements Converter<Tuple, T> {
 			throw new QueryConfigurationException(
 					MessageFormat.format(
 							"Failed to convert tuple to {0}: {1}",
-							targetType.getName(), ex.getMessage()
+							discoverer.getTargetClass().getName(), ex.getMessage()
 					), ex
 			);
 		}

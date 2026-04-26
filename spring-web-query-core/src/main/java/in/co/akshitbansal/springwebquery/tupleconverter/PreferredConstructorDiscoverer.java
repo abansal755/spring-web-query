@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.tupleconverter;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.PersistenceCreator;
@@ -56,14 +57,18 @@ import java.util.stream.Collectors;
  *
  * @param <T> target DTO type
  */
-@RequiredArgsConstructor(staticName = "of")
-class PreferredConstructorDiscoverer<T> {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public class PreferredConstructorDiscoverer<T> {
 
 	/**
 	 * DTO type whose constructors are inspected.
 	 */
 	@NonNull
-	private final Class<T> clazz;
+	protected final Class<T> clazz;
+
+	public Class<T> getTargetClass() {
+		return clazz;
+	}
 
 	/**
 	 * Finds a constructor whose parameter list is compatible with the supplied

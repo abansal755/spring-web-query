@@ -33,16 +33,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TupleConverterTest {
 
-	private final TupleConverter<Address> converter = TupleConverter.of(Address.class);
+	private final TupleConverter<Address> converter = new TupleConverter<>(new PreferredConstructorDiscoverer<>(Address.class));
 
 	@Test
 	void testConstructionWithNullClass() {
-		assertThrows(NullPointerException.class, () -> TupleConverter.of(null));
+		assertThrows(NullPointerException.class, () -> new TupleConverter<>(null));
 	}
 
 	@Test
 	void testConstructionWithNonNullClass() {
-		assertDoesNotThrow(() -> TupleConverter.of(Address.class));
+		assertDoesNotThrow(() -> new TupleConverter<>(new PreferredConstructorDiscoverer<>(Address.class)));
 	}
 
 	@Test
@@ -66,7 +66,7 @@ class TupleConverterTest {
 		Tuple tuple = new TupleImpl(metadata, new Object[]{ "city" });
 
 		// New instance to test caching
-		TupleConverter<Address> converter = TupleConverter.of(Address.class);
+		TupleConverter<Address> converter = new TupleConverter<>(new PreferredConstructorDiscoverer<>(Address.class));
 
 		// Should be null initially
 		var constructor = getCachedConstructor(converter);
