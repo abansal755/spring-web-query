@@ -20,7 +20,6 @@ import in.co.akshitbansal.springwebquery.operator.RSQLCustomOperator;
 import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Map;
@@ -38,7 +37,6 @@ public class ValidatorAutoConfig {
 	 * @return sortable field validator
 	 */
 	@Bean
-	@ConditionalOnMissingBean
 	public SortableFieldValidator sortableFieldValidator() {
 		return new SortableFieldValidator();
 	}
@@ -52,7 +50,6 @@ public class ValidatorAutoConfig {
 	 * @return filterable field validator
 	 */
 	@Bean
-	@ConditionalOnMissingBean
 	public FilterableFieldValidator filterableFieldValidator(Map<Class<?>, RSQLCustomOperator<?>> customOperatorMap) {
 		return new FilterableFieldValidator(customOperatorMap);
 	}
