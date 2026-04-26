@@ -19,7 +19,6 @@ package in.co.akshitbansal.springwebquery.config;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Set;
@@ -38,7 +37,6 @@ public class RSQLParserAutoConfig {
 	 * @return configured RSQL parser
 	 */
 	@Bean
-	@ConditionalOnMissingBean
 	public RSQLParser rsqlParser(Set<ComparisonOperator> allowedOperatorSet) {
 		return new RSQLParser(allowedOperatorSet);
 	}

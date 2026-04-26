@@ -22,7 +22,6 @@ import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
@@ -49,7 +48,6 @@ public class FactoryAutoConfig {
 			havingValue = "true",
 			matchIfMissing = true
 	)
-	@ConditionalOnMissingBean
 	public DTOToEntityPathMapperFactory dtoToEntityPathMapperFactoryWithCaching(
 			@Value("${spring-web-query.field-resolution.caching.failed-resolutions-max-capacity:1000}") int failedResolutionsMaxCapacity,
 			@Value("${spring-web-query.field-resolution.caching.lock-stripe-count:32}") int lockStripeCount
@@ -67,7 +65,6 @@ public class FactoryAutoConfig {
 			name = "spring-web-query.field-resolution.caching.enabled",
 			havingValue = "false"
 	)
-	@ConditionalOnMissingBean
 	public DTOToEntityPathMapperFactory dtoToEntityPathMapperFactoryWithoutCaching() {
 		return new DTOToEntityPathMapperFactory();
 	}
@@ -81,7 +78,6 @@ public class FactoryAutoConfig {
 	 * @return validation visitor factory
 	 */
 	@Bean
-	@ConditionalOnMissingBean
 	public ValidationRSQLVisitorFactory validationRSQLVisitorFactory(
 			DTOToEntityPathMapperFactory pathMapperFactory,
 			FilterableFieldValidator filterableFieldValidator
