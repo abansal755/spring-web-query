@@ -13,6 +13,7 @@ jobs:
                     - ReflectiveFieldResolverBenchmark
                     - DTOToEntityPathMapperBenchmark
                     - CachedDTOToEntityPathMapperBenchmark
+                    - ListHashingBenchmark
         
         steps:
             - name: Checkout
