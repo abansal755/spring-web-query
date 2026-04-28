@@ -16,6 +16,7 @@ jobs:
                     - ListHashingBenchmark
                     - PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
                     - PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructors
+                    - CachedPreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
         
         steps:
             - name: Checkout
