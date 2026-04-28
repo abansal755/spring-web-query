@@ -64,7 +64,7 @@ public class CachedPreferredConstructorDiscovererBenchmarkWithGrowingNumberOfCon
 
 			DynamicType.Builder<?> builder = new ByteBuddy()
 					.subclass(Object.class, ConstructorStrategy.Default.NO_CONSTRUCTORS)
-					.name("in.co.akshitbansal.springwebquery.jmh.benchmark.CachedGrowingNumberOfConstructorParamsTestClass" + size)
+					.name("in.co.akshitbansal.springwebquery.jmh.benchmark.CacheMissGrowingNumberOfConstructorParamsTestClass" + size)
 					.defineConstructor(Visibility.PUBLIC)
 					.withParameters(constructorParams)
 					.intercept(MethodCall.invoke(Object.class.getConstructor()));
@@ -127,7 +127,7 @@ public class CachedPreferredConstructorDiscovererBenchmarkWithGrowingNumberOfCon
 
 			DynamicType.Builder<?> builder = new ByteBuddy()
 					.subclass(Object.class, ConstructorStrategy.Default.NO_CONSTRUCTORS)
-					.name("in.co.akshitbansal.springwebquery.jmh.benchmark.CachedGrowingNumberOfConstructorParamsTestClass" + size)
+					.name("in.co.akshitbansal.springwebquery.jmh.benchmark.CacheHitGrowingNumberOfConstructorParamsTestClass" + size)
 					.defineConstructor(Visibility.PUBLIC)
 					.withParameters(constructorParams)
 					.intercept(MethodCall.invoke(Object.class.getConstructor()));

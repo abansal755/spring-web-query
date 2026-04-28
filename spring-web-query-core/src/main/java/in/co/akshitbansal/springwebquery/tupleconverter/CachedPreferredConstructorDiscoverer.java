@@ -86,7 +86,6 @@ public class CachedPreferredConstructorDiscoverer<T> extends PreferredConstructo
 	/**
 	 * Cache key representing one DTO constructor lookup by tuple shape.
 	 */
-	@RequiredArgsConstructor(staticName = "of")
 	@Getter
 	@EqualsAndHashCode
 	@ToString
@@ -101,5 +100,14 @@ public class CachedPreferredConstructorDiscoverer<T> extends PreferredConstructo
 		 * Positional tuple element types used to match a constructor.
 		 */
 		private final List<Class<?>> parameterTypes;
+
+		private CacheKey(@NonNull Class<?> clazz, @NonNull List<Class<?>> parameterTypes) {
+			this.clazz = clazz;
+			this.parameterTypes = List.copyOf(parameterTypes);
+		}
+
+		public static CacheKey of(@NonNull Class<?> clazz, @NonNull List<Class<?>> parameterTypes) {
+			return new CacheKey(clazz, parameterTypes);
+		}
 	}
 }
