@@ -150,7 +150,7 @@ public class PreferredConstructorDiscoverer<T> {
 	 * Converts primitive types to their boxed equivalents before assignability
 	 * checks are performed.
 	 */
-	private Class<?> wrap(Class<?> clazz) {
+	protected Class<?> wrap(Class<?> clazz) {
 		if (!clazz.isPrimitive()) return clazz;
 		if (clazz == int.class) return Integer.class;
 		if (clazz == long.class) return Long.class;

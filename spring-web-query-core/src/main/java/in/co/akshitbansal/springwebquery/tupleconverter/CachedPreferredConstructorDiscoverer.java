@@ -79,7 +79,7 @@ public class CachedPreferredConstructorDiscoverer<T> extends PreferredConstructo
 	private CacheKey newCacheKey(Tuple tuple) {
 		List<Class<?>> parameterTypes = new ArrayList<>();
 		for(TupleElement<?> tupleElement: tuple.getElements())
-			parameterTypes.add(tupleElement.getJavaType());
+			parameterTypes.add(wrap(tupleElement.getJavaType()));
 		return CacheKey.of(clazz, parameterTypes);
 	}
 
