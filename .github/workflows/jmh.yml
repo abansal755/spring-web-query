@@ -13,6 +13,10 @@ jobs:
                     - ReflectiveFieldResolverBenchmark
                     - DTOToEntityPathMapperBenchmark
                     - CachedDTOToEntityPathMapperBenchmark
+                    - ListHashingBenchmark
+                    - PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
+                    - PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructors
+                    - CachedPreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
         
         steps:
             - name: Checkout

@@ -19,6 +19,7 @@ package in.co.akshitbansal.springwebquery.tupleconverter;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.PersistenceCreator;
@@ -56,14 +57,23 @@ import java.util.stream.Collectors;
  *
  * @param <T> target DTO type
  */
-@RequiredArgsConstructor(staticName = "of")
-class PreferredConstructorDiscoverer<T> {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public class PreferredConstructorDiscoverer<T> {
 
 	/**
 	 * DTO type whose constructors are inspected.
 	 */
 	@NonNull
-	private final Class<T> clazz;
+	protected final Class<T> clazz;
+
+	/**
+	 * Returns the DTO type whose constructors this discoverer inspects.
+	 *
+	 * @return target DTO type
+	 */
+	public Class<T> getTargetClass() {
+		return clazz;
+	}
 
 	/**
 	 * Finds a constructor whose parameter list is compatible with the supplied
@@ -140,7 +150,7 @@ class PreferredConstructorDiscoverer<T> {
 	 * Converts primitive types to their boxed equivalents before assignability
 	 * checks are performed.
 	 */
-	private Class<?> wrap(Class<?> clazz) {
+	protected Class<?> wrap(Class<?> clazz) {
 		if (!clazz.isPrimitive()) return clazz;
 		if (clazz == int.class) return Integer.class;
 		if (clazz == long.class) return Long.class;

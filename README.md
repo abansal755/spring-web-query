@@ -378,13 +378,14 @@ If a query exceeds the configured depth, the library throws a `QueryMaxASTDepthE
 
 ### Performance & Caching
 
-The library caches the reflective mapping between DTO fields and Entity paths to ensure minimal overhead per request.
+The library caches the reflective mapping between DTO fields and Entity paths to ensure minimal overhead per request. It also caches discovered constructors used for Tuple projections.
 
 | Property | Default | Description |
 | :--- | :--- | :--- |
 | `spring-web-query.field-resolution.caching.enabled` | `true` | Enables or disables the path resolution cache. |
 | `spring-web-query.field-resolution.caching.failed-resolutions-max-capacity` | `1000` | The maximum number of failed path resolutions to cache (prevents repeated failed reflective lookups for invalid fields). |
 | `spring-web-query.field-resolution.caching.lock-stripe-count` | `32` | Number of stripes for the fine-grained locking used during cache population. |
+| `spring-web-query.constructor-discovery.caching.enabled` | `true` | Enables or disables the global cache for DTO constructor discovery. |
 
 ---
 
