@@ -341,7 +341,7 @@ Reference your operator class in the `@RSQLFilterable` annotation.
 public class MyDTO {
     
     @RSQLFilterable(customOperators = IsMondayOperator.class)
-    Instant createdAt
+    Instant createdAt;
 }
 ```
 
