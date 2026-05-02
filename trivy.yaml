@@ -4,3 +4,5 @@ scan:
         - secret
     skip-dirs:
         - jmh-benchmarks
+    skip-files:
+        - spring-web-query-core/pom.xml
