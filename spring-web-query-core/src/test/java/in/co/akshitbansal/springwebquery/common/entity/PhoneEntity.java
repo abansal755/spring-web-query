@@ -18,6 +18,8 @@ package in.co.akshitbansal.springwebquery.common.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Table(name = "phones")
@@ -30,6 +32,8 @@ public class PhoneEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "user_id")
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
 	private UserEntity user;
 
 	@Column(name = "phone_number")

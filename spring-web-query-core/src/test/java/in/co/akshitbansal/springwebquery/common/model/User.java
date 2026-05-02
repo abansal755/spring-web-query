@@ -45,13 +45,14 @@ public class User {
 	private Phone[] phones;
 	private List<Address> addresses;
 
+	private static final ObjectMapper objectMapper = new ObjectMapper();
+
 	@PersistenceCreator
 	private User(Long id, String email, String firstName, String lastName, String phones, String addresses) throws JsonProcessingException {
 		this.id = id;
 		this.email = email;
 		this.name = new Name(firstName, lastName);
 
-		ObjectMapper objectMapper = new ObjectMapper();
 		this.phones = objectMapper.readValue(phones, new TypeReference<Phone[]>() {});
 		this.addresses = objectMapper.readValue(addresses, new TypeReference<List<Address>>() {});
 	}
