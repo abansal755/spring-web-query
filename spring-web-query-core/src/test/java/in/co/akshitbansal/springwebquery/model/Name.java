@@ -17,7 +17,9 @@
 package in.co.akshitbansal.springwebquery.model;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
 import in.co.akshitbansal.springwebquery.annotation.Sortable;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import lombok.Data;
 
 @Data
@@ -25,6 +27,7 @@ public class Name {
 
 	@MapsTo(value = "firstName", absolute = true)
 	@Sortable
+	@RSQLFilterable(RSQLDefaultOperator.IGNORE_CASE)
 	private String firstName;
 
 	@MapsTo(value = "lastName", absolute = true)
