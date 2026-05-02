@@ -16,9 +16,9 @@
 
 package in.co.akshitbansal.springwebquery.pathmapper;
 
-import in.co.akshitbansal.springwebquery.entity.UserEntity;
+import in.co.akshitbansal.springwebquery.common.entity.UserEntity;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
-import in.co.akshitbansal.springwebquery.model.User;
+import in.co.akshitbansal.springwebquery.common.model.User;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -16,12 +16,12 @@
 
 package in.co.akshitbansal.springwebquery.pathmapper;
 
-import in.co.akshitbansal.springwebquery.entity.UserEntity;
+import in.co.akshitbansal.springwebquery.common.entity.UserEntity;
 import in.co.akshitbansal.springwebquery.exception.QueryConfigurationException;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
-import in.co.akshitbansal.springwebquery.model.Name;
-import in.co.akshitbansal.springwebquery.model.Phone;
-import in.co.akshitbansal.springwebquery.model.User;
+import in.co.akshitbansal.springwebquery.common.model.Name;
+import in.co.akshitbansal.springwebquery.common.model.Phone;
+import in.co.akshitbansal.springwebquery.common.model.User;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;

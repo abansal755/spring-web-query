@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.entity;
+package in.co.akshitbansal.springwebquery.repository;
 
-import lombok.Data;
+import in.co.akshitbansal.springwebquery.common.entity.UserEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
-@Data
-public class UserEntity {
-
-	private Long id;
-	private String email;
-	private String firstName;
-	private String lastName;
-	private List<PhoneEntity> phones;
-	private List<AddressEntity> addresses;
+@Repository
+public interface UserRepository extends JpaRepository<UserEntity, Long>, WebQueryRepository<UserEntity> {
 }

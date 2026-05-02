@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.entity;
+package in.co.akshitbansal.springwebquery.common.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 
 @Data
-public class PhoneEntity {
+@NoArgsConstructor
+public class Address {
 
-	private Long id;
-	private String phoneNumber;
+	// Intentionally not annotated with @MapsTo to test failure scenarios
+	private String city;
+
+	@PersistenceCreator
+	private Address(String city) {
+		this.city = city;
+	}
 }

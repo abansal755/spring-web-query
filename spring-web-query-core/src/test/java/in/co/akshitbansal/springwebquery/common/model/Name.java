@@ -14,21 +14,27 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.model;
+package in.co.akshitbansal.springwebquery.common.model;
 
+import in.co.akshitbansal.springwebquery.annotation.MapsTo;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
+import in.co.akshitbansal.springwebquery.annotation.Sortable;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.PersistenceCreator;
 
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
-public class Address {
+public class Name {
 
-	// Intentionally not annotated with @MapsTo to test failure scenarios
-	private String city;
+	@MapsTo(value = "firstName", absolute = true)
+	@Sortable
+	@RSQLFilterable(RSQLDefaultOperator.IGNORE_CASE)
+	private String firstName;
 
-	@PersistenceCreator
-	private Address(String city) {
-		this.city = city;
-	}
+	@MapsTo(value = "lastName", absolute = true)
+	// Explicitly not annotated with @Sortable
+	private String lastName;
 }

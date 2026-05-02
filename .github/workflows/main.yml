@@ -21,10 +21,10 @@ jobs:
                 java-version:
                     - 17
                     - 21
-                spring-boot-version:
-                    - 3.5.13
-                    - 4.0.5
-        name: Build (Java ${{ matrix.java-version }}, Spring Boot ${{ matrix.spring-boot-version }})
+                spring-boot-profile:
+                    - boot3
+                    - boot4
+        name: Build (java${{ matrix.java-version }}, ${{ matrix.spring-boot-profile }})
 
         steps:
             - name: Checkout
@@ -39,11 +39,11 @@ jobs:
 
             - name: Build core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean install -Dspring-boot.version=${{ matrix.spring-boot-version }}
+              run: mvn -B -ntp clean install -P${{ matrix.spring-boot-profile }}
 
             - name: Build spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B -ntp clean verify -Dspring-boot.version=${{ matrix.spring-boot-version }}
+              run: mvn -B -ntp clean verify -P${{ matrix.spring-boot-profile }}
 
     jmh-build-test:
         runs-on: ubuntu-latest
@@ -127,7 +127,7 @@ jobs:
 
             - name: Release core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B clean deploy -Prelease -DskipTests
+              run: mvn -B clean deploy -Prelease,boot4 -DskipTests
               env:
                   GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                   MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -135,7 +135,7 @@ jobs:
 
             - name: Release spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B clean deploy -Prelease -DskipTests
+              run: mvn -B clean deploy -Prelease,boot4 -DskipTests
               env:
                   GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                   MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}

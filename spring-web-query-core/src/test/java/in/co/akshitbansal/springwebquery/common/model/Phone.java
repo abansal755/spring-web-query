@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.entity;
+package in.co.akshitbansal.springwebquery.common.model;
 
+import in.co.akshitbansal.springwebquery.annotation.MapsTo;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterableText;
 import lombok.Data;
 
 @Data
-public class AddressEntity {
+public class Phone {
 
-	private Long id;
-	private String userCity;
+	@MapsTo("phoneNumber")
+	@RSQLFilterableText
+	private String number;
 }

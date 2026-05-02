@@ -17,7 +17,7 @@
 package in.co.akshitbansal.springwebquery.validator;
 
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
-import in.co.akshitbansal.springwebquery.model.Name;
+import in.co.akshitbansal.springwebquery.common.model.Name;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;

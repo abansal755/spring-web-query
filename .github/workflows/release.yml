@@ -119,7 +119,7 @@ jobs:
               id: release-core
               working-directory: ${{ github.workspace }}/spring-web-query-core
               run: |
-                  mvn -B clean deploy -Prelease | tee build.log
+                  mvn -B clean deploy -Prelease,boot4 | tee build.log
                   DEPLOYMENT_ID=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
                   if [ -z "$DEPLOYMENT_ID" ]; then
                     echo "Failed to extract DEPLOYMENT_ID"
@@ -135,7 +135,7 @@ jobs:
               id: release-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: |
-                  mvn -B clean deploy -Prelease | tee build.log 
+                  mvn -B clean deploy -Prelease,boot4 | tee build.log 
                   DEPLOYMENT_ID=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
                   if [ -z "$DEPLOYMENT_ID" ]; then
                     echo "Failed to extract DEPLOYMENT_ID"

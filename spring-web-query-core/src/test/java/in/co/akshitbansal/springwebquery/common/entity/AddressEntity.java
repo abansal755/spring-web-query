@@ -14,20 +14,28 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.model;
+package in.co.akshitbansal.springwebquery.common.entity;
 
-import in.co.akshitbansal.springwebquery.annotation.MapsTo;
-import in.co.akshitbansal.springwebquery.annotation.Sortable;
+import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+@Entity
+@Table(name = "addresses")
 @Data
-public class Name {
+public class AddressEntity {
 
-	@MapsTo(value = "firstName", absolute = true)
-	@Sortable
-	private String firstName;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-	@MapsTo(value = "lastName", absolute = true)
-	// Explicitly not annotated with @Sortable
-	private String lastName;
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private UserEntity user;
+
+	@Column(name = "user_city")
+	private String userCity;
 }
