@@ -19,7 +19,7 @@ jobs:
 
             - name: Run tests for core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean test -Pjacoco
+              run: mvn -B -ntp clean test -Pjacoco,boot4
 
             - name: Upload jacoco report
               uses: actions/upload-artifact@v7
