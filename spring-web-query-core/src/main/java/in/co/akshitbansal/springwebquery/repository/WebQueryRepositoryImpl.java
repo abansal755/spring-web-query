@@ -317,17 +317,17 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		Class<E> entityClass = getEntityClass();
 		Root<E> root = query.from(entityClass);
 
-		// SELECT clause
-		List<Selection<?>> selections = selectionsProvider.getSelections(root, query, cb);
-		if (selections.isEmpty()) throw new QueryConfigurationException("No selections provided");
-		Selection<?>[] selectionsArray = selections.toArray(new Selection<?>[0]);
-		query.select(cb.tuple(selectionsArray));
-
 		// WHERE clause
 		if (specification != null) {
 			Predicate predicate = specification.toPredicate(root, query, cb);
 			if (predicate != null) query.where(predicate);
 		}
+
+		// SELECT clause
+		List<Selection<?>> selections = selectionsProvider.getSelections(root, query, cb);
+		if (selections.isEmpty()) throw new QueryConfigurationException("No selections provided");
+		Selection<?>[] selectionsArray = selections.toArray(new Selection<?>[0]);
+		query.select(cb.tuple(selectionsArray));
 
 		// ORDER BY clause
 		List<Order> orders = mapSortToJpaOrders(pageable.getSort(), root, cb, dtoClass);
