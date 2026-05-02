@@ -32,8 +32,19 @@ jobs:
                 echo "ref=refs/heads/${{ inputs.target_branch }}" >> "$GITHUB_OUTPUT"
                 echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+            - name: Set up JDK 17
+              uses: actions/setup-java@v5
+              with:
+                  distribution: temurin
+                  java-version: 17
+                  cache: maven
+
+            - name: Build effective pom for core package
+              working-directory: ${{ github.workspace }}/spring-web-query-core
+              run: mvn -B -ntp help:effective-pom -Pboot4 -Doutput=tmp/pom.xml
+
             - name: Run Trivy (table output)
-              uses: aquasecurity/trivy-action@0.35.0
+              uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
               with:
                 scan-type: 'fs'
                 scan-ref: '.'
@@ -42,7 +53,7 @@ jobs:
                 TRIVY_TABLE_MODE: summary
 
             - name: Run Trivy (generate SARIF)
-              uses: aquasecurity/trivy-action@0.35.0
+              uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
               with:
                 scan-type: 'fs'
                 scan-ref: '.'
