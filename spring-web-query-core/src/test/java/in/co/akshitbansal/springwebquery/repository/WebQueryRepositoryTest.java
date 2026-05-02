@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.integration.repository;
+package in.co.akshitbansal.springwebquery.repository;
 
 import in.co.akshitbansal.springwebquery.common.entity.AddressEntity;
 import in.co.akshitbansal.springwebquery.common.entity.PhoneEntity;

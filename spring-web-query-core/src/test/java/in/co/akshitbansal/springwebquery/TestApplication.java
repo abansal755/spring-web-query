@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.integration;
+package in.co.akshitbansal.springwebquery;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
@@ -29,10 +29,8 @@ import in.co.akshitbansal.springwebquery.validator.FilterableFieldValidator;
 import in.co.akshitbansal.springwebquery.validator.SortableFieldValidator;
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -41,11 +39,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SpringBootApplication
-@EntityScan(basePackages = "in.co.akshitbansal.springwebquery.common.entity")
-@EnableJpaRepositories(basePackages = {
-		"in.co.akshitbansal.springwebquery.integration.repository",
-		"in.co.akshitbansal.springwebquery.repository"
-})
 @Import(RSQLJPAAutoConfiguration.class)
 public class TestApplication {
 
