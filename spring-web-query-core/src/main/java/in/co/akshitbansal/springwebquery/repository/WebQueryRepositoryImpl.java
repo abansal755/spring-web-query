@@ -156,6 +156,38 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		this.globalMaxASTDepth = globalMaxASTDepth;
 	}
 
+	/*
+	  NOTE ON NULLABILITY (Spring Boot 3 vs 4)
+
+	  Starting with Spring Boot 4 (Spring Data 4 / Spring Framework 7),
+	  repository method invocations are intercepted by an internal validator
+	  (NullnessMethodInvocationValidator) that enforces nullability constraints
+	  at runtime.
+
+	  This validator supports:
+	  - JSpecify annotations (e.g. @NullMarked, @Nullable)
+	  - Kotlin nullability
+	  - JSR-305 annotations
+
+	  As a result:
+	  - Parameters marked as non-null (implicitly under @NullMarked) are validated
+	    before method execution.
+	  - Returning null from a method declared as non-null will also fail.
+
+	  In contrast, Spring Boot 3 (Spring Data 3.x):
+	  - Does NOT support JSpecify for runtime validation.
+	  - JSpecify annotations are ignored at runtime.
+
+	  To ensure null-safety on Spring Boot 3 as well, this codebase uses
+	  Lombok's @NonNull on method parameters. Lombok generates explicit
+	  null checks (NullPointerException) at the beginning of the method,
+	  providing consistent runtime enforcement across versions.
+
+	  Implication:
+	  - Spring Boot 4+: nullability enforced by Spring (JSpecify-aware)
+	  - Spring Boot 3: nullability enforced via Lombok-generated checks
+	 */
+
 	/**
 	 * Executes a projected result query using explicit validation settings.
 	 */

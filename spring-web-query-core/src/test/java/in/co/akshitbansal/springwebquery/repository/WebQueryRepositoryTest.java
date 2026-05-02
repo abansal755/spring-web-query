@@ -20,6 +20,7 @@ import in.co.akshitbansal.springwebquery.common.entity.AddressEntity;
 import in.co.akshitbansal.springwebquery.common.entity.PhoneEntity;
 import in.co.akshitbansal.springwebquery.common.entity.UserEntity;
 import in.co.akshitbansal.springwebquery.common.model.User;
+import in.co.akshitbansal.springwebquery.util.MySQLContainerFactory;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +31,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.mysql.MySQLContainer;
 
 import java.util.List;
 
@@ -43,7 +44,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class WebQueryRepositoryTest {
 
 	@Container
-	private static final MySQLContainer mysqlContainer = new MySQLContainer("mysql:9.7.0")
+	private static final JdbcDatabaseContainer<?> mysqlContainer = MySQLContainerFactory
+			.createMySQLContainer("mysql:8.4.9")
 			.withInitScript("init.sql");
 
 	@DynamicPropertySource
@@ -58,27 +60,27 @@ class WebQueryRepositoryTest {
 
 	@Test
 	void testWithNullPageable() {
-		assertThrows(NullPointerException.class, () ->
+		assertThrows(RuntimeException.class, () ->
 				userRepository.findAll(null, null, this::getSelections, User.class));
-		assertThrows(NullPointerException.class, () ->
+		assertThrows(RuntimeException.class, () ->
 				userRepository.findAllPaged(null, null, this::getSelections, User.class));
 	}
 
 	@Test
 	void testWithNullSelectionsProvider() {
-		assertThrows(NullPointerException.class, () ->
+		assertThrows(RuntimeException.class, () ->
 				userRepository.findAll(null, Pageable.unpaged(), null, User.class));
-		assertThrows(NullPointerException.class, () ->
+		assertThrows(RuntimeException.class, () ->
 				userRepository.findAllPaged(null, Pageable.unpaged(), null, User.class));
 	}
 
 	@Test
 	void testWithNullDTOClass() {
-		assertThrows(NullPointerException.class, () ->
+		assertThrows(RuntimeException.class, () ->
 				userRepository.findAll(null, Pageable.unpaged(), this::getSelections, null));
-		assertThrows(NullPointerException.class, () ->
+		assertThrows(RuntimeException.class, () ->
 				userRepository.findAllPaged(null, Pageable.unpaged(), this::getSelections, null));
-		assertThrows(NullPointerException.class, () ->
+		assertThrows(RuntimeException.class, () ->
 				userRepository.count(null, null));
 	}
 
