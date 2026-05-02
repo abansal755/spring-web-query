@@ -19,8 +19,8 @@ package in.co.akshitbansal.springwebquery.pathmapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.Striped;
-import in.co.akshitbansal.springwebquery.entity.UserEntity;
-import in.co.akshitbansal.springwebquery.model.User;
+import in.co.akshitbansal.springwebquery.common.entity.UserEntity;
+import in.co.akshitbansal.springwebquery.common.model.User;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;

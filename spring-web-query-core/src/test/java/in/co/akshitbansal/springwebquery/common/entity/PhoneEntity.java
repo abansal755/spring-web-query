@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.entity;
+package in.co.akshitbansal.springwebquery.common.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.List;
-
+@Entity
+@Table(name = "phones")
 @Data
-public class UserEntity {
+public class PhoneEntity {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	private String email;
-	private String firstName;
-	private String lastName;
-	private List<PhoneEntity> phones;
-	private List<AddressEntity> addresses;
+
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	private UserEntity user;
+
+	@Column(name = "phone_number")
+	private String phoneNumber;
 }

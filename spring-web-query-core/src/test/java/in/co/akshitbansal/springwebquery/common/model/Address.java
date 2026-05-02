@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.model;
+package in.co.akshitbansal.springwebquery.common.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

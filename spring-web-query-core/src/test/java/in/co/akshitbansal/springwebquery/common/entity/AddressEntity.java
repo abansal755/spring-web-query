@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.model;
+package in.co.akshitbansal.springwebquery.common.entity;
 
-import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
-import in.co.akshitbansal.springwebquery.annotation.RSQLFilterableEquality;
-import in.co.akshitbansal.springwebquery.customoperator.IsLongGreaterThanFiveOperator;
+import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.List;
-
+@Entity
+@Table(name = "addresses")
 @Data
-public class User {
+public class AddressEntity {
 
-	@RSQLFilterable(customOperators = IsLongGreaterThanFiveOperator.class)
-	@RSQLFilterableEquality
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	// Explicitly not annotated with @RSQLFilterable
-	private String email;
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	private UserEntity user;
 
-	private Name name;
-	private Phone[] phones;
-	private List<Address> addresses;
+	@Column(name = "user_city")
+	private String userCity;
 }

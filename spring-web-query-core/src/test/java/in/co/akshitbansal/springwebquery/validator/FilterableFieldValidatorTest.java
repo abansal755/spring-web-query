@@ -19,7 +19,7 @@ package in.co.akshitbansal.springwebquery.validator;
 import in.co.akshitbansal.springwebquery.customoperator.IsLongGreaterThanFiveOperator;
 import in.co.akshitbansal.springwebquery.exception.QueryFieldValidationException;
 import in.co.akshitbansal.springwebquery.exception.QueryForbiddenOperatorException;
-import in.co.akshitbansal.springwebquery.model.User;
+import in.co.akshitbansal.springwebquery.common.model.User;
 import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
 import org.junit.jupiter.api.Test;
 

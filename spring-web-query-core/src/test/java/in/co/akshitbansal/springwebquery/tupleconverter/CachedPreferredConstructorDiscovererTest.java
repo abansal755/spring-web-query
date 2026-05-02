@@ -16,7 +16,7 @@
 
 package in.co.akshitbansal.springwebquery.tupleconverter;
 
-import in.co.akshitbansal.springwebquery.model.Address;
+import in.co.akshitbansal.springwebquery.common.model.Address;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 import org.hibernate.sql.results.internal.TupleElementImpl;

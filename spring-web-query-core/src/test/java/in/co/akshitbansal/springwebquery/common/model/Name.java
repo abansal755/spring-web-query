@@ -14,14 +14,27 @@
  * limitations under the License.
  */
 
-package in.co.akshitbansal.springwebquery.model;
+package in.co.akshitbansal.springwebquery.common.model;
 
 import in.co.akshitbansal.springwebquery.annotation.MapsTo;
+import in.co.akshitbansal.springwebquery.annotation.RSQLFilterable;
+import in.co.akshitbansal.springwebquery.annotation.Sortable;
+import in.co.akshitbansal.springwebquery.operator.RSQLDefaultOperator;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class Phone {
+@AllArgsConstructor
+@NoArgsConstructor
+public class Name {
 
-	@MapsTo("phoneNumber")
-	private String number;
+	@MapsTo(value = "firstName", absolute = true)
+	@Sortable
+	@RSQLFilterable(RSQLDefaultOperator.IGNORE_CASE)
+	private String firstName;
+
+	@MapsTo(value = "lastName", absolute = true)
+	// Explicitly not annotated with @Sortable
+	private String lastName;
 }

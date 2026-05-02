@@ -16,10 +16,10 @@
 
 package in.co.akshitbansal.springwebquery.resolver;
 
-import in.co.akshitbansal.springwebquery.model.Address;
-import in.co.akshitbansal.springwebquery.model.Name;
-import in.co.akshitbansal.springwebquery.model.Phone;
-import in.co.akshitbansal.springwebquery.model.User;
+import in.co.akshitbansal.springwebquery.common.model.Address;
+import in.co.akshitbansal.springwebquery.common.model.Name;
+import in.co.akshitbansal.springwebquery.common.model.Phone;
+import in.co.akshitbansal.springwebquery.common.model.User;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

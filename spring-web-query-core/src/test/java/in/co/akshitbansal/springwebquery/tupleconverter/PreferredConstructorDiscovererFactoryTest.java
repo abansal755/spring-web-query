@@ -16,7 +16,7 @@
 
 package in.co.akshitbansal.springwebquery.tupleconverter;
 
-import in.co.akshitbansal.springwebquery.model.Address;
+import in.co.akshitbansal.springwebquery.common.model.Address;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
