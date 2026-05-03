@@ -39,14 +39,6 @@ jobs:
                   java-version: 17
                   cache: maven
 
-            - name: Build effective pom for core package
-              working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp help:effective-pom -Pboot4 -Doutput=tmp/pom.xml
-
-            - name: Build effective pom for starter package
-              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B -ntp help:effective-pom -Pboot4 -Doutput=tmp/pom.xml
-
             - name: Run Trivy (table output)
               uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
               with:
