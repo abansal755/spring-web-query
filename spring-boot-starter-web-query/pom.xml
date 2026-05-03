@@ -49,37 +49,15 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-autoconfigure</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.github.perplexhub</groupId>
-			<artifactId>rsql-jpa-spring-boot-starter</artifactId>
-			<version>6.0.33</version>
+			<groupId>in.co.akshitbansal</groupId>
+			<artifactId>spring-web-query-core</artifactId>
+			<version>0.20.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>${lombok.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>in.co.akshitbansal</groupId>
-			<artifactId>spring-web-query-core</artifactId>
-			<version>0.20.2-SNAPSHOT</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 
