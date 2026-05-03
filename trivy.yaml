@@ -6,3 +6,4 @@ scan:
         - jmh-benchmarks
     skip-files:
         - spring-web-query-core/pom.xml
+        - spring-boot-starter-web-query/pom.xml
