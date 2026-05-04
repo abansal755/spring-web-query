@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>in.co.akshitbansal</groupId>
 	<artifactId>spring-boot-starter-web-query</artifactId>
-	<version>0.21.1-SNAPSHOT</version>
+	<version>0.21.2-SNAPSHOT</version>
 	<name>spring-boot-starter-web-query</name>
 	<description>Effective querying for Spring Web APIs</description>
 	<url>https://github.com/abansal755/spring-web-query</url>
@@ -52,7 +52,7 @@
 		<dependency>
 			<groupId>in.co.akshitbansal</groupId>
 			<artifactId>spring-web-query-core</artifactId>
-			<version>0.21.1-SNAPSHOT</version>
+			<version>0.21.2-SNAPSHOT</version>
 		</dependency>
 
 		<!--	Provided Dependencies	-->
