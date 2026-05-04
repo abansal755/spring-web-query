@@ -332,6 +332,8 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 
 		// SELECT clause
 		List<Selection<?>> selections = selectionsProvider.getSelections(root, query, cb);
+		// noinspection ConstantValue
+		if (selections == null) throw new QueryConfigurationException("selectionsProvider returned a null list"); //NOSONAR
 		if (selections.isEmpty()) throw new QueryConfigurationException("No selections provided");
 		Selection<?>[] selectionsArray = selections.toArray(new Selection<?>[0]);
 		query.select(cb.tuple(selectionsArray));
