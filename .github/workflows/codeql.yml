@@ -22,7 +22,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v6
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
               with:
                 ref: ${{ inputs.target_branch }}
 
@@ -34,14 +34,14 @@ jobs:
                 echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
             - name: Set up JDK 17
-              uses: actions/setup-java@v5
+              uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
               with:
                   distribution: temurin
                   java-version: '17'
                   cache: maven
 
             - name: Initialize CodeQL
-              uses: github/codeql-action/init@v4
+              uses: github/codeql-action/init@e46ed2cbd01164d986452f91f178727624ae40d7 #v4.35.3
               with:
                   languages: java-kotlin
                   build-mode: manual
@@ -55,7 +55,7 @@ jobs:
               run: mvn -B -ntp clean verify -Dmaven.test.skip=true
 
             - name: Perform CodeQL Analysis
-              uses: github/codeql-action/analyze@v4
+              uses: github/codeql-action/analyze@e46ed2cbd01164d986452f91f178727624ae40d7 #v4.35.3
               with:
                 ref: ${{ steps.upload-target.outputs.ref }}
                 sha: ${{ steps.upload-target.outputs.sha }}
