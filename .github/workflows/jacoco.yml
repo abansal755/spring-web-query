@@ -21,8 +21,18 @@ jobs:
               working-directory: ${{ github.workspace }}/spring-web-query-core
               run: mvn -B -ntp clean test -Pjacoco,boot4
 
-            - name: Upload jacoco report
+            - name: Upload core jacoco report
               uses: actions/upload-artifact@v7
               with:
                   name: spring-web-query-core-jacoco-report
                   path: spring-web-query-core/target/site/jacoco
+
+            - name: Run tests for starter package
+              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
+              run: mvn -B -ntp clean test -Pjacoco,boot4
+
+            - name: Upload starter jacoco report
+              uses: actions/upload-artifact@v7
+              with:
+                  name: spring-boot-starter-web-query-jacoco-report
+                  path: spring-boot-starter-web-query/target/site/jacoco
