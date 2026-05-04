@@ -46,3 +46,4 @@ jobs:
               with:
                   name: jmh-results-${{ matrix.className }}
                   path: jmh-benchmarks/target/results-${{ matrix.className }}.csv
+                  archive: false
