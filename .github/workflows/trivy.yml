@@ -46,7 +46,7 @@ jobs:
                 scan-ref: '.'
                 format: 'table'
               env:
-                TRIVY_TABLE_MODE: summary
+                TRIVY_DEPENDENCY_TREE: true
 
             - name: Run Trivy (generate SARIF)
               uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
