@@ -48,16 +48,26 @@
 	</dependencyManagement>
 
 	<dependencies>
+		<!--	Compile Dependencies	-->
 		<dependency>
 			<groupId>in.co.akshitbansal</groupId>
 			<artifactId>spring-web-query-core</artifactId>
 			<version>0.21.1-SNAPSHOT</version>
 		</dependency>
+
+		<!--	Provided Dependencies	-->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>${lombok.version}</version>
 			<scope>provided</scope>
+		</dependency>
+
+		<!--	Test Dependencies	-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
@@ -200,6 +210,33 @@
 								<arg>loopback</arg>
 							</gpgArguments>
 						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>jacoco</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>0.8.14</version>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report</id>
+								<phase>test</phase>
+								<goals>
+									<goal>report</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
