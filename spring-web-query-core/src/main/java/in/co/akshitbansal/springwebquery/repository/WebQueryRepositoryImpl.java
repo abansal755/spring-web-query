@@ -153,6 +153,13 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 		this.tupleConverterFactory = tupleConverterFactory;
 		this.globalAllowAndOperation = globalAllowAndOperation;
 		this.globalAllowOrOperation = globalAllowOrOperation;
+
+		if (globalMaxASTDepth < 0) {
+			throw new QueryConfigurationException(MessageFormat.format(
+					"Invalid configuration for maximum RSQL AST depth: {0}. The value must be non-negative.",
+					globalMaxASTDepth
+			));
+		}
 		this.globalMaxASTDepth = globalMaxASTDepth;
 	}
 
@@ -428,7 +435,14 @@ public class WebQueryRepositoryImpl<E> implements WebQueryRepository<E>, Reposit
 			@Nullable String rsqlQuery, Class<?> dtoClass,
 			boolean allowAndOperation, boolean allowOrOperation, int maxASTDepth
 	) {
+		if (maxASTDepth < 0) {
+			throw new QueryConfigurationException(MessageFormat.format(
+					"Invalid configuration for maximum RSQL AST depth: {0}. The value must be non-negative.",
+					maxASTDepth
+			));
+		}
 		if (rsqlQuery == null) return Specification.unrestricted();
+
 		try {
 			// Parse the RSQL query into an Abstract Syntax Tree (AST)
 			Node rootNode = rsqlParser.parse(rsqlQuery);
