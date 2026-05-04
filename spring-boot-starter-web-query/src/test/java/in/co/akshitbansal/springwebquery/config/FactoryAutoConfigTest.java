@@ -48,14 +48,14 @@ class FactoryAutoConfigTest {
 
 	@Test
 	void testFieldResolutionCachingWithNoPropertyDefined() {
-		runner.run(this::assertFieldResolutionIsNotCached);
+		runner.run(this::assertFieldResolutionIsCached);
 	}
 
 	@Test
 	void testWithFieldResolutionCachingEnabled() {
 		runner
 				.withPropertyValues("spring-web-query.field-resolution.caching.enabled=true")
-				.run(this::assertFieldResolutionIsNotCached);
+				.run(this::assertFieldResolutionIsCached);
 	}
 
 	@Test
@@ -72,7 +72,7 @@ class FactoryAutoConfigTest {
 				});
 	}
 
-	private void assertFieldResolutionIsNotCached(AssertableApplicationContext ctx) {
+	private void assertFieldResolutionIsCached(AssertableApplicationContext ctx) {
 		// Assert that the DTOToEntityPathMapperFactory bean is registered
 		DTOToEntityPathMapperFactory factory = assertDoesNotThrow(() -> ctx.getBean(DTOToEntityPathMapperFactory.class));
 
