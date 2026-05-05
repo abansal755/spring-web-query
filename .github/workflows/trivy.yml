@@ -11,6 +11,8 @@ on:
             target_branch:
                 type: string
                 default: main
+    schedule:
+        - cron: "30 2 * * *"
 
 permissions:
     security-events: write
@@ -24,12 +26,12 @@ jobs:
             - name: Checkout
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
               with:
-                ref: ${{ inputs.target_branch }}
+                ref: ${{ inputs.target_branch || 'main' }}
 
             - name: Resolve Upload Target
               id: upload-target
               run: |
-                echo "ref=refs/heads/${{ inputs.target_branch }}" >> "$GITHUB_OUTPUT"
+                echo "ref=refs/heads/${{ inputs.target_branch || 'main' }}" >> "$GITHUB_OUTPUT"
                 echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
             - name: Set up JDK 17
