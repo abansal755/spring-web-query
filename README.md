@@ -1,14 +1,22 @@
-# Spring Web Query
-
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Java 17/21](https://img.shields.io/badge/Java-17%20%7C%2021-blue?style=flat&color=orange)](https://www.oracle.com/java/technologies/downloads/)
-[![Spring Boot 3.5.12/4.0.2](https://img.shields.io/badge/Spring_Boot-3%20%7C%204-orange?style=flat&logo=springboot)](https://spring.io/projects/spring-boot)
-
-[![Maven Central (spring-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fin%2Fco%2Fakshitbansal%2Fspring-web-query-core%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Maven%20Central%20(Core)&color=brightgreen&logo=apachemaven)](https://central.sonatype.com/artifact/in.co.akshitbansal/spring-web-query-core)
-[![Maven Central (spring-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fin%2Fco%2Fakshitbansal%2Fspring-web-query-core%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Snapshot%20(Core)&color=yellow&logo=apachemaven)](https://central.sonatype.com/repository/maven-snapshots/in/co/akshitbansal/spring-web-query-core/maven-metadata.xml)
-
-[![Maven Central (spring-boot-starter-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fin%2Fco%2Fakshitbansal%2Fspring-boot-starter-web-query%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Maven%20Central%20(Starter)&color=brightgreen&logo=apachemaven)](https://central.sonatype.com/artifact/in.co.akshitbansal/spring-boot-starter-web-query)
-[![Maven Central (spring-boot-starter-web-query)](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fin%2Fco%2Fakshitbansal%2Fspring-boot-starter-web-query%2Fmaven-metadata.xml&strategy=highestVersion&style=flat&label=Snapshot%20(Starter)&color=yellow&logo=apachemaven)](https://central.sonatype.com/repository/maven-snapshots/in/co/akshitbansal/spring-boot-starter-web-query/maven-metadata.xml)
+<div align="center">
+    <h1>Spring Web Query</h1>
+    <div>
+        <a href="https://www.apache.org/licenses/LICENSE-2.0">
+            <img alt="GitHub License" src="https://img.shields.io/github/license/abansal755/spring-web-query?style=for-the-badge&label=License&color=blue">
+        </a>
+        <img alt="Static Badge" src="https://img.shields.io/badge/Java-17-orange?style=for-the-badge">
+        <img alt="Static Badge" src="https://img.shields.io/badge/Java-21-orange?style=for-the-badge">
+        <img alt="Static Badge" src="https://img.shields.io/badge/Spring_Boot-3-green?style=for-the-badge&logo=spring&logoColor=white">
+        <img alt="Static Badge" src="https://img.shields.io/badge/Spring_Boot-4-green?style=for-the-badge&logo=spring&logoColor=white">
+    </div>
+    <div>
+        <a href="https://central.sonatype.com/artifact/in.co.akshitbansal/spring-boot-starter-web-query">
+            <img alt="Maven Central Version" src="https://img.shields.io/maven-central/v/in.co.akshitbansal/spring-boot-starter-web-query?strategy=highestVersion&style=for-the-badge&logo=apachemaven&label=Maven%20Central&color=green">
+        </a>
+        <img alt="Maven metadata URL" src="https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fin%2Fco%2Fakshitbansal%2Fspring-web-query-core%2Fmaven-metadata.xml&strategy=highestVersion&style=for-the-badge&logo=apachemaven&label=Maven%20Central%20(Snapshot)&color=yellow">
+    </div>
+</div>
+<br>
 
 `spring-web-query` is a Spring Boot library that provides a **declarative**, **secure**, and **high-performance** way to implement filtering, pagination, and sorting for your Spring MVC APIs.
 
@@ -437,7 +445,6 @@ public class GlobalQueryExceptionHandler {
 `spring-web-query` is designed for high-traffic environments:
 - **Cached Path Mapping**: DTO-to-Entity path resolution is cached to minimize reflection overhead.
 - **Tuple Projections**: Uses JPA Tuples to avoid loading full entities, reducing memory pressure and DB IO.
-- **Optimized Paging**: Paged queries automatically skip the content fetch if the count is zero.
 
 ---
 
