@@ -17,22 +17,37 @@ jobs:
                   java-version: "17"
                   cache: maven
 
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 #v6.1.1
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ vars.AWS_REGION }}
+
             - name: Run tests for core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
               run: mvn -B -ntp clean test -Pjacoco,boot4
 
             - name: Upload core jacoco report
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
-              with:
-                  name: spring-web-query-core-jacoco-report
-                  path: spring-web-query-core/target/site/jacoco
+              working-directory: ${{ github.workspace }}/spring-web-query-core/target/site
+              run: |
+                  aws s3 cp \
+                  jacoco \
+                  s3://spring-web-query-build-artifacts-444353257799-ap-south-2-an/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report \
+                  --recursive
+
+                  echo "JaCoCo report for core package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report/index.html"
 
             - name: Run tests for starter package
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: mvn -B -ntp clean test -Pjacoco,boot4
 
             - name: Upload starter jacoco report
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
-              with:
-                  name: spring-boot-starter-web-query-jacoco-report
-                  path: spring-boot-starter-web-query/target/site/jacoco
+              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query/target/site
+              run: |
+                  aws s3 cp \
+                  jacoco \
+                  s3://spring-web-query-build-artifacts-444353257799-ap-south-2-an/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report \
+                  --recursive
+
+                  echo "JaCoCo report for starter package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report/index.html"
