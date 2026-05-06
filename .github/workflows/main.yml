@@ -78,6 +78,7 @@ jobs:
             - build-test
             - jmh-build-test
         name: JaCoCo Report Generation
+        secrets: inherit
 
     trivy:
         uses: ./.github/workflows/trivy.yml
