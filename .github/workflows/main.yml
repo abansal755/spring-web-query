@@ -140,9 +140,3 @@ jobs:
                   GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                   MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
                   MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-
-    publish-javadoc:
-        name: Publish Javadoc
-        needs: snapshot-release
-        uses: ./.github/workflows/javadoc.yml
-        secrets: inherit
