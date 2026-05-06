@@ -16,10 +16,10 @@
         <img alt="Maven metadata URL" src="https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fin%2Fco%2Fakshitbansal%2Fspring-web-query-core%2Fmaven-metadata.xml&strategy=highestVersion&style=for-the-badge&logo=apachemaven&label=Maven%20Central%20(Snapshot)&color=yellow">
     </div>
     <a href="https://javadoc.io/doc/in.co.akshitbansal/spring-web-query-core">
-        <img src="https://javadoc.io/badge2/in.co.akshitbansal/spring-web-query-core/javadoc.svg?label=Core+Javadoc&style=for-the-badge"/>
+        <img alt="Core Javadoc" src="https://javadoc.io/badge2/in.co.akshitbansal/spring-web-query-core/javadoc.svg?label=Core+Javadoc&style=for-the-badge"/>
     </a>
     <a href="https://javadoc.io/doc/in.co.akshitbansal/spring-boot-starter-web-query">
-        <img src="https://javadoc.io/badge2/in.co.akshitbansal/spring-boot-starter-web-query/javadoc.svg?label=Starter+Javadoc&style=for-the-badge"/>
+        <img alt="Starter Javadoc" src="https://javadoc.io/badge2/in.co.akshitbansal/spring-boot-starter-web-query/javadoc.svg?label=Starter+Javadoc&style=for-the-badge"/>
     </a>
 </div>
 <br>
