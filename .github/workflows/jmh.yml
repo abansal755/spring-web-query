@@ -67,20 +67,5 @@ jobs:
                   {
                     echo "# JMH Benchmark Results"
                     echo ""
-                    echo "| Benchmark | Result |"
-                    echo "|---|---|"
-
-                    benchmarks=(
-                      "ReflectiveFieldResolverBenchmark"
-                      "DTOToEntityPathMapperBenchmark"
-                      "CachedDTOToEntityPathMapperBenchmark"
-                      "ListHashingBenchmark"
-                      "PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams"
-                      "PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructors"
-                      "CachedPreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams"
-                    )
-
-                    for benchmark in "${benchmarks[@]}"; do
-                      echo "| ${benchmark} | [View Result](https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/jmh-benchmarks/${benchmark}.txt) |"
-                    done
+                    echo "[Open JMH Benchmark Results](https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/jmh-benchmarks/)"
                   } >> "$GITHUB_STEP_SUMMARY"
