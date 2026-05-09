@@ -41,7 +41,7 @@ jobs:
                   s3://spring-web-query-build-artifacts-444353257799-ap-south-2-an/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report \
                   --recursive
 
-                  echo "JaCoCo report for core package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report/index.html"
+                  echo "JaCoCo report for core package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report/"
 
             - name: Run tests for starter package
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
@@ -55,7 +55,7 @@ jobs:
                   s3://spring-web-query-build-artifacts-444353257799-ap-south-2-an/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report \
                   --recursive
 
-                  echo "JaCoCo report for starter package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report/index.html"
+                  echo "JaCoCo report for starter package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report/"
 
             - name: Generate workflow summary
               run: |
@@ -64,6 +64,6 @@ jobs:
                     echo ""
                     echo "| Module | Report |"
                     echo "|---|---|"
-                    echo "| spring-web-query-core | [Open Report](https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report/index.html) |"
-                    echo "| spring-boot-starter-web-query | [Open Report](https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report/index.html) |"
+                    echo "| spring-web-query-core | [Open Report](https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report/) |"
+                    echo "| spring-boot-starter-web-query | [Open Report](https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report/) |"
                   } >> "$GITHUB_STEP_SUMMARY"
