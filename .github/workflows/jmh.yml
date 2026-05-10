@@ -57,6 +57,12 @@ jobs:
 
                   echo "Benchmark results for ${{ matrix.className }} are available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/jmh-benchmarks/${{ matrix.className }}.txt"
 
+            - name: Invalidate cloudfront distribution cache
+              run: |
+                  aws cloudfront create-invalidation \
+                  --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+                  --paths "/runs/" "/runs/${{ github.run_id }}/" "/runs/${{ github.run_id }}/jmh-benchmarks/"
+
     summary:
         needs: jmh
         runs-on: ubuntu-latest
