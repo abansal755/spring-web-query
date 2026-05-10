@@ -61,7 +61,7 @@ jobs:
               run: |
                   aws cloudfront create-invalidation \
                   --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
-                  --paths "/runs/" "/runs/${{ github.run_id }}/" "/runs/${{ github.run_id }}/jmh-benchmarks/"
+                  --paths "/runs/" "/runs/${{ github.run_id }}/" "/runs/${{ github.run_id }}/*"
 
     summary:
         needs: jmh
