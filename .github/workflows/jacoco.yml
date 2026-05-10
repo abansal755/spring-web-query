@@ -57,6 +57,12 @@ jobs:
 
                   echo "JaCoCo report for starter package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report/"
 
+            - name: Invalidate cloudfront distribution cache
+              run: |
+                  aws cloudfront create-invalidation \
+                  --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+                  --paths "/runs/" "/runs/${{ github.run_id }}/" "/runs/${{ github.run_id }}/*"
+
             - name: Generate workflow summary
               run: |
                   {
