@@ -38,10 +38,10 @@ jobs:
               run: |
                   aws s3 cp \
                   jacoco \
-                  s3://spring-web-query-build-artifacts-444353257799-ap-south-2-an/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report \
+                  s3://${{ vars.AWS_S3_BUCKET_NAME}}/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core \
                   --recursive
 
-                  echo "JaCoCo report for core package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report/"
+                  echo "JaCoCo report for core package is available at: https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core/"
 
             - name: Run tests for starter package
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
@@ -52,16 +52,19 @@ jobs:
               run: |
                   aws s3 cp \
                   jacoco \
-                  s3://spring-web-query-build-artifacts-444353257799-ap-south-2-an/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report \
+                  s3://${{ vars.AWS_S3_BUCKET_NAME}}/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/starter \
                   --recursive
 
-                  echo "JaCoCo report for starter package is available at: https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report/"
+                  echo "JaCoCo report for starter package is available at: https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/starter/"
 
             - name: Invalidate cloudfront distribution cache
               run: |
                   aws cloudfront create-invalidation \
                   --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
-                  --paths "/runs/" "/runs/${{ github.run_id }}/" "/runs/${{ github.run_id }}/*"
+                  --paths "/spring-web-query/runs/" \
+                  "/spring-web-query/runs/${{ github.run_id }}/attempts/" \
+                  "/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/" \
+                  "/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/*"
 
             - name: Generate workflow summary
               run: |
@@ -70,6 +73,6 @@ jobs:
                     echo ""
                     echo "| Module | Report |"
                     echo "|---|---|"
-                    echo "| spring-web-query-core | [Open Report](https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-web-query-core-jacoco-report/) |"
-                    echo "| spring-boot-starter-web-query | [Open Report](https://builds.akshitbansal.co.in/runs/${{ github.run_id }}/spring-boot-starter-web-query-jacoco-report/) |"
+                    echo "| spring-web-query-core | [Open Report](https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core/) |"
+                    echo "| spring-boot-starter-web-query | [Open Report](https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/starter/) |"
                   } >> "$GITHUB_STEP_SUMMARY"
