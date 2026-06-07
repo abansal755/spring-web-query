@@ -57,15 +57,6 @@ jobs:
 
                   echo "Benchmark results for ${{ matrix.className }} are available at: https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jmh-benchmarks/${{ matrix.className }}.txt"
 
-            - name: Invalidate cloudfront distribution cache
-              run: |
-                  aws cloudfront create-invalidation \
-                  --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
-                  --paths "/spring-web-query/runs/" \
-                  "/spring-web-query/runs/${{ github.run_id }}/attempts/" \
-                  "/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/" \
-                  "/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/*"
-
     summary:
         needs: jmh
         runs-on: ubuntu-latest
