@@ -67,5 +67,5 @@ jobs:
                   {
                     echo "# JMH Benchmark Results"
                     echo ""
-                    echo "[Open JMH Benchmark Results](https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jmh-benchmarks/)"
+                    echo "[Open JMH Benchmark Results](https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jmh-benchmarks)"
                   } >> "$GITHUB_STEP_SUMMARY"

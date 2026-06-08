@@ -41,7 +41,7 @@ jobs:
                   s3://${{ vars.AWS_S3_BUCKET_NAME}}/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core \
                   --recursive
 
-                  echo "JaCoCo report for core package is available at: https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core/"
+                  echo "JaCoCo report for core package is available at: https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core"
 
             - name: Run tests for starter package
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
@@ -55,7 +55,7 @@ jobs:
                   s3://${{ vars.AWS_S3_BUCKET_NAME}}/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/starter \
                   --recursive
 
-                  echo "JaCoCo report for starter package is available at: https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/starter/"
+                  echo "JaCoCo report for starter package is available at: https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/starter"
 
             - name: Generate workflow summary
               run: |
@@ -64,6 +64,6 @@ jobs:
                     echo ""
                     echo "| Module | Report |"
                     echo "|---|---|"
-                    echo "| spring-web-query-core | [Open Report](https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core/) |"
-                    echo "| spring-boot-starter-web-query | [Open Report](https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/starter/) |"
+                    echo "| spring-web-query-core | [Open Report](https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core) |"
+                    echo "| spring-boot-starter-web-query | [Open Report](https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/starter) |"
                   } >> "$GITHUB_STEP_SUMMARY"
