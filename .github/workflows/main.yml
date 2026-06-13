@@ -7,9 +7,6 @@ on:
     pull_request:
     workflow_dispatch:
 
-permissions:
-    security-events: write
-
 jobs:
     build-test:
         runs-on: ubuntu-latest
@@ -79,6 +76,9 @@ jobs:
             - build-test
             - jmh-build-test
         name: JaCoCo Report Generation
+        permissions:
+            id-token: write
+            contents: read
         secrets: inherit
 
     trivy:
@@ -87,6 +87,9 @@ jobs:
             - build-test
             - jmh-build-test
         name: Trivy
+        permissions:
+            security-events: write
+            contents: read
         with:
             target_branch: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
@@ -96,6 +99,9 @@ jobs:
             - build-test
             - jmh-build-test
         name: CodeQL
+        permissions:
+            security-events: write
+            contents: read
         with:
             target_branch: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
