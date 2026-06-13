@@ -3,13 +3,12 @@ name: JMH Benchmarks
 on:
     workflow_dispatch:
 
-permissions:
-    id-token: write
-    contents: read
-
 jobs:
     jmh:
         name: Run JMH Benchmarks
+        permissions:
+            id-token: write
+            contents: read
         runs-on: ubuntu-latest
         strategy:
             matrix:
