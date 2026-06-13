@@ -22,16 +22,20 @@ jobs:
                   java-version: "17"
                   cache: maven
 
+            - name: Run tests for core package
+              working-directory: ${{ github.workspace }}/spring-web-query-core
+              run: mvn -B -ntp clean test -Pjacoco,boot4
+
+            - name: Run tests for starter package
+              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
+              run: mvn -B -ntp clean test -Pjacoco,boot4
+
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 #v6.1.1
               with:
                 aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws-region: ${{ vars.AWS_REGION }}
-
-            - name: Run tests for core package
-              working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean test -Pjacoco,boot4
 
             - name: Upload core jacoco report
               working-directory: ${{ github.workspace }}/spring-web-query-core/target/site
@@ -42,10 +46,6 @@ jobs:
                   --recursive
 
                   echo "JaCoCo report for core package is available at: https://builds.akshitbansal.co.in/spring-web-query/runs/${{ github.run_id }}/attempts/${{ github.run_attempt}}/jacoco-reports/core"
-
-            - name: Run tests for starter package
-              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B -ntp clean test -Pjacoco,boot4
 
             - name: Upload starter jacoco report
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query/target/site
