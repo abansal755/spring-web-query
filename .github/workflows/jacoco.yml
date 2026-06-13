@@ -2,11 +2,10 @@ name: Generate JaCoCo Report
 
 on:
     workflow_call:
-        secrets:
-            AWS_ACCESS_KEY_ID:
-                required: true
-            AWS_SECRET_ACCESS_KEY:
-                required: true
+
+permissions:
+    id-token: write
+    contents: read
 
 jobs:
     jacoco:
@@ -33,8 +32,8 @@ jobs:
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 #v6.1.1
               with:
-                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                role-to-assume: ${{ vars.AWS_ROLE }}
+                role-session-name: github-actions-jacoco-${{ github.run_id }}-${{ github.run_attempt }}
                 aws-region: ${{ vars.AWS_REGION }}
 
             - name: Upload core jacoco report
