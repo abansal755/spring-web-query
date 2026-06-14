@@ -15,11 +15,11 @@ coverage:
 flags:
   core:
     paths:
-      - spring-web-query-core/
+      - spring-web-query-core/**/*.java
 
   starter:
     paths:
-      - spring-boot-starter-web-query/
+      - spring-boot-starter-web-query/**/*.java
 
 comment:
-  layout: " diff, flags, files"
+  layout: "diff, flags, files"
