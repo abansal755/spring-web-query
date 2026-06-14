@@ -96,9 +96,6 @@ jobs:
         name: Deploy Packages
         needs: create-release-branch
         runs-on: ubuntu-latest
-        outputs:
-            deployment_id1: ${{ steps.release-core.outputs.deployment_id }}
-            deployment_id2: ${{ steps.release-starter.outputs.deployment_id }}
 
         steps:
             - name: Checkout
@@ -122,13 +119,7 @@ jobs:
               id: release-core
               working-directory: ${{ github.workspace }}/spring-web-query-core
               run: |
-                  mvn -B clean deploy -Prelease,boot4 | tee build.log
-                  DEPLOYMENT_ID=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
-                  if [ -z "$DEPLOYMENT_ID" ]; then
-                    echo "Failed to extract DEPLOYMENT_ID"
-                    exit 1
-                  fi
-                  echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+                  mvn -B clean deploy -Prelease,boot4
               env:
                   GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                   MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -138,13 +129,7 @@ jobs:
               id: release-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
               run: |
-                  mvn -B clean deploy -Prelease,boot4 | tee build.log 
-                  DEPLOYMENT_ID=$(grep -o 'deploymentId: [a-f0-9-]*' build.log | awk '{print $2}')
-                  if [ -z "$DEPLOYMENT_ID" ]; then
-                    echo "Failed to extract DEPLOYMENT_ID"
-                    exit 1
-                  fi
-                  echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+                  mvn -B clean deploy -Prelease,boot4
               env:
                   GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
                   MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
