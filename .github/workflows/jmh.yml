@@ -47,11 +47,16 @@ jobs:
                   {
                     echo "# 🚀 ${{ matrix.className }} JMH Benchmarks"
                     echo ""
-                    echo "| Benchmark | Mode | Score | Error | Units |"
-                    echo "|-----------|------|-------|-------|-------|"
+                    echo "| Benchmark | Params | Mode | Score | Error | Units |"
+                    echo "|-----------|--------|------|-------|-------|-------|"
 
                     jq -r '
-                    .[] |
-                    "| \(.benchmark) | \(.mode) | \(.primaryMetric.score) | \(.primaryMetric.scoreError // "-") | \(.primaryMetric.scoreUnit) |"
+                      .[] |
+                      "| \(.benchmark) | \(
+                          (.params // {})
+                          | to_entries
+                          | map("\(.key)=\(.value)")
+                          | join(", ")
+                        ) | \(.mode) | \(.primaryMetric.score) | \(.primaryMetric.scoreError // "-") | \(.primaryMetric.scoreUnit) |"
                     ' results.json
                   } >> $GITHUB_STEP_SUMMARY
