@@ -1,8 +1,25 @@
 coverage:
   status:
     project:
-      default:
+      core:
+        flags:
+          - core
         target: 75%
         threshold: 1%
+      starter:
+        flags:
+          - starter
+        target: 75%
+        threshold: 1%
+
+flags:
+  core:
+    paths:
+      - spring-web-query-core/
+
+  starter:
+    paths:
+      - spring-boot-starter-web-query/
+
 comment:
   layout: " diff, flags, files"
