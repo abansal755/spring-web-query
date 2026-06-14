@@ -37,11 +37,11 @@ jobs:
 
             - name: Build core package
               working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean install -P${{ matrix.spring-boot-profile }}${{ matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco' }}
+              run: mvn -B -ntp clean install -P${{ matrix.spring-boot-profile }}${{ matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco' || ''}}
 
             - name: Build spring-boot-starter
               working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B -ntp clean verify -P${{ matrix.spring-boot-profile }}${{ matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco' }}
+              run: mvn -B -ntp clean verify -P${{ matrix.spring-boot-profile }}${{ matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco' || ''}}
 
             - name: Upload core coverage to Codecov
               if: ${{ matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' }}
