@@ -6,9 +6,6 @@ on:
 jobs:
     jmh:
         name: Run JMH Benchmarks
-        permissions:
-            id-token: write
-            contents: read
         runs-on: ubuntu-latest
         strategy:
             matrix:
@@ -45,6 +42,7 @@ jobs:
               run: java -jar benchmarks.jar "^.*\.${{ matrix.className }}\..*$" -rf json -rff results.json
 
             - name: Generate summary
+              working-directory: ${{ github.workspace }}/jmh-benchmarks/target
               run: |
                   {
                     echo "# 🚀 ${{ matrix.className }} JMH Benchmarks"
