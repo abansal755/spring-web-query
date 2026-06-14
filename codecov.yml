@@ -1,25 +1,14 @@
-coverage:
-  status:
-    project:
-      core:
-        flags:
-          - core
-        target: 75%
-        threshold: 1%
-      starter:
-        flags:
-          - starter
-        target: 75%
-        threshold: 1%
-
-flags:
-  core:
-    paths:
-      - spring-web-query-core/
-
-  starter:
-    paths:
-      - spring-boot-starter-web-query/
-
+component_management:
+  default_rules:
+    - type: project
+      target: 75%
+      threshold: 1%
+  individual_components:
+    - component_id: core
+      paths:
+        - spring-web-query-core/
+    - component_id: starter
+      paths:
+        - spring-boot-starter-web-query/
 comment:
-  layout: " diff, flags, files"
+  layout: "condensed_header, diff, flags, components"
