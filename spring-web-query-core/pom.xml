@@ -266,6 +266,30 @@
 			</build>
 		</profile>
 		<profile>
+			<id>sonar</id>
+			<properties>
+				<sonar.projectKey>abansal755_spring-web-query-core</sonar.projectKey>
+				<sonar.organization>abansal755</sonar.organization>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.sonarsource.scanner.maven</groupId>
+						<artifactId>sonar-maven-plugin</artifactId>
+						<version>5.7.0.6970</version>
+						<executions>
+							<execution>
+								<goals>
+									<goal>sonar</goal>
+								</goals>
+								<phase>verify</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>boot3</id>
 			<properties>
 				<spring-boot.version>3.5.13</spring-boot.version>
