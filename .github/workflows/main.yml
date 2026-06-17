@@ -4,7 +4,7 @@ on:
     push:
         branches:
             - main
-    pull_request_target:
+    pull_request:
     workflow_dispatch:
 
 jobs:
@@ -29,7 +29,6 @@ jobs:
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
               with:
                 fetch-depth: 0
-                ref: ${{ github.event_name == 'pull_request_target' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref }}
 
             - name: Set up JDK ${{ matrix.java-version }}
               uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
@@ -43,7 +42,7 @@ jobs:
               run: |
                 mvn clean install \
                 -B -ntp \
-                -P${{ matrix.spring-boot-profile }}${{ matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
+                -P${{ matrix.spring-boot-profile }}${{ github.event_name != 'pull_request' && matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
               env:
                 SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -52,7 +51,7 @@ jobs:
               run: |
                 mvn clean verify \
                 -B -ntp \
-                -P${{ matrix.spring-boot-profile }}${{ matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
+                -P${{ matrix.spring-boot-profile }}${{ github.event_name != 'pull_request' && matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
               env:
                 SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -67,8 +66,6 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-              with:
-                ref: ${{ github.event_name == 'pull_request_target' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref }}
 
             - name: Set up JDK 17
               uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
@@ -86,6 +83,8 @@ jobs:
               run: mvn -B -ntp clean verify
 
     trivy:
+        if: >- 
+            ${{ github.event_name != 'pull_request' }}
         uses: ./.github/workflows/trivy.yml
         needs:
             - build-test
@@ -95,9 +94,11 @@ jobs:
             security-events: write
             contents: read
         with:
-            ref: ${{ github.event_name == 'pull_request_target' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref }}
+            ref: ${{ github.ref }}
 
     codeql:
+        if: >- 
+            ${{ github.event_name != 'pull_request' }}
         uses: ./.github/workflows/codeql.yml
         needs:
             - build-test
@@ -107,7 +108,7 @@ jobs:
             security-events: write
             contents: read
         with:
-            ref: ${{ github.event_name == 'pull_request_target' && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref }}
+            ref: ${{ github.ref }}
 
     snapshot-release:
         name: Snapshot Release
