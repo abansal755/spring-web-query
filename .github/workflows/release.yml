@@ -80,7 +80,7 @@ jobs:
             security-events: write
             contents: read
         with:
-            target_branch: release/${{ inputs.version }}
+            ref: refs/heads/release/${{ inputs.version }}
 
     codeql:
         uses: ./.github/workflows/codeql.yml
@@ -90,7 +90,7 @@ jobs:
             security-events: write
             contents: read
         with:
-            target_branch: release/${{ inputs.version }}
+            ref: refs/heads/release/${{ inputs.version }}
 
     deploy-packages:
         name: Deploy Packages
@@ -101,7 +101,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
               with:
-                  ref: release/${{ inputs.version }}
+                  ref: refs/heads/release/${{ inputs.version }}
 
             - name: Set up JDK 17
               uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
