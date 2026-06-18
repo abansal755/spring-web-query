@@ -17,7 +17,8 @@
 package in.co.akshitbansal.springwebquery.config;
 
 import io.github.perplexhub.rsql.RSQLJPAAutoConfiguration;
-import io.github.perplexhub.rsql.RSQLJPASupport;
+import io.github.perplexhub.rsql.RSQLCommonSupport;
+
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -40,7 +41,7 @@ public class RSQLJPAConverterRegistrationAutoConfig {
 	// %2B is URL encoding for +
 	@PostConstruct
 	public void init() {
-		RSQLJPASupport.addConverter(
+		RSQLCommonSupport.addConverter(
 				Timestamp.class, value -> {
 					OffsetDateTime odt = OffsetDateTime.parse(value);
 					Instant instant = odt.toInstant();
