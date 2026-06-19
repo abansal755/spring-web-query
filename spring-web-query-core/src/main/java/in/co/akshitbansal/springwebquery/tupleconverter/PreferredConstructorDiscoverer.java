@@ -105,11 +105,12 @@ public class PreferredConstructorDiscoverer<T> {
 			// So we can safely cast here
 			// noinspection unchecked
 			Constructor<T> constructor = (Constructor<T>) rawConstructor;
-			if (constructor.isSynthetic()) continue;
-			if (!isConstructorMatchingTuple(constructor, tuple)) continue;
-			bestMatch = constructor;
-			if (constructor.isAnnotationPresent(PersistenceCreator.class))
-				break;
+			if (!constructor.isSynthetic() && isConstructorMatchingTuple(constructor, tuple)) {
+				bestMatch = constructor;
+				if (constructor.isAnnotationPresent(PersistenceCreator.class)) {
+					break;
+				}
+			}
 		}
 		if (bestMatch == null) {
 			throw new QueryConfigurationException(MessageFormat.format(
