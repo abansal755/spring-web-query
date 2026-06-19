@@ -1,62 +1,62 @@
 name: CodeQL
 
 on:
-    workflow_call:
-        inputs:
-            ref:
-                required: true
-                type: string
-    workflow_dispatch:
-        inputs:
-            ref:
-                type: string
-                default: refs/heads/main
-    schedule:
-        - cron: "30 2 * * *"
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        type: string
+        default: refs/heads/main
+  schedule:
+    - cron: "30 2 * * *"
 
 permissions:
-    security-events: write
+  security-events: write
 
 jobs:
-    analyze:
-        name: Analyze (CodeQL)
-        runs-on: ubuntu-latest
+  analyze:
+    name: Analyze (CodeQL)
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-              with:
-                ref: ${{ inputs.ref || 'refs/heads/main' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          ref: ${{ inputs.ref || 'refs/heads/main' }}
 
-            - name: Resolve SHA
-              id: upload-target
-              shell: bash
-              run: |
-                echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Resolve SHA
+        id: upload-target
+        shell: bash
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-            - name: Set up JDK 17
-              uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
-              with:
-                  distribution: temurin
-                  java-version: '17'
-                  cache: maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
 
-            - name: Initialize CodeQL
-              uses: github/codeql-action/init@e46ed2cbd01164d986452f91f178727624ae40d7 #v4.35.3
-              with:
-                  languages: java-kotlin
-                  build-mode: manual
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@e46ed2cbd01164d986452f91f178727624ae40d7 #v4.35.3
+        with:
+          languages: java-kotlin
+          build-mode: manual
 
-            - name: Build core package
-              working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean install -Dmaven.test.skip=true
+      - name: Build core package
+        working-directory: ${{ github.workspace }}/spring-web-query-core
+        run: mvn -B -ntp clean install -Dmaven.test.skip=true
 
-            - name: Build spring-boot-starter
-              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B -ntp clean verify -Dmaven.test.skip=true
+      - name: Build spring-boot-starter
+        working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
+        run: mvn -B -ntp clean verify -Dmaven.test.skip=true
 
-            - name: Perform CodeQL Analysis
-              uses: github/codeql-action/analyze@e46ed2cbd01164d986452f91f178727624ae40d7 #v4.35.3
-              with:
-                ref: ${{ inputs.ref || 'refs/heads/main' }}
-                sha: ${{ steps.upload-target.outputs.sha }}
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@e46ed2cbd01164d986452f91f178727624ae40d7 #v4.35.3
+        with:
+          ref: ${{ inputs.ref || 'refs/heads/main' }}
+          sha: ${{ steps.upload-target.outputs.sha }}

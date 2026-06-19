@@ -1,155 +1,158 @@
 name: Java CI
 
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-    workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-    build-test:
-        runs-on: ubuntu-latest
-        if: >-
-            ${{ github.event_name != 'push' || !(
-              contains(github.event.head_commit.message, 'SKIP CI')
-            ) }}
-        strategy:
-            matrix:
-                java-version:
-                    - 17
-                    - 21
-                spring-boot-profile:
-                    - boot3
-                    - boot4
-        name: Build (java${{ matrix.java-version }}, ${{ matrix.spring-boot-profile }})
+  build-test:
+    runs-on: ubuntu-latest
+    if: >-
+      ${{ github.event_name != 'push' || !(
+        contains(github.event.head_commit.message, 'SKIP CI')
+      ) }}
+    strategy:
+      matrix:
+        java-version:
+          - 17
+          - 21
+        spring-boot-profile:
+          - boot3
+          - boot4
+    name: Build (java${{ matrix.java-version }}, ${{ matrix.spring-boot-profile }})
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-              with:
-                fetch-depth: 0
-
-            - name: Set up JDK ${{ matrix.java-version }}
-              uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
-              with:
-                  distribution: temurin
-                  java-version: ${{ matrix.java-version }}
-                  cache: maven
-
-            - name: Build core package
-              working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: |
-                mvn clean install \
-                -B -ntp \
-                -P${{ matrix.spring-boot-profile }}${{ github.event_name != 'pull_request' && matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
-              env:
-                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-            - name: Build spring-boot-starter
-              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: |
-                mvn clean verify \
-                -B -ntp \
-                -P${{ matrix.spring-boot-profile }}${{ github.event_name != 'pull_request' && matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
-              env:
-                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-    jmh-build-test:
-        runs-on: ubuntu-latest
-        if: >-
-            ${{ github.event_name != 'push' || !(
-              contains(github.event.head_commit.message, 'SKIP CI')
-            ) }}
-        name: Build JMH Benchmarks
-
-        steps:
-            - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-
-            - name: Set up JDK 17
-              uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
-              with:
-                  distribution: temurin
-                  java-version: "17"
-                  cache: maven
-
-            - name: Build core package
-              working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean install
-
-            - name: Build jmh project
-              working-directory: ${{ github.workspace }}/jmh-benchmarks
-              run: mvn -B -ntp clean verify
-
-    trivy:
-        if: >- 
-            ${{ github.event_name != 'pull_request' }}
-        uses: ./.github/workflows/trivy.yml
-        needs:
-            - build-test
-            - jmh-build-test
-        name: Trivy
-        permissions:
-            security-events: write
-            contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
-            ref: ${{ github.ref }}
+          fetch-depth: 0
 
-    codeql:
-        if: >- 
-            ${{ github.event_name != 'pull_request' }}
-        uses: ./.github/workflows/codeql.yml
-        needs:
-            - build-test
-            - jmh-build-test
-        name: CodeQL
-        permissions:
-            security-events: write
-            contents: read
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
         with:
-            ref: ${{ github.ref }}
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+          cache: maven
 
-    snapshot-release:
-        name: Snapshot Release
-        needs:
-            - build-test
-            - jmh-build-test
-        runs-on: ubuntu-latest
-        if: >-
-            ${{ 
-                github.event_name == 'push' && 
-                !(contains(github.event.head_commit.message, 'SKIP CI'))
-            }}
+      - name: Build core package
+        working-directory: ${{ github.workspace }}/spring-web-query-core
+        run: |
+          mvn clean install \
+          -B -ntp \
+          -P${{ matrix.spring-boot-profile }}${{ github.event_name != 'pull_request' && matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+      - name: Build spring-boot-starter
+        working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
+        run: |
+          mvn clean verify \
+          -B -ntp \
+          -P${{ matrix.spring-boot-profile }}${{ github.event_name != 'pull_request' && matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-            - name: Set up JDK 17
-              uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
-              with:
-                  distribution: temurin
-                  java-version: "17"
-                  cache: maven
-                  server-id: central
-                  server-username: MAVEN_CENTRAL_USERNAME
-                  server-password: MAVEN_CENTRAL_PASSWORD
-                  gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-                  gpg-passphrase: GPG_PASSPHRASE
+  jmh-build-test:
+    runs-on: ubuntu-latest
+    if: >-
+      ${{ github.event_name != 'push' || !(
+        contains(github.event.head_commit.message, 'SKIP CI')
+      ) }}
+    name: Build JMH Benchmarks
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
-            - name: Release core package
-              working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B clean deploy -Prelease,boot4 -DskipTests
-              env:
-                  GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-                  MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-                  MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+      - name: Set up JDK 17
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
 
-            - name: Release spring-boot-starter
-              working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
-              run: mvn -B clean deploy -Prelease,boot4 -DskipTests
-              env:
-                  GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-                  MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-                  MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+      - name: Build core package
+        working-directory: ${{ github.workspace }}/spring-web-query-core
+        run: mvn -B -ntp clean install
+
+      - name: Build jmh project
+        working-directory: ${{ github.workspace }}/jmh-benchmarks
+        run: mvn -B -ntp clean verify
+
+  trivy:
+    if: >-
+      ${{ github.event_name != 'pull_request' }}
+    uses: ./.github/workflows/trivy.yml
+    needs:
+      - build-test
+      - jmh-build-test
+    name: Trivy
+    permissions:
+      security-events: write
+      contents: read
+    with:
+      ref: ${{ github.ref }}
+
+  codeql:
+    if: >-
+      ${{ github.event_name != 'pull_request' }}
+    uses: ./.github/workflows/codeql.yml
+    needs:
+      - build-test
+      - jmh-build-test
+    name: CodeQL
+    permissions:
+      security-events: write
+      contents: read
+    with:
+      ref: ${{ github.ref }}
+
+  snapshot-release:
+    name: Snapshot Release
+    needs:
+      - build-test
+      - jmh-build-test
+    runs-on: ubuntu-latest
+    if: >-
+      ${{ 
+          github.event_name == 'push' && 
+          !(contains(github.event.head_commit.message, 'SKIP CI'))
+      }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: Release core package
+        working-directory: ${{ github.workspace }}/spring-web-query-core
+        run: mvn -B clean deploy -Prelease,boot4 -DskipTests
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+
+      - name: Release spring-boot-starter
+        working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
+        run: mvn -B clean deploy -Prelease,boot4 -DskipTests
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}

@@ -1,65 +1,65 @@
 name: Trivy Code Scanning
 
 on:
-    workflow_call:
-        inputs:
-            ref:
-                required: true
-                type: string
-    workflow_dispatch:
-        inputs:
-            ref:
-                type: string
-                default: refs/heads/main
-    schedule:
-        - cron: "30 2 * * *"
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        type: string
+        default: refs/heads/main
+  schedule:
+    - cron: "30 2 * * *"
 
 permissions:
-    security-events: write
+  security-events: write
 
 jobs:
-    trivy-code-scanning:
-        runs-on: ubuntu-latest
-        name: Trivy Code Scanning
+  trivy-code-scanning:
+    runs-on: ubuntu-latest
+    name: Trivy Code Scanning
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-              with:
-                ref: ${{ inputs.ref || 'refs/heads/main' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          ref: ${{ inputs.ref || 'refs/heads/main' }}
 
-            - name: Resolve SHA
-              id: upload-target
-              run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Resolve SHA
+        id: upload-target
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-            - name: Set up JDK 17
-              uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
-              with:
-                  distribution: temurin
-                  java-version: 17
-                  cache: maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
 
-            - name: Run Trivy (table output)
-              uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
-              with:
-                scan-type: 'fs'
-                scan-ref: '.'
-                format: 'table'
-              env:
-                TRIVY_DEPENDENCY_TREE: true
+      - name: Run Trivy (table output)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "table"
+        env:
+          TRIVY_DEPENDENCY_TREE: true
 
-            - name: Run Trivy (generate SARIF)
-              uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
-              with:
-                scan-type: 'fs'
-                scan-ref: '.'
-                format: 'sarif'
-                output: 'report.sarif'
+      - name: Run Trivy (generate SARIF)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 #v0.35.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "report.sarif"
 
-            - name: Upload results to GitHub Code Scanning
-              uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 #v4.35.3
-              with:
-                sarif_file: report.sarif
-                category: trivy
-                ref: ${{ inputs.ref || 'refs/heads/main' }}
-                sha: ${{ steps.upload-target.outputs.sha }}
+      - name: Upload results to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 #v4.35.3
+        with:
+          sarif_file: report.sarif
+          category: trivy
+          ref: ${{ inputs.ref || 'refs/heads/main' }}
+          sha: ${{ steps.upload-target.outputs.sha }}
