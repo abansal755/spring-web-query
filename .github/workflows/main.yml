@@ -83,8 +83,6 @@ jobs:
               run: mvn -B -ntp clean verify
 
     trivy:
-        if: >- 
-            ${{ github.event_name != 'pull_request' }}
         uses: ./.github/workflows/trivy.yml
         needs:
             - build-test
@@ -97,8 +95,6 @@ jobs:
             ref: ${{ github.ref }}
 
     codeql:
-        if: >- 
-            ${{ github.event_name != 'pull_request' }}
         uses: ./.github/workflows/codeql.yml
         needs:
             - build-test
