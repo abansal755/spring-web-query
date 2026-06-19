@@ -28,9 +28,12 @@ jobs:
       - name: Run tests for core
         working-directory: ${{ github.workspace }}/spring-web-query-core
         run: |
-          mvn clean test \
+          mvn clean install \
           -B -ntp \
-          -Pboot4,jacoco,sonar
+          -Pboot4,jacoco,sonar \
+          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
+          -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
+          -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -39,6 +42,9 @@ jobs:
         run: |
           mvn clean test \
           -B -ntp \
-          -Pboot4,jacoco,sonar
+          -Pboot4,jacoco,sonar \
+          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
+          -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
+          -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
