@@ -1,0 +1,44 @@
+name: Trusted PR Workflow
+
+on:
+  pull_request_target:
+    types:
+      - labeled
+      - synchronize
+
+jobs:
+  sonar:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'trusted')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          fetch-depth: 0
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Run tests for core
+        working-directory: ${{ github.workspace }}/spring-web-query-core
+        run: |
+          mvn clean test \
+          -B -ntp \
+          -Pboot4,jacoco,sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Run tests for starter
+        working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
+        run: |
+          mvn clean test \
+          -B -ntp \
+          -Pboot4,jacoco,sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
