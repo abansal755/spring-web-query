@@ -2,10 +2,29 @@ name: JMH Benchmarks
 
 on:
   workflow_dispatch:
+  pull_request:
+    types:
+      - labeled
+
+permissions:
+  pull-requests: write
+  contents: read
 
 jobs:
+  in-progress-comment:
+    name: In-Progress PR Comment
+    if: github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'benchmarks')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+          -b "📊 Benchmark workflow triggered. JMH benchmarks are currently running against this PR. Please wait while performance measurements are collected."
+        env:
+          GH_TOKEN: ${{ github.token }}
   jmh:
     name: Run JMH Benchmarks
+    if: github.event_name == 'workflow_dispatch' || (github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'benchmarks'))
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -59,4 +78,14 @@ jobs:
                   | join(", ")
                 ) | \(.mode) | \(.primaryMetric.score) | \(.primaryMetric.scoreError // "-") | \(.primaryMetric.scoreUnit) |"
             ' results.json
-          } >> $GITHUB_STEP_SUMMARY
+          } >> report.md
+
+          cat report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Completed Comment
+        if: github.event_name == 'pull_request'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+          -F report.md
+        env:
+          GH_TOKEN: ${{ github.token }}
