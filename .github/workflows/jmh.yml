@@ -13,7 +13,7 @@ permissions:
 jobs:
   in-progress-comment:
     name: In-Progress PR Comment
-    if: github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'benchmarks')
+    if: github.event.action == 'labeled' && contains(github.event.label.name, 'benchmarks')
     runs-on: ubuntu-latest
     steps:
       - name: Comment
@@ -25,7 +25,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
   jmh:
     name: Run JMH Benchmarks
-    if: github.event_name == 'workflow_dispatch' || (github.event.action == 'labeled' && contains(github.event.pull_request.labels.*.name, 'benchmarks'))
+    if: github.event_name == 'workflow_dispatch' || (github.event.action == 'labeled' && contains(github.event.label.name, 'benchmarks'))
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -84,7 +84,8 @@ jobs:
           cat report.md >> $GITHUB_STEP_SUMMARY
 
       - name: Completed Comment
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && contains(github.event.label.name, 'benchmarks')
+        working-directory: ${{ github.workspace }}/jmh-benchmarks/target
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
           -F report.md
