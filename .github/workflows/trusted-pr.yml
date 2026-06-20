@@ -6,6 +6,14 @@ on:
       - labeled
       - synchronize
 
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   sonar:
     name: SonarQube Analysis
@@ -17,6 +25,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: refs/pull/${{ github.event.pull_request.number }}/head
+          persist-credentials: false
 
       - name: Set up JDK 17
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
@@ -31,12 +40,16 @@ jobs:
           mvn clean install \
           -B -ntp \
           -Pboot4,jacoco,sonar \
-          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
-          -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
-          -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} \
-          -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
+          -Dsonar.pullrequest.key="$PR_KEY" \
+          -Dsonar.pullrequest.base="$PR_BASE" \
+          -Dsonar.pullrequest.branch="$PR_BRANCH" \
+          -Dsonar.scm.revision="$PR_SHA"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PR_KEY: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
 
       - name: Run tests for starter
         working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
@@ -44,9 +57,13 @@ jobs:
           mvn clean test \
           -B -ntp \
           -Pboot4,jacoco,sonar \
-          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
-          -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
-          -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} \
-          -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
+          -Dsonar.pullrequest.key="$PR_KEY" \
+          -Dsonar.pullrequest.base="$PR_BASE" \
+          -Dsonar.pullrequest.branch="$PR_BRANCH" \
+          -Dsonar.scm.revision="$PR_SHA"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PR_KEY: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
