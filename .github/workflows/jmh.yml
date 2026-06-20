@@ -19,6 +19,7 @@ jobs:
       - name: Comment
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
+          -R ${{ github.repository }} \
           -b "📊 Benchmark workflow triggered. JMH benchmarks are currently running against this PR. Please wait while performance measurements are collected."
         env:
           GH_TOKEN: ${{ github.token }}
