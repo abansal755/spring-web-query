@@ -47,7 +47,6 @@ jobs:
           languages: java-kotlin
           build-mode: manual
           queries: security-extended
-          debug: true
 
       - name: Build core package
         working-directory: ${{ github.workspace }}/spring-web-query-core
