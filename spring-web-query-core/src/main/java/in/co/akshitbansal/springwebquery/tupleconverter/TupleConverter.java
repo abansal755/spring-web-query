@@ -60,8 +60,8 @@ public class TupleConverter<T> implements Converter<Tuple, T> {
 	 *
 	 * @return instantiated DTO
 	 *
-	 * @throws QueryConfigurationException if no suitable constructor can be
-	 * found or invocation fails
+	 * @throws QueryConfigurationException if constructor discovery fails or
+	 * invocation fails
 	 */
 	@Override
 	public T convert(@NonNull Tuple tuple) {
