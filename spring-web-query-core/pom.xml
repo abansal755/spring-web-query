@@ -270,6 +270,7 @@
 			<properties>
 				<sonar.projectKey>abansal755_spring-web-query-core</sonar.projectKey>
 				<sonar.organization>abansal755</sonar.organization>
+				<sonar.projectVersion>${project.version}</sonar.projectVersion>
 			</properties>
 			<build>
 				<plugins>
