@@ -46,6 +46,7 @@ jobs:
         with:
           languages: java-kotlin
           build-mode: manual
+          queries: security-extended
 
       - name: Build core package
         working-directory: ${{ github.workspace }}/spring-web-query-core
@@ -60,3 +61,4 @@ jobs:
         with:
           ref: ${{ inputs.ref || 'refs/heads/main' }}
           sha: ${{ steps.upload-target.outputs.sha }}
+          category: /project:spring-web-query
