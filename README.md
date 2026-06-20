@@ -223,9 +223,18 @@ Returns a `long` representing the number of rows matching the filter.
 
 The library uses **Constructor Projection** to materialize DTOs from JPA Tuples.
 
-- **Positional Matching**: The order of selections in your `SelectionsProvider` must match the order of parameters in your DTO constructor.
-- **Type Safety**: The types in the constructor must be assignable from the types returned by the JPA selections.
-- **Disambiguation**: If your DTO has multiple constructors, use `@PersistenceCreator` to mark the one intended for query projection.
+### Constructor Discovery Rules
+
+The discovery process for DTO constructors follows strict deterministic rules to convert JPA Tuples into DTO instances:
+
+1. **Matching Candidates**: The library inspects all declared constructors (both public and non-public) to find those that match the returned tuple's shape.
+    - **Positional Matching**: The order of selections in your `SelectionsProvider` must match the exact order of parameters in the constructor.
+    - **Type Safety**: The parameter types in the constructor must be assignable from the types returned by the JPA selections (primitive types are automatically boxed for comparison).
+2. **Single Match**: If exactly one constructor matches the tuple shape, it is automatically selected.
+3. **Multiple Matches (Ambiguity)**: If multiple constructors match the tuple shape, the library looks for the `org.springframework.data.annotation.PersistenceCreator` annotation to resolve the ambiguity.
+    - If exactly one matching constructor is annotated with `@PersistenceCreator`, it is selected.
+    - If none of the matching constructors are annotated, or if more than one is annotated, a `QueryConfigurationException` is thrown to enforce explicit disambiguation.
+4. **No Match**: If no matching constructor is found, a `QueryConfigurationException` is thrown.
 
 ---
 
