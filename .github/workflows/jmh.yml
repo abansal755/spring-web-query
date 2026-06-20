@@ -1,62 +1,62 @@
 name: JMH Benchmarks
 
 on:
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-    jmh:
-        name: Run JMH Benchmarks
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                className:
-                    - ReflectiveFieldResolverBenchmark
-                    - DTOToEntityPathMapperBenchmark
-                    - CachedDTOToEntityPathMapperBenchmark
-                    - ListHashingBenchmark
-                    - PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
-                    - PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructors
-                    - CachedPreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
-        
-        steps:
-            - name: Checkout
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+  jmh:
+    name: Run JMH Benchmarks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        className:
+          - ReflectiveFieldResolverBenchmark
+          - DTOToEntityPathMapperBenchmark
+          - CachedDTOToEntityPathMapperBenchmark
+          - ListHashingBenchmark
+          - PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
+          - PreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructors
+          - CachedPreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
 
-            - name: Set up JDK 17
-              uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
-              with:
-                  distribution: temurin
-                  java-version: "17"
-                  cache: maven
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
-            - name: Build core package
-              working-directory: ${{ github.workspace }}/spring-web-query-core
-              run: mvn -B -ntp clean install
+      - name: Set up JDK 17
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
 
-            - name: Build JMH Maven Project
-              working-directory: ${{ github.workspace }}/jmh-benchmarks
-              run: mvn -B -ntp clean verify
+      - name: Build core package
+        working-directory: ${{ github.workspace }}/spring-web-query-core
+        run: mvn -B -ntp clean install
 
-            - name: Run Benchmarks
-              working-directory: ${{ github.workspace }}/jmh-benchmarks/target
-              run: java -jar benchmarks.jar "^.*\.${{ matrix.className }}\..*$" -rf json -rff results.json
+      - name: Build JMH Maven Project
+        working-directory: ${{ github.workspace }}/jmh-benchmarks
+        run: mvn -B -ntp clean verify
 
-            - name: Generate summary
-              working-directory: ${{ github.workspace }}/jmh-benchmarks/target
-              run: |
-                  {
-                    echo "# 🚀 ${{ matrix.className }} JMH Benchmarks"
-                    echo ""
-                    echo "| Benchmark | Params | Mode | Score | Error | Units |"
-                    echo "|-----------|--------|------|-------|-------|-------|"
+      - name: Run Benchmarks
+        working-directory: ${{ github.workspace }}/jmh-benchmarks/target
+        run: java -jar benchmarks.jar "^.*\.${{ matrix.className }}\..*$" -rf json -rff results.json
 
-                    jq -r '
-                      .[] |
-                      "| \(.benchmark) | \(
-                          (.params // {})
-                          | to_entries
-                          | map("\(.key)=\(.value)")
-                          | join(", ")
-                        ) | \(.mode) | \(.primaryMetric.score) | \(.primaryMetric.scoreError // "-") | \(.primaryMetric.scoreUnit) |"
-                    ' results.json
-                  } >> $GITHUB_STEP_SUMMARY
+      - name: Generate summary
+        working-directory: ${{ github.workspace }}/jmh-benchmarks/target
+        run: |
+          {
+            echo "# 🚀 ${{ matrix.className }} JMH Benchmarks"
+            echo ""
+            echo "| Benchmark | Params | Mode | Score | Error | Units |"
+            echo "|-----------|--------|------|-------|-------|-------|"
+
+            jq -r '
+              .[] |
+              "| \(.benchmark) | \(
+                  (.params // {})
+                  | to_entries
+                  | map("\(.key)=\(.value)")
+                  | join(", ")
+                ) | \(.mode) | \(.primaryMetric.score) | \(.primaryMetric.scoreError // "-") | \(.primaryMetric.scoreUnit) |"
+            ' results.json
+          } >> $GITHUB_STEP_SUMMARY
