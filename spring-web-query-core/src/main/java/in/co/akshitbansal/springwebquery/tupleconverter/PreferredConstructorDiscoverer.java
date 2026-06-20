@@ -27,6 +27,7 @@ import org.springframework.data.annotation.PersistenceCreator;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,16 +45,13 @@ import java.util.stream.Collectors;
  *       the tuple element Java type after primitive types are boxed</li>
  * </ul>
  *
- * <p>The implementation iterates over {@link Class#getDeclaredConstructors()},
- * keeps track of the latest suitable constructor it has seen, and stops early
- * if it encounters a suitable constructor annotated with
- * {@link PersistenceCreator}. Because Java reflection does not guarantee a
- * stable ordering for declared constructors, constructor selection is
- * unpredictable when multiple suitable constructors are present.</p>
- *
- * <p>To keep selection deterministic, DTOs should ideally expose only one
- * suitable constructor. If {@link PersistenceCreator} is used, it is strongly
- * recommended that at most one suitable constructor be annotated with it.</p>
+ * <p>The implementation inspects declared constructors, so public and
+ * non-public constructors are eligible. Constructor selection is deterministic:
+ * a single suitable constructor is selected directly, multiple suitable
+ * constructors must be disambiguated by annotating exactly one of the matching
+ * constructors with {@link PersistenceCreator}. Discovery throws a
+ * {@link QueryConfigurationException} when ambiguity remains unresolved,
+ * including when multiple matching constructors are annotated.</p>
  *
  * @param <T> target DTO type
  */
@@ -84,42 +82,72 @@ public class PreferredConstructorDiscoverer<T> {
 	 * element Java type, with primitive parameter types first converted to their
 	 * boxed equivalents. Tuple aliases are ignored.</p>
 	 *
-	 * <p>If several suitable constructors exist, the outcome depends on the
-	 * order returned by {@link Class#getDeclaredConstructors()}. A suitable
-	 * constructor annotated with {@link PersistenceCreator} wins immediately when
-	 * encountered. Otherwise, the last suitable constructor encountered is
-	 * selected.</p>
+	 * <p>Public and non-public declared constructors are considered. If exactly
+	 * one suitable constructor exists, it is selected. If several suitable
+	 * constructors exist, exactly one matching constructor must be annotated with
+	 * {@link PersistenceCreator}. If none or more than one matching constructor
+	 * is annotated, discovery throws a {@link QueryConfigurationException}.</p>
 	 *
 	 * @param tuple tuple whose values will be passed to the constructor
 	 *
 	 * @return matching constructor made accessible for invocation
 	 *
 	 * @throws QueryConfigurationException if no suitable constructor can be
-	 * found for the tuple shape
+	 * found for the tuple shape, if multiple suitable constructors cannot be
+	 * disambiguated, or if multiple matching constructors are annotated with
+	 * {@link PersistenceCreator}
 	 */
 	public Constructor<T> discover(@NonNull Tuple tuple) {
-		Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-		Constructor<T> bestMatch = null;
-		for (Constructor<?> rawConstructor: constructors) {
-			// Constructors are of type Constructor<T> only, but the returned array is of type Constructor<?>[]
-			// So we can safely cast here
-			// noinspection unchecked
-			Constructor<T> constructor = (Constructor<T>) rawConstructor;
-			if (!constructor.isSynthetic() && isConstructorMatchingTuple(constructor, tuple)) {
-				bestMatch = constructor;
-				if (constructor.isAnnotationPresent(PersistenceCreator.class)) {
-					break;
-				}
-			}
-		}
-		if (bestMatch == null) {
+		// Constructors are of type Constructor<T> only, but the returned array is of type Constructor<?>[]
+		// So we can safely cast here
+		// noinspection unchecked
+		Constructor<T>[] constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
+		List<Constructor<T>> matchingConstructors = Arrays
+				.stream(constructors)
+				.filter(constructor -> !constructor.isSynthetic() && isConstructorMatchingTuple(constructor, tuple))
+				.toList();
+		List<Constructor<T>> annotatedMatchingConstructors = matchingConstructors
+				.stream()
+				.filter(constructor -> constructor.isAnnotationPresent(PersistenceCreator.class))
+				.toList();
+
+		// no matching constructors found
+		if (matchingConstructors.isEmpty()) {
 			throw new QueryConfigurationException(MessageFormat.format(
 					"No suitable constructor found for tuple: {0}",
 					tupleToString(tuple)
 			));
 		}
-		bestMatch.setAccessible(true);
-		return bestMatch;
+		// matching constructors found
+
+		// only one matching constructor found
+		if (matchingConstructors.size() == 1) {
+			Constructor<T> constructor = matchingConstructors.get(0);
+			constructor.setAccessible(true);
+			return constructor;
+		}
+		// multiple matching constructors found
+
+		// no annotated matching constructors found
+		if (annotatedMatchingConstructors.isEmpty()) {
+			throw new QueryConfigurationException(MessageFormat.format(
+					"Multiple suitable constructors found for tuple: {0}, consider annotating the desired constructor to be used with {1}",
+					tupleToString(tuple), PersistenceCreator.class.getName()
+			));
+		}
+
+		// only one annotated matching constructor found
+		if (annotatedMatchingConstructors.size() == 1) {
+			Constructor<T> constructor = annotatedMatchingConstructors.get(0);
+			constructor.setAccessible(true);
+			return constructor;
+		}
+		// multiple annotated matching constructors found
+
+		throw new QueryConfigurationException(MessageFormat.format(
+				"Multiple suitable constructors annotated with {0} found for tuple: {1}, consider annotating only the desired constructor to be used with {0}",
+				PersistenceCreator.class.getName(), tupleToString(tuple)
+		));
 	}
 
 	/**
