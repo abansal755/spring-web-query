@@ -16,11 +16,16 @@ jobs:
       version: ${{ steps.parse.outputs.version }}
       next-main-version: ${{ steps.parse.outputs.next-main-version }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          ref: main
+
       - name: Parse Issue Body
         id: parse
         run: |
-          VERSION=$(echo "${{ github.event.issue.body }}" | grep -A 1 "### Release Version" | tail -n 1 | tr -d '\r ')
-          NEXT_VERSION=$(echo "${{ github.event.issue.body }}" | grep -A 1 "### Next Main Version" | tail -n 1 | tr -d '\r ')
+          VERSION=$(echo "$FORM_BODY" | sed -n '/### Release Version/{n;s/^[[:space:]]*//;s/[[:space:]]*$//;/^$/n;p;}')
+          NEXT_VERSION=$(echo "$FORM_BODY" | sed -n '/### Next Main Version/{n;s/^[[:space:]]*//;s/[[:space:]]*$//;/^$/n;p;}')
 
           if [ -z "$VERSION" ] || [ -z "$NEXT_VERSION" ]; then
             echo "Unable to cleanly parse version strings from the issue form"
@@ -36,11 +41,7 @@ jobs:
           echo "next-main-version=$NEXT_VERSION" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
-
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
-        with:
-          ref: main
+          FORM_BODY: ${{ github.event.issue.body }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
