@@ -220,7 +220,7 @@ jobs:
       - name: Release branch comment
         run: |
           gh issue comment ${{ github.event.issue.number }} -b "### 📦 Packages published to Maven Central
-          ⚠️ **Note:** It can take upto **30 minutes** for for the auto-publishing to complete"
+          ⚠️ **Note:** It can take upto **30 minutes** for the auto-publishing to complete"
         env:
           GH_TOKEN: ${{ github.token }}
 
