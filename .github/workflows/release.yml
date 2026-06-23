@@ -121,6 +121,7 @@ jobs:
       ref: refs/heads/release/${{ needs.create-release-branch.outputs.version }}
 
   post-trivy-comment:
+    name: Trivy Status Comment
     runs-on: ubuntu-latest
     needs:
       - trivy
@@ -128,7 +129,7 @@ jobs:
     permissions:
       issues: write
     steps:
-      - name: Trivy status comment
+      - name: Issue comment
         run: |
           SECURITY_URL="${{ github.server_url }}/${{ github.repository }}/security/code-scanning?query=is:open+branch:release/$VERSION"
 
@@ -152,6 +153,7 @@ jobs:
       ref: refs/heads/release/${{ needs.create-release-branch.outputs.version }}
 
   post-codeql-comment:
+    name: CodeQL Status Comment
     runs-on: ubuntu-latest
     needs:
       - codeql
@@ -159,7 +161,7 @@ jobs:
     permissions:
       issues: write
     steps:
-      - name: CodeQL status comment
+      - name: Issue comment
         run: |
           SECURITY_URL="${{ github.server_url }}/${{ github.repository }}/security/code-scanning?query=is:open+branch:release/$VERSION"
 
@@ -298,6 +300,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
   
   close-issue:
+    name: Close Issue
     runs-on: ubuntu-latest
     needs:
       - post-trivy-comment
@@ -306,7 +309,7 @@ jobs:
     permissions:
       issues: write
     steps:
-      - name: Close issue
+      - name: Close issue with comment
         run: |
           gh issue close ${{ github.event.issue.number }} \
           -R ${{ github.repository }} \
