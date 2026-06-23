@@ -1,0 +1,27 @@
+name: 📦 Release
+description: Trigger the automated deployment workflow
+title: 📦 Release (<version>)
+body:
+  - type: markdown
+    attributes::
+      value: |
+        ### 🚀 Release Workflow
+        Filling out this form and applying the `release` label will instantly trigger the deployment workflow. This publishes the packages to Maven Central.
+  
+  - type: input
+    id: version
+    attributes:
+      label: Release Version
+      description: The production semantic version of the library to build, tag, and publish right now.
+      placeholder: "e.g., 0.0.3"
+    validations:
+      required: true
+
+  - type: input
+    id: next-main-version
+    attributes:
+      label: Next Main Version
+      description: The development snapshot version that the main branch poms will bump to post-release.
+      placeholder: "e.g., 0.0.4-SNAPSHOT"
+    validations:
+      required: true

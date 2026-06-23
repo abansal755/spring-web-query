@@ -1,21 +1,42 @@
 name: Release
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        required: true
-        description: "Release version (example: 0.0.3)"
-      next-main-version:
-        required: true
-        description: "Next main version (example: 0.0.4-SNAPSHOT)"
+  issues:
+    types:
+      - labeled
 
 jobs:
   create-release-branch:
     name: Create Release Branch
     runs-on: ubuntu-latest
+    if: github.event.label.name == 'release'
     permissions:
       contents: write
+      issues: write
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+      next-main-version: ${{ steps.parse.outputs.next-main-version }}
     steps:
+      - name: Parse Issue Body
+        id: parse
+        run: |
+          VERSION=$(echo "${{ github.event.issue.body }}" | grep -A 1 "### Release Version" | tail -n 1 | tr -d '\r ')
+          NEXT_VERSION=$(echo "${{ github.event.issue.body }}" | grep -A 1 "### Next Main Version" | tail -n 1 | tr -d '\r ')
+
+          if [ -z "$VERSION" ] || [ -z "$NEXT_VERSION" ]; then
+            echo "Unable to cleanly parse version strings from the issue form"
+            gh issue comment ${{ github.event.issue.number }} -b "❌ Failed to cleanly parse version strings from the issue form"
+            exit 1
+          fi
+
+          gh issue comment ${{ github.event.issue.number }} -b "### 🚀 Release workflow initiated
+          - **Version**: \`$VERSION\`
+          - **Next Main Version**: \`$NEXT_VERSION\`"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "next-main-version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
@@ -34,20 +55,20 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Create release branch
-        run: git checkout -b release/${{ inputs.version }}
+        run: git checkout -b release/${{ steps.parse.outputs.version }}
 
       - name: Set core package version
         working-directory: ${{ github.workspace }}/spring-web-query-core
-        run: mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
+        run: mvn -ntp versions:set -DnewVersion=${{ steps.parse.outputs.version }} -DgenerateBackupPoms=false
 
       - name: Set starter package version
         working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
         run: |
-          mvn -ntp versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false
+          mvn -ntp versions:set -DnewVersion=${{ steps.parse.outputs.version }} -DgenerateBackupPoms=false
 
           mvn -ntp versions:use-dep-version \
           -Dincludes=in.co.akshitbansal:spring-web-query-core \
-          -DdepVersion=${{ inputs.version }} \
+          -DdepVersion=${{ steps.parse.outputs.version }} \
           -DforceVersion=true -DgenerateBackupPoms=false
 
       - name: Change version in jmh project
@@ -55,7 +76,7 @@ jobs:
         run: |
           mvn -ntp versions:use-dep-version \
           -Dincludes=in.co.akshitbansal:spring-web-query-core \
-          -DdepVersion=${{ inputs.version }} \
+          -DdepVersion=${{ steps.parse.outputs.version }} \
           -DforceVersion=true -DgenerateBackupPoms=false
 
       - name: Commit changes
@@ -64,13 +85,25 @@ jobs:
           spring-boot-starter-web-query/pom.xml \
           jmh-benchmarks/pom.xml
 
-          git commit -m "Changed versions to ${{ inputs.version }}"
+          git commit -m "Changed versions to ${{ steps.parse.outputs.version }}"
 
       - name: Push commit and tag
         run: |
-          git push origin release/${{ inputs.version }}
-          git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
-          git push origin ${{ inputs.version }}
+          git push origin release/${{ steps.parse.outputs.version }}
+          git tag -a ${{ steps.parse.outputs.version }} -m "Release ${{ steps.parse.outputs.version }}"
+          git push origin ${{ steps.parse.outputs.version }}
+
+      - name: Release branch comment
+        run: |
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+
+          gh issue comment ${{ github.event.issue.number }} -b "### 🌿 Release branch and tag created
+          - **Branch**: [release/$VERSION]($REPO_URL/tree/release/$VERSION)
+          - **Tag**: [$VERSION]($REPO_URL/releases/tag/$VERSION)
+          "
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.parse.outputs.version }}
 
   trivy:
     uses: ./.github/workflows/trivy.yml
@@ -80,7 +113,7 @@ jobs:
       security-events: write
       contents: read
     with:
-      ref: refs/heads/release/${{ inputs.version }}
+      ref: refs/heads/release/${{ needs.create-release-branch.outputs.version }}
 
   codeql:
     uses: ./.github/workflows/codeql.yml
@@ -90,18 +123,20 @@ jobs:
       security-events: write
       contents: read
     with:
-      ref: refs/heads/release/${{ inputs.version }}
+      ref: refs/heads/release/${{ needs.create-release-branch.outputs.version }}
 
   deploy-packages:
     name: Deploy Packages
     needs: create-release-branch
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
-          ref: refs/heads/release/${{ inputs.version }}
+          ref: refs/heads/release/${{ needs.create-release-branch.outputs.version }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
@@ -135,13 +170,21 @@ jobs:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
 
+      - name: Release branch comment
+        run: gh issue comment ${{ github.event.issue.number }} -b "📦 Packages deployed to Maven Central"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   version-bump:
     name: Version Bump PR
-    needs: deploy-packages
+    needs:
+      - deploy-packages
+      - create-release-branch
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
+      issues: write
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -157,16 +200,16 @@ jobs:
 
       - name: Set core package version
         working-directory: ${{ github.workspace }}/spring-web-query-core
-        run: mvn -ntp versions:set -DnewVersion=${{ inputs.next-main-version }} -DgenerateBackupPoms=false
+        run: mvn -ntp versions:set -DnewVersion=${{ needs.create-release-branch.outputs.next-main-version }} -DgenerateBackupPoms=false
 
       - name: Set starter package version
         working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
         run: |
-          mvn -ntp versions:set -DnewVersion=${{ inputs.next-main-version }} -DgenerateBackupPoms=false
+          mvn -ntp versions:set -DnewVersion=${{ needs.create-release-branch.outputs.next-main-version }} -DgenerateBackupPoms=false
 
           mvn -ntp versions:use-dep-version \
           -Dincludes=in.co.akshitbansal:spring-web-query-core \
-          -DdepVersion=${{ inputs.next-main-version }} \
+          -DdepVersion=${{ needs.create-release-branch.outputs.next-main-version }} \
           -DforceVersion=true -DgenerateBackupPoms=false
 
       - name: Change version in jmh project
@@ -174,7 +217,7 @@ jobs:
         run: |
           mvn -ntp versions:use-dep-version \
           -Dincludes=in.co.akshitbansal:spring-web-query-core \
-          -DdepVersion=${{ inputs.next-main-version }} \
+          -DdepVersion=${{ needs.create-release-branch.outputs.next-main-version }} \
           -DforceVersion=true -DgenerateBackupPoms=false
 
       - name: Configure git identity
@@ -183,12 +226,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Create PR
+        id: create-pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 #v8.1.1
         with:
-          commit-message: Changed versions to ${{ inputs.next-main-version }} [SKIP CI]
-          branch: version-bump-${{ inputs.next-main-version }}
-          title: Changed versions to ${{ inputs.next-main-version }}
-          body: Automated version changes to ${{ inputs.next-main-version }} post [${{ inputs.version }} release](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ inputs.version }})
+          commit-message: Changed versions to ${{ needs.create-release-branch.outputs.next-main-version }} [SKIP CI]
+          branch: version-bump-${{ needs.create-release-branch.outputs.next-main-version }}
+          title: Changed versions to ${{ needs.create-release-branch.outputs.next-main-version }}
+          body: Automated version changes to ${{ needs.create-release-branch.outputs.next-main-version }} post [${{ needs.create-release-branch.outputs.version }} release](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.create-release-branch.outputs.version }})
           labels: automated,post-release
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
@@ -196,3 +240,14 @@ jobs:
             spring-web-query-core/pom.xml
             spring-boot-starter-web-query/pom.xml
             jmh-benchmarks/pom.xml
+
+      - name: Close issue
+        run: |
+          gh issue close ${{ github.event.issue.number }} \
+          -c "### ✅ Release completed
+          Pull request created for next main version: #${{ steps.create-pr.outputs.pull-request-number }}
+          "
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.create-release-branch.outputs.version }}
+          NEXT_VERSION: ${{ needs.create-release-branch.outputs.next-main-version }}
