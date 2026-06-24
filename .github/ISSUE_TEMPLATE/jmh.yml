@@ -1,0 +1,18 @@
+name: "📊 JMH Benchmarks"
+description: "Trigger JMH benchmarks to run on a specific branch."
+title: "📊 JMH Benchmarks (<branch>)"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 📊 JMH Benchmarks
+        Once you submit this issue, a GitHub Action will automatically extract the branch name, check it out, and run the JMH benchmarks.
+
+  - type: input
+    id: branch
+    attributes:
+      label: Branch to Benchmark
+      description: Enter the exact name of the branch to run the JMH benchmarks against.
+      placeholder: feature/my-optimization
+    validations:
+      required: true
