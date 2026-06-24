@@ -21,9 +21,14 @@ jobs:
     steps:
       - name: Comment
         run: |
+          RUN_ID="${{ github.run_id }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/$RUN_ID"
+
           gh pr comment ${{ github.event.pull_request.number }} \
           -R ${{ github.repository }} \
-          -b "📊 Benchmark workflow triggered. JMH benchmarks are currently running against this PR. Please wait while performance measurements are collected."
+          -b "### 📊 Benchmark workflow triggered
+          JMH benchmarks are currently running against this PR. Please wait while performance measurements are collected.
+          Check logs: [$RUN_ID]($RUN_URL)"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -39,9 +44,14 @@ jobs:
     steps:
       - name: Comment
         run: |
+          RUN_ID="${{ github.run_id }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/$RUN_ID"
+
           gh issue comment ${{ github.event.issue.number }} \
           -R ${{ github.repository }} \
-          -b "📊 Benchmark workflow triggered. JMH benchmarks are currently running. Please wait while performance measurements are collected."
+          -b "### 📊 Benchmark workflow triggered
+          JMH benchmarks are currently running. Please wait while performance measurements are collected.
+          Check logs: [$RUN_ID]($RUN_URL)"
         env:
           GH_TOKEN: ${{ github.token }}
 
