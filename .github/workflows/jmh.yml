@@ -160,7 +160,10 @@ jobs:
 
   close-issue:
     name: Close issue
-    if: github.event_name == 'issues'
+    if: >-
+      always() &&
+      github.event_name == 'issues' &&
+      needs.jmh.result == 'success'
     needs: jmh
     runs-on: ubuntu-latest
     permissions:
