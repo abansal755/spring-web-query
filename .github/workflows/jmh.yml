@@ -1,19 +1,22 @@
 name: JMH Benchmarks
 
 on:
-  workflow_dispatch:
   pull_request:
     types:
       - labeled
-
-permissions:
-  pull-requests: write
-  contents: read
+  issues:
+    types:
+      - labeled
 
 jobs:
-  in-progress-comment:
+  in-progress-pr-comment:
     name: In-Progress PR Comment
-    if: github.event.action == 'labeled' && contains(github.event.label.name, 'benchmarks')
+    permissions:
+      pull-requests: write
+    if: >-
+        github.event_name == 'pull_request' && 
+        github.event.action == 'labeled' && 
+        contains(github.event.label.name, 'benchmarks')
     runs-on: ubuntu-latest
     steps:
       - name: Comment
@@ -23,10 +26,31 @@ jobs:
           -b "📊 Benchmark workflow triggered. JMH benchmarks are currently running against this PR. Please wait while performance measurements are collected."
         env:
           GH_TOKEN: ${{ github.token }}
+
+  in-progress-issue-comment:
+    name: In-Progress Issue Comment
+    permissions:
+      issues: write
+    if: >-
+        github.event_name == 'issues' && 
+        github.event.action == 'labeled' && 
+        contains(github.event.label.name, 'benchmarks') 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+          -R ${{ github.repository }} \
+          -b "📊 Benchmark workflow triggered. JMH benchmarks are currently running. Please wait while performance measurements are collected."
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   jmh:
     name: Run JMH Benchmarks
-    if: github.event_name == 'workflow_dispatch' || (github.event.action == 'labeled' && contains(github.event.label.name, 'benchmarks'))
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
     strategy:
       matrix:
         className:
@@ -39,8 +63,34 @@ jobs:
           - CachedPreferredConstructorDiscovererBenchmarkWithGrowingNumberOfConstructorParams
 
     steps:
+      - name: Parse issue body
+        id: parse
+        if: github.event_name == 'issues'
+        uses: issue-ops/parser@cb7e2e4e5da701aad0e23e718bc4c91d442ca8ba # v5.0.0
+        with:
+          body: ${{ github.event.issue.body }}
+          issue-form-template: jmh.yml
+
+      - name: Determine target branch
+        id: target
+        run: |
+          if [ $EVENT == "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+          elif [ $EVENT == "issues" ]; then
+            BRANCH_NAME="${{ steps.parse.outputs.parsed_branch }}"
+          else
+            echo "Unsupported github trigger"
+            exit 1
+          fi
+
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        env:
+          EVENT: ${{ github.event_name }}
+
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          ref: ${{ steps.target.outputs.branch }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
@@ -83,11 +133,20 @@ jobs:
 
           cat report.md >> $GITHUB_STEP_SUMMARY
 
-      - name: Completed Comment
-        if: github.event_name == 'pull_request' && contains(github.event.label.name, 'benchmarks')
+      - name: Completed PR Comment
+        if: github.event_name == 'pull_request'
         working-directory: ${{ github.workspace }}/jmh-benchmarks/target
         run: |
           gh pr comment ${{ github.event.pull_request.number }} \
+          -F report.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Completed Issue Comment
+        if: github.event_name == 'issues'
+        working-directory: ${{ github.workspace }}/jmh-benchmarks/target
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
           -F report.md
         env:
           GH_TOKEN: ${{ github.token }}
