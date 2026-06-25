@@ -360,6 +360,7 @@ jobs:
     needs:
       - post-trivy-comment
       - post-codeql-comment
+      - deploy-packages
       - version-bump
       - create-release
     permissions:
