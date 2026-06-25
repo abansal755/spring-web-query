@@ -311,7 +311,9 @@ jobs:
       - name: Download release notes agent jar
         run: |
           curl \
-          -u $USERNAME:$TOKEN -L -O \
+          -f -S -L --retry 3 \
+          -o release-notes-agent-$AGENT_VERSION.jar \
+          -u $USERNAME:$TOKEN \
           https://maven.pkg.github.com/abansal755/release-notes-agent/in/co/akshitbansal/release-notes-agent/$AGENT_VERSION/release-notes-agent-$AGENT_VERSION.jar
         env:
           USERNAME: ${{ vars.GH_PACKAGES_USERNAME }}
