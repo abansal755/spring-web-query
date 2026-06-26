@@ -42,20 +42,58 @@ jobs:
           cache: maven
 
       - name: Build core package
+        if: >-
+          ${{
+            github.event_name == 'pull_request' ||
+            matrix.java-version != 17 ||
+            matrix.spring-boot-profile != 'boot4'
+          }}
         working-directory: ${{ github.workspace }}/spring-web-query-core
         run: |
           mvn clean install \
           -B -ntp \
-          -P${{ matrix.spring-boot-profile }}${{ github.event_name != 'pull_request' && matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
+          -P${{ matrix.spring-boot-profile }}
+
+      - name: Build core package with Sonar
+        if: >-
+          ${{
+            github.event_name != 'pull_request' &&
+            matrix.java-version == 17 &&
+            matrix.spring-boot-profile == 'boot4'
+          }}
+        working-directory: ${{ github.workspace }}/spring-web-query-core
+        run: |
+          mvn clean install \
+          -B -ntp \
+          -P${{ matrix.spring-boot-profile }},jacoco,sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Build spring-boot-starter
+        if: >-
+          ${{
+            github.event_name == 'pull_request' ||
+            matrix.java-version != 17 ||
+            matrix.spring-boot-profile != 'boot4'
+          }}
         working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
         run: |
           mvn clean verify \
           -B -ntp \
-          -P${{ matrix.spring-boot-profile }}${{ github.event_name != 'pull_request' && matrix.java-version == 17 && matrix.spring-boot-profile == 'boot4' && ',jacoco,sonar' || ''}}
+          -P${{ matrix.spring-boot-profile }}
+
+      - name: Build spring-boot-starter with Sonar
+        if: >-
+          ${{
+            github.event_name != 'pull_request' &&
+            matrix.java-version == 17 &&
+            matrix.spring-boot-profile == 'boot4'
+          }}
+        working-directory: ${{ github.workspace }}/spring-boot-starter-web-query
+        run: |
+          mvn clean verify \
+          -B -ntp \
+          -P${{ matrix.spring-boot-profile }},jacoco,sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
