@@ -300,7 +300,7 @@ jobs:
       issues: write
       contents: write
     env:
-      AGENT_VERSION: 0.1.0
+      AGENT_VERSION: 0.2.0
     steps:
       - name: Set up JDK 21
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 #v5.2.0
